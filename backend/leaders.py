@@ -8,10 +8,15 @@ import traceback
 router = APIRouter(prefix="/api/leaders", tags=["Leaders"])
 
 def get_sb():
-    url = os.getenv("SUPABASE_URL","").strip()
-    key = os.getenv("SUPABASE_ANON_KEY","").strip() or os.getenv("SUPABASE_SERVICE_KEY","").strip()
-    if not url or not key: 
-        raise HTTPException(status_code=500, detail="SUPABASE_URL / ANON_KEY not set in Vercel env vars")
+    url = (os.getenv("SUPABASE_URL") or "").strip()
+    # Accept both naming conventions
+    key = (
+        os.getenv("SUPABASE_SERVICE_ROLE_KEY") or 
+        os.getenv("SUPABASE_SERVICE_KEY") or 
+        os.getenv("SUPABASE_ANON_KEY") or ""
+    ).strip()
+    if not url or not key:
+        raise HTTPException(status_code=500, detail=f"Supabase env missing. URL set={bool(url)} key set={bool(key)} Found keys: {[k for k in os.environ.keys() if 'SUPABASE' in k]}")
     return create_client(url, key)
 
 class LeaderCreate(BaseModel):
@@ -48,9 +53,7 @@ async def add_leader(payload: LeaderCreate):
             "nicknames": payload.nicknames or "",
             "monitoring_enabled": True if payload.monitoring_enabled is None else payload.monitoring_enabled
         }).execute()
-        if not res.data:
-            raise HTTPException(status_code=500, detail="Insert returned no data - check RLS")
-        return {"success": True, "leader": res.data[0]}
+        return {"success": True, "leader": res.data[0] if res.data else None}
     except HTTPException:
         raise
     except Exception as e:
@@ -70,7 +73,7 @@ async def update_leader(leader_id: str, payload: LeaderCreate):
             "nicknames": payload.nicknames,
             "monitoring_enabled": payload.monitoring_enabled
         }).eq("id", leader_id).execute()
-        return {"success": True, "leader": res.data[0] if res.data else None}
+        return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
