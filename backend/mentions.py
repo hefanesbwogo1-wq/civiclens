@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Request, Query, HTTPException
 from typing import Optional
 
-from .database import get_connection
+import os
+from supabase import create_client, Client
 
 
 # =========================================================
@@ -15,45 +16,92 @@ router = APIRouter(
 
 
 # =========================================================
-# DATABASE SETUP
+# SUPABASE CONFIGURATION
 # =========================================================
 
-def ensure_mentions_table():
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "").strip()
 
-    connection = get_connection()
 
-    connection.execute(
-        """
-        CREATE TABLE IF NOT EXISTS mentions (
+# =========================================================
+# SUPABASE CLIENT
+# =========================================================
 
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+def get_supabase() -> Client:
 
-            leader_id INTEGER,
-
-            leader_name TEXT,
-
-            platform TEXT NOT NULL,
-
-            author_name TEXT,
-
-            author_handle TEXT,
-
-            content TEXT NOT NULL,
-
-            post_url TEXT,
-
-            sentiment TEXT DEFAULT 'neutral',
-
-            published_at TEXT,
-
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
-
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail="Supabase configuration is missing."
         )
-        """
+
+    return create_client(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
     )
 
-    connection.commit()
-    connection.close()
+
+# =========================================================
+# AUTHENTICATED SUPABASE CLIENT
+# =========================================================
+
+def get_authenticated_supabase(request: Request):
+
+    authorization = request.headers.get("Authorization", "")
+
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required."
+        )
+
+    access_token = authorization.replace(
+        "Bearer ",
+        "",
+        1
+    ).strip()
+
+    if not access_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication token."
+        )
+
+    try:
+
+        supabase = get_supabase()
+
+        user_response = supabase.auth.get_user(
+            access_token
+        )
+
+        user = user_response.user
+
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid or expired session."
+            )
+
+        # Make Supabase REST requests run as this user.
+        supabase.postgrest.auth(access_token)
+
+        return supabase, user
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+
+        print(
+            "CivicLens authentication error:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired session."
+        )
 
 
 # =========================================================
@@ -61,52 +109,71 @@ def ensure_mentions_table():
 # =========================================================
 
 @router.get("/stats")
-async def mention_stats():
+async def mention_stats(
+    request: Request
+):
 
-    ensure_mentions_table()
+    supabase, user = get_authenticated_supabase(
+        request
+    )
 
-    connection = get_connection()
+    try:
 
-    total = connection.execute(
-        """
-        SELECT COUNT(*) AS count
-        FROM mentions
-        """
-    ).fetchone()["count"]
+        response = (
+            supabase
+            .table("mentions")
+            .select("sentiment")
+            .eq("user_id", user.id)
+            .execute()
+        )
 
-    positive = connection.execute(
-        """
-        SELECT COUNT(*) AS count
-        FROM mentions
-        WHERE LOWER(sentiment) = 'positive'
-        """
-    ).fetchone()["count"]
+        rows = response.data or []
 
-    neutral = connection.execute(
-        """
-        SELECT COUNT(*) AS count
-        FROM mentions
-        WHERE LOWER(sentiment) = 'neutral'
-        """
-    ).fetchone()["count"]
+        total = len(rows)
 
-    negative = connection.execute(
-        """
-        SELECT COUNT(*) AS count
-        FROM mentions
-        WHERE LOWER(sentiment) = 'negative'
-        """
-    ).fetchone()["count"]
+        positive = sum(
+            1
+            for row in rows
+            if str(
+                row.get("sentiment") or ""
+            ).lower() == "positive"
+        )
 
-    connection.close()
+        neutral = sum(
+            1
+            for row in rows
+            if str(
+                row.get("sentiment") or ""
+            ).lower() == "neutral"
+        )
 
-    return {
-        "success": True,
-        "total": total,
-        "positive": positive,
-        "neutral": neutral,
-        "negative": negative
-    }
+        negative = sum(
+            1
+            for row in rows
+            if str(
+                row.get("sentiment") or ""
+            ).lower() == "negative"
+        )
+
+        return {
+            "success": True,
+            "total": total,
+            "positive": positive,
+            "neutral": neutral,
+            "negative": negative
+        }
+
+    except Exception as error:
+
+        print(
+            "CivicLens mention statistics error:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to load mention statistics."
+        )
 
 
 # =========================================================
@@ -115,6 +182,8 @@ async def mention_stats():
 
 @router.get("")
 async def get_mentions(
+
+    request: Request,
 
     search: Optional[str] = Query(
         default=None
@@ -131,135 +200,144 @@ async def get_mentions(
     sentiment: Optional[str] = Query(
         default=None
     )
-
 ):
 
-    ensure_mentions_table()
+    supabase, user = get_authenticated_supabase(
+        request
+    )
 
-    connection = get_connection()
+    try:
 
-    query = """
-        SELECT
-            id,
-            leader_id,
-            leader_name,
-            platform,
-            author_name,
-            author_handle,
-            content,
-            post_url,
-            sentiment,
-            published_at,
-            created_at
-        FROM mentions
-        WHERE 1 = 1
-    """
-
-    parameters = []
-
-    # -----------------------------------------------------
-    # SEARCH
-    # -----------------------------------------------------
-
-    if search:
-
-        query += """
-            AND (
-                content LIKE ?
-                OR author_name LIKE ?
-                OR author_handle LIKE ?
-                OR leader_name LIKE ?
+        query = (
+            supabase
+            .table("mentions")
+            .select(
+                """
+                id,
+                leader_id,
+                leader_name,
+                platform,
+                author_name,
+                author_handle,
+                content,
+                post_url,
+                sentiment,
+                published_at,
+                created_at
+                """
             )
-        """
-
-        search_value = f"%{search}%"
-
-        parameters.extend([
-            search_value,
-            search_value,
-            search_value,
-            search_value
-        ])
-
-    # -----------------------------------------------------
-    # LEADER
-    # -----------------------------------------------------
-
-    if leader:
-
-        query += """
-            AND leader_name = ?
-        """
-
-        parameters.append(leader)
-
-    # -----------------------------------------------------
-    # PLATFORM
-    # -----------------------------------------------------
-
-    if platform:
-
-        query += """
-            AND platform = ?
-        """
-
-        parameters.append(platform)
-
-    # -----------------------------------------------------
-    # SENTIMENT
-    # -----------------------------------------------------
-
-    if sentiment:
-
-        query += """
-            AND LOWER(sentiment) = LOWER(?)
-        """
-
-        parameters.append(sentiment)
-
-    # -----------------------------------------------------
-    # ORDER
-    # -----------------------------------------------------
-
-    query += """
-        ORDER BY
-            COALESCE(published_at, created_at) DESC,
-            id DESC
-        LIMIT 100
-    """
-
-    rows = connection.execute(
-        query,
-        parameters
-    ).fetchall()
-
-    connection.close()
-
-    mentions = []
-
-    for row in rows:
-
-        mentions.append(
-            {
-                "id": row["id"],
-                "leader_id": row["leader_id"],
-                "leader_name": row["leader_name"],
-                "platform": row["platform"],
-                "author_name": row["author_name"],
-                "author_handle": row["author_handle"],
-                "content": row["content"],
-                "post_url": row["post_url"],
-                "sentiment": row["sentiment"],
-                "published_at": row["published_at"],
-                "created_at": row["created_at"]
-            }
+            .eq(
+                "user_id",
+                user.id
+            )
+            .order(
+                "published_at",
+                desc=True
+            )
+            .limit(100)
         )
 
-    return {
-        "success": True,
-        "count": len(mentions),
-        "mentions": mentions
-    }
+
+        # =================================================
+        # SEARCH
+        # =================================================
+
+        if search:
+
+            value = search.strip()
+
+            if value:
+
+                query = query.or_(
+                    "content.ilike.%{}%,"
+                    "author_name.ilike.%{}%,"
+                    "author_handle.ilike.%{}%,"
+                    "leader_name.ilike.%{}%"
+                    .format(
+                        value,
+                        value,
+                        value,
+                        value
+                    )
+                )
+
+
+        # =================================================
+        # LEADER
+        # =================================================
+
+        if leader:
+
+            query = query.eq(
+                "leader_name",
+                leader
+            )
+
+
+        # =================================================
+        # PLATFORM
+        # =================================================
+
+        if platform:
+
+            query = query.eq(
+                "platform",
+                platform
+            )
+
+
+        # =================================================
+        # SENTIMENT
+        # =================================================
+
+        if sentiment:
+
+            query = query.ilike(
+                "sentiment",
+                sentiment
+            )
+
+
+        response = query.execute()
+
+        mentions = response.data or []
+
+
+        # =================================================
+        # SORT WITH CREATED DATE FALLBACK
+        # =================================================
+
+        def sort_key(item):
+
+            return (
+                item.get("published_at")
+                or item.get("created_at")
+                or ""
+            )
+
+        mentions.sort(
+            key=sort_key,
+            reverse=True
+        )
+
+
+        return {
+            "success": True,
+            "count": len(mentions),
+            "mentions": mentions
+        }
+
+    except Exception as error:
+
+        print(
+            "CivicLens mentions error:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to load mentions."
+        )
 
 
 # =========================================================
@@ -267,31 +345,61 @@ async def get_mentions(
 # =========================================================
 
 @router.get("/leaders")
-async def mention_leaders():
+async def mention_leaders(
+    request: Request
+):
 
-    ensure_mentions_table()
+    supabase, user = get_authenticated_supabase(
+        request
+    )
 
-    connection = get_connection()
+    try:
 
-    rows = connection.execute(
-        """
-        SELECT DISTINCT leader_name
-        FROM mentions
-        WHERE leader_name IS NOT NULL
-        AND TRIM(leader_name) != ''
-        ORDER BY leader_name ASC
-        """
-    ).fetchall()
+        response = (
+            supabase
+            .table("mentions")
+            .select("leader_name")
+            .eq(
+                "user_id",
+                user.id
+            )
+            .not_.is_(
+                "leader_name",
+                "null"
+            )
+            .execute()
+        )
 
-    connection.close()
+        rows = response.data or []
 
-    return {
-        "success": True,
-        "leaders": [
-            row["leader_name"]
-            for row in rows
-        ]
-    }
+        leaders = sorted(
+            {
+                str(row.get("leader_name")).strip()
+                for row in rows
+                if row.get("leader_name")
+                and str(
+                    row.get("leader_name")
+                ).strip()
+            },
+            key=str.lower
+        )
+
+        return {
+            "success": True,
+            "leaders": leaders
+        }
+
+    except Exception as error:
+
+        print(
+            "CivicLens mention leaders error:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to load mention leaders."
+        )
 
 
 # =========================================================
@@ -300,43 +408,74 @@ async def mention_leaders():
 
 @router.get("/{mention_id}")
 async def get_mention(
+
+    request: Request,
+
     mention_id: int
+
 ):
 
-    ensure_mentions_table()
+    supabase, user = get_authenticated_supabase(
+        request
+    )
 
-    connection = get_connection()
+    try:
 
-    row = connection.execute(
-        """
-        SELECT
-            id,
-            leader_id,
-            leader_name,
-            platform,
-            author_name,
-            author_handle,
-            content,
-            post_url,
-            sentiment,
-            published_at,
-            created_at
-        FROM mentions
-        WHERE id = ?
-        """,
-        (mention_id,)
-    ).fetchone()
+        response = (
+            supabase
+            .table("mentions")
+            .select(
+                """
+                id,
+                leader_id,
+                leader_name,
+                platform,
+                author_name,
+                author_handle,
+                content,
+                post_url,
+                sentiment,
+                published_at,
+                created_at
+                """
+            )
+            .eq(
+                "id",
+                mention_id
+            )
+            .eq(
+                "user_id",
+                user.id
+            )
+            .maybe_single()
+            .execute()
+        )
 
-    connection.close()
+        mention = response.data
 
-    if not row:
+        if not mention:
+
+            raise HTTPException(
+                status_code=404,
+                detail="Mention not found."
+            )
 
         return {
-            "success": False,
-            "message": "Mention not found."
+            "success": True,
+            "mention": mention
         }
 
-    return {
-        "success": True,
-        "mention": dict(row)
-    }
+    except HTTPException:
+        raise
+
+    except Exception as error:
+
+        print(
+            "CivicLens single mention error:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to load mention."
+        )

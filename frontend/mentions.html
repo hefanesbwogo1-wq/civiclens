@@ -27,7 +27,9 @@
         href="/static/css/mentions.css"
     >
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
 
     <script src="/config.js"></script>
 
@@ -37,443 +39,441 @@
 <body>
 
 
-    <!-- =====================================================
-         SIDEBAR
-    ====================================================== -->
+<!-- =====================================================
+     SIDEBAR
+====================================================== -->
 
-    <aside class="sidebar">
+<aside class="sidebar">
 
-        <div class="sidebar-brand">
+    <div class="sidebar-brand">
 
-            <img
-                src="/static/images/civiclens-logo.png"
-                alt="CivicLens"
-            >
+        <img
+            src="/static/images/civiclens-logo.png"
+            alt="CivicLens"
+        >
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+        <a
+            href="/dashboard"
+            class="nav-item"
+        >
+            <span>▣</span>
+            <span>Dashboard</span>
+        </a>
+
+
+        <a
+            href="/mentions"
+            class="nav-item active"
+        >
+            <span>◉</span>
+            <span>Mentions</span>
+        </a>
+
+
+        <a
+            href="/leaders"
+            class="nav-item"
+        >
+            <span>♟</span>
+            <span>Leaders</span>
+        </a>
+
+
+        <a
+            href="/platforms"
+            class="nav-item"
+        >
+            <span>◌</span>
+            <span>Platforms</span>
+        </a>
+
+
+        <a
+            href="/reports"
+            class="nav-item"
+        >
+            <span>▤</span>
+            <span>Reports</span>
+        </a>
+
+
+        <a
+            href="/settings"
+            class="nav-item"
+        >
+            <span>⚙</span>
+            <span>Settings</span>
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <button
+            id="logout-button"
+            class="logout-button"
+            type="button"
+        >
+            <span>↪</span>
+            <span>Sign Out</span>
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- =====================================================
+     MAIN
+====================================================== -->
+
+<main class="main-content">
+
+
+    <!-- TOP BAR -->
+
+    <header class="topbar">
+
+        <div>
+
+            <p class="eyebrow">
+                PUBLIC CONVERSATION INTELLIGENCE
+            </p>
+
+            <h1>
+                Mentions
+            </h1>
 
         </div>
 
 
-        <nav class="sidebar-nav">
+        <div class="topbar-right">
 
-            <a
-                href="/dashboard"
-                class="nav-item"
-            >
-                <span>▣</span>
-                <span>Dashboard</span>
-            </a>
+            <div class="notification">
 
+                <span>🔔</span>
 
-            <a
-                href="/mentions"
-                class="nav-item active"
-            >
-                <span>◉</span>
-                <span>Mentions</span>
-            </a>
+                <span class="notification-dot"></span>
+
+            </div>
 
 
-            <a
-                href="/leaders"
-                class="nav-item"
-            >
-                <span>♟</span>
-                <span>Leaders</span>
-            </a>
+            <div class="user-profile">
+
+                <div
+                    class="avatar"
+                    id="user-avatar"
+                >
+                    C
+                </div>
 
 
-            <a
-                href="#"
-                class="nav-item"
-            >
-                <span>◌</span>
-                <span>Platforms</span>
-            </a>
+                <div class="user-info">
 
+                    <strong id="user-name">
+                        CivicLens User
+                    </strong>
 
-            <a
-                href="#"
-                class="nav-item"
-            >
-                <span>▤</span>
-                <span>Reports</span>
-            </a>
+                    <span id="user-email">
+                        Loading...
+                    </span>
 
+                </div>
 
-            <a
-                href="#"
-                class="nav-item"
-            >
-                <span>⚙</span>
-                <span>Settings</span>
-            </a>
-
-        </nav>
-
-
-        <div class="sidebar-bottom">
-
-            <button
-                id="logout-button"
-                class="logout-button"
-                type="button"
-            >
-
-                <span>↪</span>
-
-                <span>Sign Out</span>
-
-            </button>
+            </div>
 
         </div>
 
-    </aside>
+    </header>
 
 
-    <!-- =====================================================
-         MAIN
-    ====================================================== -->
+    <!-- =================================================
+         HERO
+    ================================================== -->
 
-    <main class="main-content">
+    <section class="mentions-hero">
+
+        <div>
+
+            <span class="page-kicker">
+                LIVE MONITORING
+            </span>
+
+            <h2>
+                Public Mentions
+            </h2>
+
+            <p>
+                Monitor public conversations mentioning
+                the leaders and keywords you are tracking.
+            </p>
+
+        </div>
 
 
-        <!-- TOP BAR -->
+        <button
+            id="refresh-button"
+            class="refresh-button"
+            type="button"
+        >
+            ↻ Refresh
+        </button>
 
-        <header class="topbar">
+    </section>
+
+
+    <!-- =================================================
+         STATISTICS
+    ================================================== -->
+
+    <section class="mention-stats">
+
+
+        <div class="mention-stat-card">
+
+            <div class="mention-stat-icon">
+                ◉
+            </div>
 
             <div>
-
-                <p class="eyebrow">
-                    PUBLIC CONVERSATION INTELLIGENCE
-                </p>
-
-                <h1>
-                    Mentions
-                </h1>
-
-            </div>
-
-
-            <div class="topbar-right">
-
-                <div class="notification">
-                    <span>🔔</span>
-                    <span class="notification-dot"></span>
-                </div>
-
-
-                <div class="user-profile">
-
-                    <div
-                        class="avatar"
-                        id="user-avatar"
-                    >
-                        C
-                    </div>
-
-
-                    <div class="user-info">
-
-                        <strong id="user-name">
-                            CivicLens User
-                        </strong>
-
-                        <span id="user-email">
-                            Loading...
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </header>
-
-
-        <!-- =================================================
-             PAGE INTRO
-        ================================================== -->
-
-        <section class="mentions-hero">
-
-            <div>
-
-                <span class="page-kicker">
-                    LIVE MONITORING
-                </span>
-
-                <h2>
-                    Public Mentions
-                </h2>
-
-                <p>
-                    Monitor public conversations mentioning
-                    the leaders and keywords you are tracking.
-                </p>
-
-            </div>
-
-
-            <button
-                id="refresh-button"
-                class="refresh-button"
-                type="button"
-            >
-                ↻ Refresh
-            </button>
-
-        </section>
-
-
-        <!-- =================================================
-             STATISTICS
-        ================================================== -->
-
-        <section class="mention-stats">
-
-            <div class="mention-stat-card">
-
-                <div class="mention-stat-icon">
-                    ◉
-                </div>
-
-                <div>
-
-                    <span>
-                        TOTAL MENTIONS
-                    </span>
-
-                    <strong id="stat-total">
-                        0
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <div class="mention-stat-card positive">
-
-                <div class="mention-stat-icon">
-                    +
-                </div>
-
-                <div>
-
-                    <span>
-                        POSITIVE
-                    </span>
-
-                    <strong id="stat-positive">
-                        0
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <div class="mention-stat-card neutral">
-
-                <div class="mention-stat-icon">
-                    =
-                </div>
-
-                <div>
-
-                    <span>
-                        NEUTRAL
-                    </span>
-
-                    <strong id="stat-neutral">
-                        0
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <div class="mention-stat-card negative">
-
-                <div class="mention-stat-icon">
-                    −
-                </div>
-
-                <div>
-
-                    <span>
-                        NEGATIVE
-                    </span>
-
-                    <strong id="stat-negative">
-                        0
-                    </strong>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =================================================
-             FILTERS
-        ================================================== -->
-
-        <section class="mention-filters">
-
-            <div class="search-box">
 
                 <span>
-                    🔎
+                    TOTAL MENTIONS
                 </span>
 
-                <input
-                    id="search-input"
-                    type="search"
-                    placeholder="Search mentions, authors or leaders..."
-                    autocomplete="off"
-                >
+                <strong id="stat-total">
+                    0
+                </strong>
 
             </div>
 
-
-            <select id="leader-filter">
-
-                <option value="">
-                    All Leaders
-                </option>
-
-            </select>
+        </div>
 
 
-            <select id="platform-filter">
+        <div class="mention-stat-card positive">
 
-                <option value="">
-                    All Platforms
-                </option>
+            <div class="mention-stat-icon">
+                +
+            </div>
 
-                <option value="X">
-                    X
-                </option>
+            <div>
 
-                <option value="Facebook">
-                    Facebook
-                </option>
-
-            </select>
-
-
-            <select id="sentiment-filter">
-
-                <option value="">
-                    All Sentiment
-                </option>
-
-                <option value="positive">
-                    Positive
-                </option>
-
-                <option value="neutral">
-                    Neutral
-                </option>
-
-                <option value="negative">
-                    Negative
-                </option>
-
-            </select>
-
-
-            <button
-                id="clear-filters"
-                class="clear-filters"
-                type="button"
-            >
-                Clear
-            </button>
-
-        </section>
-
-
-        <!-- =================================================
-             MENTIONS PANEL
-        ================================================== -->
-
-        <section class="panel mentions-main-panel">
-
-
-            <div class="panel-header">
-
-                <div>
-
-                    <span class="panel-kicker">
-                        PUBLIC CONVERSATIONS
-                    </span>
-
-                    <h3>
-                        Recent Mentions
-                    </h3>
-
-                </div>
-
-
-                <span
-                    id="mention-count"
-                    class="mention-count"
-                >
-                    0 mentions
+                <span>
+                    POSITIVE
                 </span>
 
+                <strong id="stat-positive">
+                    0
+                </strong>
+
             </div>
 
+        </div>
 
-            <div
-                id="mentions-container"
-                class="mentions-container"
+
+        <div class="mention-stat-card neutral">
+
+            <div class="mention-stat-icon">
+                =
+            </div>
+
+            <div>
+
+                <span>
+                    NEUTRAL
+                </span>
+
+                <strong id="stat-neutral">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="mention-stat-card negative">
+
+            <div class="mention-stat-icon">
+                −
+            </div>
+
+            <div>
+
+                <span>
+                    NEGATIVE
+                </span>
+
+                <strong id="stat-negative">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         FILTERS
+    ================================================== -->
+
+    <section class="mention-filters">
+
+
+        <div class="search-box">
+
+            <span>🔎</span>
+
+            <input
+                id="search-input"
+                type="search"
+                placeholder="Search mentions, authors or leaders..."
+                autocomplete="off"
             >
 
-                <!-- JavaScript loads mentions here -->
+        </div>
 
-                <div class="mentions-loading">
 
-                    <div class="loading-spinner"></div>
+        <select id="leader-filter">
 
-                    <p>
-                        Loading mentions...
-                    </p>
+            <option value="">
+                All Leaders
+            </option>
 
-                </div>
+        </select>
+
+
+        <select id="platform-filter">
+
+            <option value="">
+                All Platforms
+            </option>
+
+            <option value="X">
+                X
+            </option>
+
+            <option value="Facebook">
+                Facebook
+            </option>
+
+        </select>
+
+
+        <select id="sentiment-filter">
+
+            <option value="">
+                All Sentiment
+            </option>
+
+            <option value="positive">
+                Positive
+            </option>
+
+            <option value="neutral">
+                Neutral
+            </option>
+
+            <option value="negative">
+                Negative
+            </option>
+
+        </select>
+
+
+        <button
+            id="clear-filters"
+            class="clear-filters"
+            type="button"
+        >
+            Clear
+        </button>
+
+    </section>
+
+
+    <!-- =================================================
+         MENTIONS PANEL
+    ================================================== -->
+
+    <section class="panel mentions-main-panel">
+
+
+        <div class="panel-header">
+
+            <div>
+
+                <span class="panel-kicker">
+                    PUBLIC CONVERSATIONS
+                </span>
+
+                <h3>
+                    Recent Mentions
+                </h3>
 
             </div>
 
 
-        </section>
-
-
-        <!-- =================================================
-             FOOTER
-        ================================================== -->
-
-        <footer class="dashboard-footer">
-
-            <span>
-                © 2026 CivicLens
+            <span
+                id="mention-count"
+                class="mention-count"
+            >
+                0 mentions
             </span>
 
-            <span>
-                Public Conversation Intelligence Platform
-            </span>
-
-        </footer>
+        </div>
 
 
-    </main>
+        <div
+            id="mentions-container"
+            class="mentions-container"
+        >
+
+            <div class="mentions-loading">
+
+                <div class="loading-spinner"></div>
+
+                <p>
+                    Loading mentions...
+                </p>
+
+            </div>
+
+        </div>
 
 
-    <script src="/static/js/mentions.js"></script>
+    </section>
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <footer class="dashboard-footer">
+
+        <span>
+            © 2026 CivicLens
+        </span>
+
+        <span>
+            Public Conversation Intelligence Platform
+        </span>
+
+    </footer>
+
+
+</main>
+
+
+<script src="/static/js/mentions.js"></script>
 
 </body>
 

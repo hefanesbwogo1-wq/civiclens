@@ -1,57 +1,579 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 import os
-from pydantic import BaseModel
-from typing import Optional
-from supabase import create_client
 import traceback
+from typing import Optional
 
-router = APIRouter(prefix="/api/leaders", tags=["Leaders"])
+from pydantic import BaseModel
+from supabase import create_client
 
-def get_sb():
-    url = os.getenv("SUPABASE_URL","").strip()
-    # Support both naming conventions
-    key = os.getenv("SUPABASE_ANON_KEY","").strip() or os.getenv("SUPABASE_SERVICE_ROLE_KEY","").strip() or os.getenv("SUPABASE_SERVICE_KEY","").strip()
-    if not url or not key: 
-        raise HTTPException(status_code=500, detail=f"SUPABASE URL or KEY missing. URL set={bool(url)} KEY set={bool(key)}")
-    return create_client(url, key)
 
-class LeaderCreate(BaseModel):
-    full_name: str
-    public_name: Optional[str] = ""
-    position: Optional[str] = ""
-    organization: Optional[str] = ""
-    keywords: Optional[str] = ""
-    nicknames: Optional[str] = ""
-    monitoring_enabled: Optional[bool] = True
+router = APIRouter(
+    prefix="/api/leaders",
+    tags=["Leaders"]
+)
 
-@router.get("")
-async def get_leaders():
-    sb = get_sb()
-    result = sb.table("leaders").select("*").order("created_at", desc=True).execute()
-    return {"leaders": result.data or [], "success": True}
 
-@router.post("")
-async def add_leader(payload: LeaderCreate):
-    sb = get_sb()
+# =========================================================
+# SUPABASE
+# =========================================================
+
+def get_supabase():
+
+    url = os.getenv(
+        "SUPABASE_URL",
+        ""
+    ).strip()
+
+    key = os.getenv(
+        "SUPABASE_ANON_KEY",
+        ""
+    ).strip()
+
+    if not url or not key:
+
+        raise HTTPException(
+            status_code=500,
+            detail="Supabase configuration is missing."
+        )
+
+    return create_client(
+        url,
+        key
+    )
+
+
+# =========================================================
+# AUTHENTICATED SUPABASE CLIENT
+# =========================================================
+
+async def get_authenticated_supabase(
+    request: Request
+):
+
+    # -----------------------------------------------------
+    # Read Authorization header
+    # -----------------------------------------------------
+
+    authorization = request.headers.get(
+        "Authorization"
+    )
+
+    if not authorization:
+
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required."
+        )
+
+
+    if not authorization.lower().startswith(
+        "bearer "
+    ):
+
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication header."
+        )
+
+
+    access_token = authorization[7:].strip()
+
+
+    if not access_token:
+
+        raise HTTPException(
+            status_code=401,
+            detail="Access token missing."
+        )
+
+
     try:
-        if not payload.full_name or not payload.full_name.strip():
-            raise HTTPException(status_code=400, detail="full_name required")
-        data = {
-            "full_name": payload.full_name.strip(),
-            "public_name": (payload.public_name or payload.full_name).strip(),
-            "position": payload.position or "",
-            "organization": payload.organization or "",
-            "keywords": payload.keywords or "",
-            "nicknames": payload.nicknames or "",
-            "monitoring_enabled": True if payload.monitoring_enabled is None else payload.monitoring_enabled
-        }
-        print(f"Inserting: {data}")
-        res = sb.table("leaders").insert(data).execute()
-        print(f"Insert OK: {res.data}")
-        return {"success": True, "leader": res.data[0] if res.data else None}
+
+        sb = get_supabase()
+
+
+        # -------------------------------------------------
+        # Verify the access token with Supabase Auth
+        # -------------------------------------------------
+
+        user_response = (
+            sb
+            .auth
+            .get_user(access_token)
+        )
+
+
+        user = user_response.user
+
+
+        if not user:
+
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid or expired session."
+            )
+
+
+        # -------------------------------------------------
+        # Attach JWT to PostgREST requests
+        # This makes auth.uid() work inside RLS.
+        # -------------------------------------------------
+
+        sb.postgrest.auth(
+            access_token
+        )
+
+
+        return sb, user
+
+
     except HTTPException:
         raise
+
+
     except Exception as e:
+
+        print(
+            "CivicLens authentication error:",
+            e
+        )
+
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired session."
+        )
+
+
+# =========================================================
+# DATA MODEL
+# =========================================================
+
+class LeaderCreate(BaseModel):
+
+    full_name: str
+
+    public_name: Optional[str] = ""
+
+    position: Optional[str] = ""
+
+    organization: Optional[str] = ""
+
+    keywords: Optional[str] = ""
+
+    nicknames: Optional[str] = ""
+
+    monitoring_enabled: Optional[bool] = True
+
+
+# =========================================================
+# GET LEADERS
+# =========================================================
+
+@router.get("")
+async def get_leaders(
+    request: Request
+):
+
+    try:
+
+        sb, user = await get_authenticated_supabase(
+            request
+        )
+
+
+        result = (
+            sb
+            .table("leaders")
+            .select("*")
+            .eq(
+                "user_id",
+                user.id
+            )
+            .order(
+                "created_at",
+                desc=True
+            )
+            .execute()
+        )
+
+
+        return {
+
+            "leaders":
+                result.data or [],
+
+            "success":
+                True
+        }
+
+
+    except HTTPException:
+        raise
+
+
+    except Exception as e:
+
         traceback.print_exc()
-        print(f"INSERT FAILED: {e}")
-        raise HTTPException(status_code=500, detail=f"Insert failed: {str(e)}")
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to load leaders: {str(e)}"
+        )
+
+
+# =========================================================
+# ADD LEADER
+# =========================================================
+
+@router.post("")
+async def add_leader(
+    request: Request,
+    payload: LeaderCreate
+):
+
+    try:
+
+        sb, user = await get_authenticated_supabase(
+            request
+        )
+
+
+        if (
+            not payload.full_name
+            or not payload.full_name.strip()
+        ):
+
+            raise HTTPException(
+                status_code=400,
+                detail="Full name is required."
+            )
+
+
+        data = {
+
+            "user_id":
+                user.id,
+
+            "full_name":
+                payload.full_name.strip(),
+
+            "public_name":
+                (
+                    payload.public_name
+                    or payload.full_name
+                ).strip(),
+
+            "position":
+                (
+                    payload.position
+                    or ""
+                ).strip(),
+
+            "organization":
+                (
+                    payload.organization
+                    or ""
+                ).strip(),
+
+            "keywords":
+                (
+                    payload.keywords
+                    or ""
+                ).strip(),
+
+            "nicknames":
+                (
+                    payload.nicknames
+                    or ""
+                ).strip(),
+
+            "monitoring_enabled":
+                (
+                    True
+                    if payload.monitoring_enabled is None
+                    else payload.monitoring_enabled
+                )
+        }
+
+
+        print(
+            "CivicLens: Adding leader for user:",
+            user.id
+        )
+
+
+        result = (
+            sb
+            .table("leaders")
+            .insert(data)
+            .execute()
+        )
+
+
+        return {
+
+            "success":
+                True,
+
+            "message":
+                "Leader added successfully.",
+
+            "leader":
+                result.data[0]
+                if result.data
+                else None
+        }
+
+
+    except HTTPException:
+        raise
+
+
+    except Exception as e:
+
+        traceback.print_exc()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Insert failed: {str(e)}"
+        )
+
+
+# =========================================================
+# UPDATE LEADER
+# =========================================================
+
+@router.put("/{leader_id}")
+async def update_leader(
+    request: Request,
+    leader_id: str,
+    payload: LeaderCreate
+):
+
+    try:
+
+        sb, user = await get_authenticated_supabase(
+            request
+        )
+
+
+        if not leader_id.strip():
+
+            raise HTTPException(
+                status_code=400,
+                detail="Leader ID is required."
+            )
+
+
+        if (
+            not payload.full_name
+            or not payload.full_name.strip()
+        ):
+
+            raise HTTPException(
+                status_code=400,
+                detail="Full name is required."
+            )
+
+
+        data = {
+
+            "full_name":
+                payload.full_name.strip(),
+
+            "public_name":
+                (
+                    payload.public_name
+                    or payload.full_name
+                ).strip(),
+
+            "position":
+                (
+                    payload.position
+                    or ""
+                ).strip(),
+
+            "organization":
+                (
+                    payload.organization
+                    or ""
+                ).strip(),
+
+            "keywords":
+                (
+                    payload.keywords
+                    or ""
+                ).strip(),
+
+            "nicknames":
+                (
+                    payload.nicknames
+                    or ""
+                ).strip(),
+
+            "monitoring_enabled":
+                (
+                    True
+                    if payload.monitoring_enabled is None
+                    else payload.monitoring_enabled
+                )
+        }
+
+
+        result = (
+            sb
+            .table("leaders")
+            .update(data)
+            .eq(
+                "id",
+                leader_id
+            )
+            .eq(
+                "user_id",
+                user.id
+            )
+            .execute()
+        )
+
+
+        if not result.data:
+
+            raise HTTPException(
+                status_code=404,
+                detail="Leader not found."
+            )
+
+
+        return {
+
+            "success":
+                True,
+
+            "message":
+                "Leader updated successfully.",
+
+            "leader":
+                result.data[0]
+        }
+
+
+    except HTTPException:
+        raise
+
+
+    except Exception as e:
+
+        traceback.print_exc()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Update failed: {str(e)}"
+        )
+
+
+# =========================================================
+# DELETE LEADER
+# =========================================================
+
+@router.delete("/{leader_id}")
+async def delete_leader(
+    request: Request,
+    leader_id: str
+):
+
+    try:
+
+        sb, user = await get_authenticated_supabase(
+            request
+        )
+
+
+        if not leader_id.strip():
+
+            raise HTTPException(
+                status_code=400,
+                detail="Leader ID is required."
+            )
+
+
+        # -------------------------------------------------
+        # Verify ownership
+        # -------------------------------------------------
+
+        existing = (
+            sb
+            .table("leaders")
+            .select("id, full_name")
+            .eq(
+                "id",
+                leader_id
+            )
+            .eq(
+                "user_id",
+                user.id
+            )
+            .execute()
+        )
+
+
+        if not existing.data:
+
+            raise HTTPException(
+                status_code=404,
+                detail="Leader not found."
+            )
+
+
+        leader_name = (
+            existing.data[0].get(
+                "full_name"
+            )
+            or "Leader"
+        )
+
+
+        # -------------------------------------------------
+        # Delete
+        # -------------------------------------------------
+
+        (
+            sb
+            .table("leaders")
+            .delete()
+            .eq(
+                "id",
+                leader_id
+            )
+            .eq(
+                "user_id",
+                user.id
+            )
+            .execute()
+        )
+
+
+        return {
+
+            "success":
+                True,
+
+            "message":
+                f"{leader_name} deleted successfully.",
+
+            "leader_id":
+                leader_id
+        }
+
+
+    except HTTPException:
+        raise
+
+
+    except Exception as e:
+
+        traceback.print_exc()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Delete failed: {str(e)}"
+        )

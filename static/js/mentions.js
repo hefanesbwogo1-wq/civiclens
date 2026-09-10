@@ -27,6 +27,23 @@ async function initializeMentions() {
 
     initializeSupabase();
 
+    if (!supabaseClient) {
+
+        showError(
+            "CivicLens configuration is unavailable."
+        );
+
+        return;
+    }
+
+
+    const authenticated = await verifySession();
+
+    if (!authenticated) {
+        return;
+    }
+
+
     await loadUser();
 
     await loadStats();
@@ -36,7 +53,6 @@ async function initializeMentions() {
     await loadMentions();
 
     setupEvents();
-
 }
 
 
@@ -93,7 +109,6 @@ function cacheElements() {
 
     elements.logout =
         document.getElementById("logout-button");
-
 }
 
 
@@ -114,7 +129,6 @@ function initializeSupabase() {
         );
 
         return;
-
     }
 
 
@@ -123,7 +137,108 @@ function initializeSupabase() {
             window.SUPABASE_URL,
             window.SUPABASE_ANON_KEY
         );
+}
 
+
+/* =========================================================
+   VERIFY SESSION
+========================================================= */
+
+async function verifySession() {
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient.auth.getSession();
+
+
+        if (
+            error ||
+            !data.session
+        ) {
+
+            window.location.href =
+                "/login";
+
+            return false;
+        }
+
+
+        return true;
+
+    }
+    catch (error) {
+
+        console.error(
+            "CivicLens session error:",
+            error
+        );
+
+        window.location.href =
+            "/login";
+
+        return false;
+    }
+}
+
+
+/* =========================================================
+   AUTHENTICATED API REQUEST
+========================================================= */
+
+async function civicLensFetch(
+    url,
+    options = {}
+) {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient.auth.getSession();
+
+
+    if (
+        error ||
+        !data.session
+    ) {
+
+        window.location.href =
+            "/login";
+
+        throw new Error(
+            "Authentication session expired."
+        );
+    }
+
+
+    const headers = new Headers(
+        options.headers || {}
+    );
+
+
+    headers.set(
+        "Authorization",
+        `Bearer ${data.session.access_token}`
+    );
+
+
+    headers.set(
+        "Accept",
+        "application/json"
+    );
+
+
+    return fetch(
+        url,
+        {
+            ...options,
+            headers
+        }
+    );
 }
 
 
@@ -132,13 +247,6 @@ function initializeSupabase() {
 ========================================================= */
 
 async function loadUser() {
-
-    if (!supabaseClient) {
-
-        return;
-
-    }
-
 
     try {
 
@@ -149,15 +257,15 @@ async function loadUser() {
             await supabaseClient.auth.getUser();
 
 
-        if (error || !data.user) {
-
+        if (
+            error ||
+            !data.user
+        ) {
             return;
-
         }
 
 
-        const user =
-            data.user;
+        const user = data.user;
 
 
         const metadata =
@@ -174,7 +282,6 @@ async function loadUser() {
 
             elements.userName.textContent =
                 name;
-
         }
 
 
@@ -182,7 +289,6 @@ async function loadUser() {
 
             elements.userEmail.textContent =
                 user.email || "";
-
         }
 
 
@@ -192,21 +298,18 @@ async function loadUser() {
                 name
                     .trim()
                     .charAt(0)
-                    .toUpperCase() || "C";
-
+                    .toUpperCase() ||
+                "C";
         }
 
     }
-
     catch (error) {
 
         console.error(
             "CivicLens user error:",
             error
         );
-
     }
-
 }
 
 
@@ -219,9 +322,17 @@ async function loadStats() {
     try {
 
         const response =
-            await fetch(
+            await civicLensFetch(
                 "/api/mentions/stats"
             );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load mention statistics."
+            );
+        }
 
 
         const result =
@@ -229,35 +340,33 @@ async function loadStats() {
 
 
         if (!result.success) {
-
             return;
-
         }
 
 
         elements.statTotal.textContent =
             result.total || 0;
 
+
         elements.statPositive.textContent =
             result.positive || 0;
 
+
         elements.statNeutral.textContent =
             result.neutral || 0;
+
 
         elements.statNegative.textContent =
             result.negative || 0;
 
     }
-
     catch (error) {
 
         console.error(
             "CivicLens statistics error:",
             error
         );
-
     }
-
 }
 
 
@@ -270,9 +379,17 @@ async function loadLeaders() {
     try {
 
         const response =
-            await fetch(
+            await civicLensFetch(
                 "/api/mentions/leaders"
             );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load leaders."
+            );
+        }
 
 
         const result =
@@ -280,14 +397,23 @@ async function loadLeaders() {
 
 
         if (!result.success) {
-
             return;
-
         }
 
 
+        const currentValue =
+            elements.leader.value;
+
+
+        elements.leader.innerHTML = `
+            <option value="">
+                All Leaders
+            </option>
+        `;
+
+
         for (
-            const leader of result.leaders
+            const leader of result.leaders || []
         ) {
 
             const option =
@@ -299,6 +425,7 @@ async function loadLeaders() {
             option.value =
                 leader;
 
+
             option.textContent =
                 leader;
 
@@ -306,20 +433,27 @@ async function loadLeaders() {
             elements.leader.appendChild(
                 option
             );
+        }
 
+
+        if (
+            result.leaders.includes(
+                currentValue
+            )
+        ) {
+
+            elements.leader.value =
+                currentValue;
         }
 
     }
-
     catch (error) {
 
         console.error(
             "CivicLens leader filter error:",
             error
         );
-
     }
-
 }
 
 
@@ -360,7 +494,6 @@ async function loadMentions() {
                 "search",
                 search
             );
-
         }
 
 
@@ -370,7 +503,6 @@ async function loadMentions() {
                 "leader",
                 leader
             );
-
         }
 
 
@@ -380,7 +512,6 @@ async function loadMentions() {
                 "platform",
                 platform
             );
-
         }
 
 
@@ -390,16 +521,23 @@ async function loadMentions() {
                 "sentiment",
                 sentiment
             );
-
         }
 
 
+        const query =
+            params.toString();
+
+
         const url =
-            `/api/mentions?${params.toString()}`;
+            query
+                ? `/api/mentions?${query}`
+                : "/api/mentions";
 
 
         const response =
-            await fetch(url);
+            await civicLensFetch(
+                url
+            );
 
 
         if (!response.ok) {
@@ -407,7 +545,6 @@ async function loadMentions() {
             throw new Error(
                 "Unable to load mentions."
             );
-
         }
 
 
@@ -421,7 +558,6 @@ async function loadMentions() {
                 result.message ||
                 "Unable to load mentions."
             );
-
         }
 
 
@@ -429,9 +565,7 @@ async function loadMentions() {
             result.mentions || []
         );
 
-
     }
-
     catch (error) {
 
         console.error(
@@ -443,9 +577,7 @@ async function loadMentions() {
         showError(
             "Unable to load mentions. Please refresh and try again."
         );
-
     }
-
 }
 
 
@@ -492,7 +624,6 @@ function renderMentions(
         `;
 
         return;
-
     }
 
 
@@ -502,7 +633,6 @@ function renderMentions(
                 createMentionCard
             )
             .join("");
-
 }
 
 
@@ -534,11 +664,28 @@ function createMentionCard(
         "Unknown";
 
 
-    const sentiment =
-        (
+    let sentiment =
+        String(
             mention.sentiment ||
             "neutral"
         ).toLowerCase();
+
+
+    const allowedSentiments = [
+        "positive",
+        "neutral",
+        "negative"
+    ];
+
+
+    if (
+        !allowedSentiments.includes(
+            sentiment
+        )
+    ) {
+
+        sentiment = "neutral";
+    }
 
 
     const content =
@@ -552,32 +699,25 @@ function createMentionCard(
             author
                 .trim()
                 .charAt(0)
-                .toUpperCase()
+                .toUpperCase() ||
+            "P"
         );
 
 
     const authorSafe =
-        escapeHtml(
-            author
-        );
+        escapeHtml(author);
 
 
     const handleSafe =
-        escapeHtml(
-            handle
-        );
+        escapeHtml(handle);
 
 
     const leaderSafe =
-        escapeHtml(
-            leader
-        );
+        escapeHtml(leader);
 
 
     const platformSafe =
-        escapeHtml(
-            platform
-        );
+        escapeHtml(platform);
 
 
     const date =
@@ -588,16 +728,22 @@ function createMentionCard(
 
 
     const postLink =
-        mention.post_url
+        isValidHttpUrl(
+            mention.post_url
+        )
             ? `
+
                 <a
                     class="view-post"
-                    href="${escapeAttribute(mention.post_url)}"
+                    href="${escapeAttribute(
+                        mention.post_url
+                    )}"
                     target="_blank"
                     rel="noopener noreferrer"
                 >
                     View Original Post →
                 </a>
+
             `
             : "";
 
@@ -661,7 +807,7 @@ function createMentionCard(
                         ${leaderSafe}
                     </strong>
 
-                    · ${date}
+                    · ${escapeHtml(date)}
 
                 </span>
 
@@ -673,7 +819,6 @@ function createMentionCard(
         </article>
 
     `;
-
 }
 
 
@@ -682,7 +827,6 @@ function createMentionCard(
 ========================================================= */
 
 function setupEvents() {
-
 
     let searchTimer;
 
@@ -701,7 +845,6 @@ function setupEvents() {
                     loadMentions,
                     350
                 );
-
         }
     );
 
@@ -741,36 +884,13 @@ function setupEvents() {
                 "";
 
             loadMentions();
-
         }
     );
 
 
     elements.refresh.addEventListener(
         "click",
-        async function () {
-
-            elements.refresh.disabled =
-                true;
-
-            elements.refresh.textContent =
-                "↻ Refreshing...";
-
-
-            await loadStats();
-
-            await loadLeaders();
-
-            await loadMentions();
-
-
-            elements.refresh.disabled =
-                false;
-
-            elements.refresh.textContent =
-                "↻ Refresh";
-
-        }
+        refreshMentions
     );
 
 
@@ -780,9 +900,41 @@ function setupEvents() {
             "click",
             logoutUser
         );
+    }
+}
+
+
+/* =========================================================
+   REFRESH
+========================================================= */
+
+async function refreshMentions() {
+
+    elements.refresh.disabled =
+        true;
+
+
+    elements.refresh.textContent =
+        "↻ Refreshing...";
+
+
+    try {
+
+        await loadStats();
+
+        await loadLeaders();
+
+        await loadMentions();
 
     }
+    finally {
 
+        elements.refresh.disabled =
+            false;
+
+        elements.refresh.textContent =
+            "↻ Refresh";
+    }
 }
 
 
@@ -792,22 +944,14 @@ function setupEvents() {
 
 async function logoutUser() {
 
-    if (!supabaseClient) {
-
-        window.location.href =
-            "/login";
-
-        return;
-
-    }
-
-
     try {
 
-        await supabaseClient.auth.signOut();
+        if (supabaseClient) {
+
+            await supabaseClient.auth.signOut();
+        }
 
     }
-
     catch (error) {
 
         console.error(
@@ -820,7 +964,6 @@ async function logoutUser() {
 
     window.location.href =
         "/login";
-
 }
 
 
@@ -843,7 +986,6 @@ function showLoading() {
         </div>
 
     `;
-
 }
 
 
@@ -862,7 +1004,6 @@ function showError(
         </div>
 
     `;
-
 }
 
 
@@ -877,7 +1018,6 @@ function formatDate(
     if (!value) {
 
         return "Date unavailable";
-
     }
 
 
@@ -885,12 +1025,13 @@ function formatDate(
         new Date(value);
 
 
-    if (Number.isNaN(
-        date.getTime()
-    )) {
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
 
-        return value;
-
+        return String(value);
     }
 
 
@@ -901,7 +1042,6 @@ function formatDate(
             timeStyle: "short"
         }
     );
-
 }
 
 
@@ -914,15 +1054,14 @@ function capitalize(
 ) {
 
     if (!value) {
-
         return "";
-
     }
 
 
-    return value.charAt(0).toUpperCase()
-        + value.slice(1);
-
+    return (
+        value.charAt(0).toUpperCase() +
+        value.slice(1)
+    );
 }
 
 
@@ -935,27 +1074,31 @@ function escapeHtml(
 ) {
 
     return String(value)
+
         .replace(
             /&/g,
             "&amp;"
         )
+
         .replace(
             /</g,
             "&lt;"
         )
+
         .replace(
             />/g,
             "&gt;"
         )
+
         .replace(
             /"/g,
             "&quot;"
         )
+
         .replace(
             /'/g,
             "&#039;"
         );
-
 }
 
 
@@ -968,21 +1111,56 @@ function escapeAttribute(
 ) {
 
     return String(value)
+
         .replace(
             /&/g,
             "&amp;"
         )
+
         .replace(
             /"/g,
             "&quot;"
         )
+
         .replace(
             /</g,
             "&lt;"
         )
+
         .replace(
             />/g,
             "&gt;"
         );
+}
 
+
+/* =========================================================
+   VALIDATE POST URL
+========================================================= */
+
+function isValidHttpUrl(
+    value
+) {
+
+    if (!value) {
+        return false;
+    }
+
+
+    try {
+
+        const url =
+            new URL(value);
+
+
+        return (
+            url.protocol === "http:" ||
+            url.protocol === "https:"
+        );
+
+    }
+    catch {
+
+        return false;
+    }
 }
