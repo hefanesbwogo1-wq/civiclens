@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>CivicLens | Platforms</title>
+
+    <meta
+        name="description"
+        content="CivicLens social platform monitoring."
+    >
+
+    <link
+        rel="stylesheet"
+        href="/static/css/dashboard.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/static/css/platforms.css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="/config.js"></script>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+====================================================== -->
+
+<aside class="sidebar">
+
+    <div class="sidebar-brand">
+
+        <img
+            src="/static/images/civiclens-logo.png"
+            alt="CivicLens"
+        >
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+        <a
+            href="/dashboard"
+            class="nav-item"
+        >
+            <span>▣</span>
+            <span>Dashboard</span>
+        </a>
+
+
+        <a
+            href="/mentions"
+            class="nav-item"
+        >
+            <span>◉</span>
+            <span>Mentions</span>
+        </a>
+
+
+        <a
+            href="/leaders"
+            class="nav-item"
+        >
+            <span>♟</span>
+            <span>Leaders</span>
+        </a>
+
+
+        <a
+            href="/platforms"
+            class="nav-item active"
+        >
+            <span>◌</span>
+            <span>Platforms</span>
+        </a>
+
+
+        <a
+            href="#"
+            class="nav-item"
+        >
+            <span>▤</span>
+            <span>Reports</span>
+        </a>
+
+
+        <a
+            href="#"
+            class="nav-item"
+        >
+            <span>⚙</span>
+            <span>Settings</span>
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <button
+            id="logout-button"
+            class="logout-button"
+            type="button"
+        >
+
+            <span>↪</span>
+
+            <span>Sign Out</span>
+
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- =====================================================
+     MAIN
+====================================================== -->
+
+<main class="main-content">
+
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+        <div>
+
+            <p class="eyebrow">
+                PUBLIC CONVERSATION INTELLIGENCE
+            </p>
+
+            <h1>
+                Platforms
+            </h1>
+
+        </div>
+
+
+        <div class="topbar-right">
+
+            <div class="notification">
+
+                <span>🔔</span>
+
+                <span class="notification-dot"></span>
+
+            </div>
+
+
+            <div class="user-profile">
+
+                <div
+                    class="avatar"
+                    id="user-avatar"
+                >
+                    C
+                </div>
+
+
+                <div class="user-info">
+
+                    <strong id="user-name">
+                        CivicLens User
+                    </strong>
+
+                    <span id="user-email">
+                        Loading...
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =================================================
+         HERO
+    ================================================== -->
+
+    <section class="platform-hero">
+
+        <div>
+
+            <span class="page-kicker">
+                MONITORING SOURCES
+            </span>
+
+            <h2>
+                Social Platforms
+            </h2>
+
+            <p>
+                Manage the public platforms CivicLens uses
+                to monitor conversations about your tracked
+                leaders and keywords.
+            </p>
+
+        </div>
+
+
+        <button
+            id="refresh-platforms"
+            class="refresh-button"
+            type="button"
+        >
+            ↻ Refresh
+        </button>
+
+    </section>
+
+
+    <!-- =================================================
+         STATISTICS
+    ================================================== -->
+
+    <section class="platform-stats">
+
+
+        <div class="platform-stat">
+
+            <div class="stat-symbol">
+                ◌
+            </div>
+
+            <div>
+
+                <span>
+                    ACTIVE PLATFORMS
+                </span>
+
+                <strong id="active-platforms">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="platform-stat">
+
+            <div class="stat-symbol">
+                ◉
+            </div>
+
+            <div>
+
+                <span>
+                    TOTAL MENTIONS
+                </span>
+
+                <strong id="total-platform-mentions">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="platform-stat">
+
+            <div class="stat-symbol">
+                𝕏
+            </div>
+
+            <div>
+
+                <span>
+                    X MENTIONS
+                </span>
+
+                <strong id="x-mentions">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="platform-stat">
+
+            <div class="stat-symbol">
+                f
+            </div>
+
+            <div>
+
+                <span>
+                    FACEBOOK MENTIONS
+                </span>
+
+                <strong id="facebook-mentions">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+    <!-- =================================================
+         PLATFORM LIST
+    ================================================== -->
+
+    <section class="panel platforms-panel">
+
+
+        <div class="panel-header">
+
+            <div>
+
+                <span class="panel-kicker">
+                    CONNECTED SOURCES
+                </span>
+
+                <h3>
+                    Monitoring Platforms
+                </h3>
+
+            </div>
+
+
+            <span class="system-status">
+                ● SYSTEM ONLINE
+            </span>
+
+        </div>
+
+
+        <div
+            id="platform-list"
+            class="platform-list"
+        >
+
+            <div class="platform-loading">
+
+                <div class="platform-spinner"></div>
+
+                <p>
+                    Loading platforms...
+                </p>
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+    <!-- =================================================
+         INFORMATION
+    ================================================== -->
+
+    <section class="platform-info-grid">
+
+
+        <div class="info-card">
+
+            <div class="info-icon">
+                ✓
+            </div>
+
+            <div>
+
+                <h4>
+                    Public Data
+                </h4>
+
+                <p>
+                    CivicLens is designed to analyze publicly
+                    available conversations and link users back
+                    to the original public source.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="info-card">
+
+            <div class="info-icon">
+                🔒
+            </div>
+
+            <div>
+
+                <h4>
+                    Privacy First
+                </h4>
+
+                <p>
+                    CivicLens should only process information
+                    that the connected platform makes publicly
+                    available and that the platform's rules allow.
+                </p>
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <footer class="dashboard-footer">
+
+        <span>
+            © 2026 CivicLens
+        </span>
+
+        <span>
+            Public Conversation Intelligence Platform
+        </span>
+
+    </footer>
+
+
+</main>
+
+
+<script src="/static/js/platforms.js"></script>
+
+</body>
+
+</html>

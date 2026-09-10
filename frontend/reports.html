@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>CivicLens | Reports</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/css/dashboard.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/static/css/reports.css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="/config.js"></script>
+
+</head>
+
+
+<body>
+
+
+<aside class="sidebar">
+
+    <div class="sidebar-brand">
+
+        <img
+            src="/static/images/civiclens-logo.png"
+            alt="CivicLens"
+        >
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+        <a href="/dashboard" class="nav-item">
+            <span>▣</span>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="/mentions" class="nav-item">
+            <span>◉</span>
+            <span>Mentions</span>
+        </a>
+
+        <a href="/leaders" class="nav-item">
+            <span>♟</span>
+            <span>Leaders</span>
+        </a>
+
+        <a href="/platforms" class="nav-item">
+            <span>◌</span>
+            <span>Platforms</span>
+        </a>
+
+        <a href="/reports" class="nav-item active">
+            <span>▤</span>
+            <span>Reports</span>
+        </a>
+
+        <a href="/settings" class="nav-item">
+            <span>⚙</span>
+            <span>Settings</span>
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <button
+            id="logout-button"
+            class="logout-button"
+            type="button"
+        >
+            <span>↪</span>
+            <span>Sign Out</span>
+        </button>
+
+    </div>
+
+</aside>
+
+
+
+<main class="main-content">
+
+
+    <header class="topbar">
+
+        <div>
+
+            <p class="eyebrow">
+                PUBLIC CONVERSATION INTELLIGENCE
+            </p>
+
+            <h1>
+                Reports
+            </h1>
+
+        </div>
+
+
+        <div class="topbar-right">
+
+            <div class="notification">
+                🔔
+            </div>
+
+            <div class="user-profile">
+
+                <div
+                    class="avatar"
+                    id="user-avatar"
+                >
+                    C
+                </div>
+
+                <div class="user-info">
+
+                    <strong id="user-name">
+                        CivicLens User
+                    </strong>
+
+                    <span id="user-email">
+                        Loading...
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <section class="reports-hero">
+
+        <div>
+
+            <span class="hero-kicker">
+                INTELLIGENCE REPORTING
+            </span>
+
+            <h2>
+                Conversation Reports
+            </h2>
+
+            <p>
+                Turn CivicLens monitoring data into clear
+                intelligence about public conversations,
+                leaders and platforms.
+            </p>
+
+        </div>
+
+
+        <button
+            id="refresh-reports"
+            class="refresh-button"
+            type="button"
+        >
+            ↻ Refresh
+        </button>
+
+    </section>
+
+
+
+    <section class="report-stat-grid">
+
+
+        <div class="report-stat">
+
+            <span>
+                TOTAL MENTIONS
+            </span>
+
+            <strong id="total-mentions">
+                0
+            </strong>
+
+        </div>
+
+
+        <div class="report-stat">
+
+            <span>
+                POSITIVE
+            </span>
+
+            <strong id="positive-mentions">
+                0
+            </strong>
+
+        </div>
+
+
+        <div class="report-stat">
+
+            <span>
+                NEUTRAL
+            </span>
+
+            <strong id="neutral-mentions">
+                0
+            </strong>
+
+        </div>
+
+
+        <div class="report-stat">
+
+            <span>
+                NEGATIVE
+            </span>
+
+            <strong id="negative-mentions">
+                0
+            </strong>
+
+        </div>
+
+
+    </section>
+
+
+
+    <section class="reports-grid">
+
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <span class="panel-kicker">
+                        LEADER ANALYSIS
+                    </span>
+
+                    <h3>
+                        Mentions by Leader
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="leader-report"
+                class="report-list"
+            >
+
+                <div class="report-empty">
+                    No report data available yet.
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <span class="panel-kicker">
+                        PLATFORM ANALYSIS
+                    </span>
+
+                    <h3>
+                        Mentions by Platform
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="platform-report"
+                class="report-list"
+            >
+
+                <div class="report-empty">
+                    No report data available yet.
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+
+    <section class="panel report-actions">
+
+        <div class="panel-header">
+
+            <div>
+
+                <span class="panel-kicker">
+                    REPORTING TOOLS
+                </span>
+
+                <h3>
+                    Generate Intelligence
+                </h3>
+
+            </div>
+
+        </div>
+
+
+        <div class="report-tool-grid">
+
+
+            <button
+                class="report-tool"
+                type="button"
+                disabled
+            >
+
+                <strong>
+                    Executive Report
+                </strong>
+
+                <span>
+                    Coming after live monitoring is connected
+                </span>
+
+            </button>
+
+
+            <button
+                class="report-tool"
+                type="button"
+                disabled
+            >
+
+                <strong>
+                    Sentiment Report
+                </strong>
+
+                <span>
+                    Coming after sentiment analysis is active
+                </span>
+
+            </button>
+
+
+            <button
+                class="report-tool"
+                type="button"
+                disabled
+            >
+
+                <strong>
+                    Leader Comparison
+                </strong>
+
+                <span>
+                    Compare monitored leaders
+                </span>
+
+            </button>
+
+
+        </div>
+
+    </section>
+
+
+
+    <footer class="dashboard-footer">
+
+        <span>
+            © 2026 CivicLens
+        </span>
+
+        <span>
+            Public Conversation Intelligence Platform
+        </span>
+
+    </footer>
+
+
+</main>
+
+
+<script src="/static/js/reports.js"></script>
+
+</body>
+
+</html>

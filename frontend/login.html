@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login | CivicLens</title>
+
+    <link rel="stylesheet" href="/static/css/login.css">
+</head>
+
+<body>
+
+<div class="login-page">
+
+    <!-- BRAND PANEL -->
+    <div class="login-brand">
+
+        <img
+            src="/static/images/civiclens-logo.png"
+            alt="CivicLens"
+        >
+
+        <div class="brand-content">
+
+            <span>WELCOME BACK</span>
+
+            <h1>
+                See the conversation.<br>
+                <strong>Understand the pulse.</strong>
+            </h1>
+
+            <p>
+                Sign in to your CivicLens workspace and continue
+                monitoring public conversations and mentions.
+            </p>
+
+        </div>
+
+        <small>
+            Monitor • Understand • Build Better
+        </small>
+
+    </div>
+
+
+    <!-- LOGIN PANEL -->
+    <div class="login-panel">
+
+        <div class="login-box">
+
+            <!-- MOBILE LOGO -->
+            <div class="mobile-logo">
+
+                <img
+                    src="/static/images/civiclens-logo.png"
+                    alt="CivicLens"
+                >
+
+            </div>
+
+
+            <span class="eyebrow">
+                CIVICLENS ACCOUNT
+            </span>
+
+
+            <h2>
+                Welcome back
+            </h2>
+
+
+            <p class="subtitle">
+                Sign in to continue to your workspace.
+            </p>
+
+
+            <!-- LOGIN FORM -->
+            <form id="login-form">
+
+                <!-- EMAIL -->
+                <label for="email">
+                    Email address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="name@example.com"
+                    autocomplete="email"
+                    required
+                >
+
+                <div
+                    id="email-error"
+                    class="field-error"
+                ></div>
+
+
+                <!-- PASSWORD -->
+                <label for="password">
+                    Password
+                </label>
+
+                <div class="password-field">
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        id="password-toggle"
+                        aria-label="Show password"
+                    >
+
+                        <span id="eye-closed">
+                            Show
+                        </span>
+
+                        <span
+                            id="eye-open"
+                            class="hidden"
+                        >
+                            Hide
+                        </span>
+
+                    </button>
+
+                </div>
+
+                <div
+                    id="password-error"
+                    class="field-error"
+                ></div>
+
+
+                <!-- OPTIONS -->
+                <div class="login-options">
+
+                    <label class="remember">
+
+                        <input
+                            type="checkbox"
+                            id="remember"
+                        >
+
+                        <span>
+                            Remember me
+                        </span>
+
+                    </label>
+
+
+                    <button
+                        type="button"
+                        id="forgot-password"
+                        class="forgot-password"
+                    >
+                        Forgot password?
+                    </button>
+
+                </div>
+
+
+                <!-- MESSAGE -->
+                <div
+                    id="message"
+                    class="message"
+                    role="alert"
+                    aria-live="polite"
+                ></div>
+
+
+                <!-- LOGIN BUTTON -->
+                <button
+                    class="login-button"
+                    type="submit"
+                    id="login-button"
+                >
+
+                    <span id="button-text">
+                        Sign In
+                    </span>
+
+                    <span
+                        id="button-loader"
+                        class="hidden"
+                    >
+                        Signing in...
+                    </span>
+
+                    <span class="button-arrow">
+                        →
+                    </span>
+
+                </button>
+
+            </form>
+
+
+            <!-- REGISTER -->
+            <div class="divider">
+                <span>
+                    New to CivicLens?
+                </span>
+            </div>
+
+
+            <a
+                class="create-account"
+                href="/register"
+            >
+                Create a CivicLens account
+            </a>
+
+
+            <!-- SECURITY -->
+            <p class="security-note">
+                🔒 Your account and workspace are protected
+                by secure authentication.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- CIVICLENS CONFIG -->
+<script src="/config.js"></script>
+
+<!-- CIVICLENS LOGIN -->
+<script src="/static/js/login.js"></script>
+</body>
+</html>

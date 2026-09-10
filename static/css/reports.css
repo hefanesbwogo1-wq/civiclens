@@ -1,0 +1,305 @@
+/* =========================================================
+   CIVICLENS REPORTS
+========================================================= */
+
+.reports-hero {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 25px;
+
+    margin: 20px 0;
+
+    padding: 30px;
+
+    border-radius: 16px;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            120deg,
+            #075bd2,
+            #0b8ce8
+        );
+
+    box-shadow:
+        0 12px 30px rgba(7,91,210,.14);
+}
+
+
+.hero-kicker {
+
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-size: 9px;
+    font-weight: 850;
+
+    letter-spacing: 2px;
+
+    opacity: .8;
+}
+
+
+.reports-hero h2 {
+
+    margin: 0 0 8px;
+
+    font-size: 26px;
+}
+
+
+.reports-hero p {
+
+    margin: 0;
+
+    max-width: 700px;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+
+    opacity: .9;
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.report-stat-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0,1fr));
+
+    gap: 14px;
+
+    margin-bottom: 20px;
+}
+
+
+.report-stat {
+
+    padding: 20px;
+
+    background: white;
+
+    border: 1px solid #e3eaf3;
+
+    border-radius: 13px;
+}
+
+
+.report-stat span {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #7e8b9c;
+
+    font-size: 8px;
+    font-weight: 850;
+
+    letter-spacing: 1px;
+}
+
+
+.report-stat strong {
+
+    color: #13243a;
+
+    font-size: 25px;
+}
+
+
+/* =========================================================
+   REPORT GRID
+========================================================= */
+
+.reports-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0,1fr));
+
+    gap: 15px;
+
+    margin-bottom: 20px;
+}
+
+
+.report-list {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+
+.report-row {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 12px;
+
+    border: 1px solid #e6ecf3;
+
+    border-radius: 9px;
+
+    background: #fbfcfe;
+}
+
+
+.report-row strong {
+
+    color: #1c2d42;
+
+    font-size: 10px;
+}
+
+
+.report-row span {
+
+    color: #1268d5;
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+
+.report-empty {
+
+    padding: 45px 15px;
+
+    text-align: center;
+
+    color: #8a97a7;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   TOOLS
+========================================================= */
+
+.report-actions {
+
+    margin-bottom: 20px;
+}
+
+
+.report-tool-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0,1fr));
+
+    gap: 10px;
+}
+
+
+.report-tool {
+
+    padding: 18px;
+
+    text-align: left;
+
+    border: 1px solid #e3eaf3;
+
+    border-radius: 10px;
+
+    background: #f8fafc;
+
+    cursor: not-allowed;
+
+    opacity: .7;
+}
+
+
+.report-tool strong {
+
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #23344a;
+
+    font-size: 10px;
+}
+
+
+.report-tool span {
+
+    color: #8a97a7;
+
+    font-size: 8px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .report-stat-grid {
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+    .reports-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .reports-hero {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+    }
+
+    .report-stat-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .report-tool-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}

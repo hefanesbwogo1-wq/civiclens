@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>CivicLens | Dashboard</title>
+
+    <meta
+        name="description"
+        content="CivicLens public conversation intelligence dashboard."
+    >
+
+    <link
+        rel="stylesheet"
+        href="/static/css/dashboard.css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="/config.js"></script>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+====================================================== -->
+
+<aside class="sidebar">
+
+    <div class="sidebar-brand">
+
+        <a href="/dashboard">
+
+            <img
+                src="/static/images/civiclens-logo.png"
+                alt="CivicLens"
+            >
+
+        </a>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+
+        <!-- DASHBOARD -->
+
+        <a
+            href="/dashboard"
+            class="nav-item active"
+        >
+
+            <span>▣</span>
+
+            <span>Dashboard</span>
+
+        </a>
+
+
+        <!-- MENTIONS -->
+
+        <a
+            href="/mentions"
+            class="nav-item"
+        >
+
+            <span>◉</span>
+
+            <span>Mentions</span>
+
+        </a>
+
+
+        <!-- LEADERS -->
+
+        <a
+            href="/leaders"
+            class="nav-item"
+        >
+
+            <span>♟</span>
+
+            <span>Leaders</span>
+
+        </a>
+
+
+        <!-- PLATFORMS -->
+
+        <a
+            href="/platforms"
+            class="nav-item"
+        >
+
+            <span>◌</span>
+
+            <span>Platforms</span>
+
+        </a>
+
+
+        <!-- REPORTS -->
+
+        <a
+            href="/reports"
+            class="nav-item"
+        >
+
+            <span>▤</span>
+
+            <span>Reports</span>
+
+        </a>
+
+
+        <!-- SETTINGS -->
+
+        <a
+            href="/settings"
+            class="nav-item"
+        >
+
+            <span>⚙</span>
+
+            <span>Settings</span>
+
+        </a>
+
+
+    </nav>
+
+
+    <!-- SIDEBAR BOTTOM -->
+
+    <div class="sidebar-bottom">
+
+        <button
+            id="logout-button"
+            class="logout-button"
+            type="button"
+        >
+
+            <span>↪</span>
+
+            <span>Sign Out</span>
+
+        </button>
+
+    </div>
+
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN CONTENT
+====================================================== -->
+
+<main class="main-content">
+
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+
+        <div>
+
+            <p class="eyebrow">
+                PUBLIC CONVERSATION INTELLIGENCE
+            </p>
+
+            <h1>
+                Dashboard
+            </h1>
+
+        </div>
+
+
+        <div class="topbar-right">
+
+
+            <div class="notification">
+
+                <span>🔔</span>
+
+                <span class="notification-dot"></span>
+
+            </div>
+
+
+            <div class="user-profile">
+
+
+                <div
+                    class="avatar"
+                    id="user-avatar"
+                >
+                    C
+                </div>
+
+
+                <div class="user-info">
+
+                    <strong id="user-name">
+                        CivicLens User
+                    </strong>
+
+                    <span id="user-email">
+                        Loading...
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- =================================================
+         WELCOME HERO
+    ================================================== -->
+
+    <section class="dashboard-hero">
+
+
+        <div class="hero-content">
+
+
+            <span class="hero-kicker">
+                CIVICLENS INTELLIGENCE
+            </span>
+
+
+            <h2>
+                Monitor the public conversation.
+            </h2>
+
+
+            <p>
+                Track how people are talking about your
+                leaders, organizations and keywords across
+                supported public platforms.
+            </p>
+
+
+            <div class="hero-actions">
+
+
+                <a
+                    href="/leaders"
+                    class="primary-button"
+                >
+                    Manage Leaders
+                </a>
+
+
+                <a
+                    href="/mentions"
+                    class="secondary-button"
+                >
+                    View Mentions
+                </a>
+
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         OVERVIEW
+    ================================================== -->
+
+    <section class="section-header">
+
+
+        <div>
+
+            <span class="section-kicker">
+                SYSTEM OVERVIEW
+            </span>
+
+            <h3>
+                Intelligence Summary
+            </h3>
+
+        </div>
+
+
+        <button
+            id="refresh-dashboard"
+            class="refresh-button"
+            type="button"
+        >
+            ↻ Refresh
+        </button>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         STAT CARDS
+    ================================================== -->
+
+    <section class="stats-grid">
+
+
+        <!-- TOTAL MENTIONS -->
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                ◉
+            </div>
+
+
+            <div class="stat-content">
+
+                <span>
+                    TOTAL MENTIONS
+                </span>
+
+                <strong id="total-mentions">
+                    0
+                </strong>
+
+                <small>
+                    Public conversations detected
+                </small>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- LEADERS -->
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                ♟
+            </div>
+
+
+            <div class="stat-content">
+
+                <span>
+                    TRACKED LEADERS
+                </span>
+
+                <strong id="total-leaders">
+                    0
+                </strong>
+
+                <small>
+                    Leaders being monitored
+                </small>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- PLATFORMS -->
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                ◌
+            </div>
+
+
+            <div class="stat-content">
+
+                <span>
+                    PLATFORMS
+                </span>
+
+                <strong id="total-platforms">
+                    0
+                </strong>
+
+                <small>
+                    Connected monitoring sources
+                </small>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- POSITIVE -->
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                +
+            </div>
+
+
+            <div class="stat-content">
+
+                <span>
+                    POSITIVE
+                </span>
+
+                <strong id="positive-mentions">
+                    0
+                </strong>
+
+                <small>
+                    Positive conversations
+                </small>
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         QUICK ACCESS
+    ================================================== -->
+
+    <section class="dashboard-grid">
+
+
+        <!-- QUICK ACTIONS -->
+
+        <div class="panel">
+
+
+            <div class="panel-header">
+
+
+                <div>
+
+                    <span class="panel-kicker">
+                        QUICK ACCESS
+                    </span>
+
+                    <h3>
+                        CivicLens Modules
+                    </h3>
+
+                </div>
+
+
+            </div>
+
+
+            <div class="quick-actions">
+
+
+                <!-- LEADERS -->
+
+                <a
+                    href="/leaders"
+                    class="quick-action"
+                >
+
+                    <div class="quick-icon">
+                        ♟
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Leaders
+                        </strong>
+
+                        <span>
+                            Manage tracked leaders
+                        </span>
+
+                    </div>
+
+                    <b>
+                        →
+                    </b>
+
+                </a>
+
+
+
+                <!-- MENTIONS -->
+
+                <a
+                    href="/mentions"
+                    class="quick-action"
+                >
+
+                    <div class="quick-icon">
+                        ◉
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Mentions
+                        </strong>
+
+                        <span>
+                            Review public conversations
+                        </span>
+
+                    </div>
+
+                    <b>
+                        →
+                    </b>
+
+                </a>
+
+
+
+                <!-- PLATFORMS -->
+
+                <a
+                    href="/platforms"
+                    class="quick-action"
+                >
+
+                    <div class="quick-icon">
+                        ◌
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Platforms
+                        </strong>
+
+                        <span>
+                            Manage monitoring sources
+                        </span>
+
+                    </div>
+
+                    <b>
+                        →
+                    </b>
+
+                </a>
+
+
+
+                <!-- REPORTS -->
+
+                <a
+                    href="/reports"
+                    class="quick-action"
+                >
+
+                    <div class="quick-icon">
+                        ▤
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Reports
+                        </strong>
+
+                        <span>
+                            Analyze conversation intelligence
+                        </span>
+
+                    </div>
+
+                    <b>
+                        →
+                    </b>
+
+                </a>
+
+
+
+                <!-- SETTINGS -->
+
+                <a
+                    href="/settings"
+                    class="quick-action"
+                >
+
+                    <div class="quick-icon">
+                        ⚙
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Settings
+                        </strong>
+
+                        <span>
+                            Manage account preferences
+                        </span>
+
+                    </div>
+
+                    <b>
+                        →
+                    </b>
+
+                </a>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- SYSTEM STATUS -->
+
+        <div class="panel">
+
+
+            <div class="panel-header">
+
+
+                <div>
+
+                    <span class="panel-kicker">
+                        SYSTEM STATUS
+                    </span>
+
+                    <h3>
+                        CivicLens Health
+                    </h3>
+
+                </div>
+
+
+                <span class="online-status">
+                    ● ONLINE
+                </span>
+
+
+            </div>
+
+
+            <div class="system-status-list">
+
+
+                <div class="status-row">
+
+                    <div>
+
+                        <strong>
+                            CivicLens API
+                        </strong>
+
+                        <span>
+                            Core application service
+                        </span>
+
+                    </div>
+
+                    <b class="status-ok">
+                        Operational
+                    </b>
+
+                </div>
+
+
+
+                <div class="status-row">
+
+                    <div>
+
+                        <strong>
+                            Authentication
+                        </strong>
+
+                        <span>
+                            Secure account access
+                        </span>
+
+                    </div>
+
+                    <b class="status-ok">
+                        Operational
+                    </b>
+
+                </div>
+
+
+
+                <div class="status-row">
+
+                    <div>
+
+                        <strong>
+                            Mentions Engine
+                        </strong>
+
+                        <span>
+                            Conversation data service
+                        </span>
+
+                    </div>
+
+                    <b class="status-ok">
+                        Ready
+                    </b>
+
+                </div>
+
+
+
+                <div class="status-row">
+
+                    <div>
+
+                        <strong>
+                            Platform Connectors
+                        </strong>
+
+                        <span>
+                            Social platform integrations
+                        </span>
+
+                    </div>
+
+                    <b class="status-pending">
+                        Configuring
+                    </b>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         RECENT ACTIVITY
+    ================================================== -->
+
+    <section class="panel recent-panel">
+
+
+        <div class="panel-header">
+
+
+            <div>
+
+                <span class="panel-kicker">
+                    ACTIVITY
+                </span>
+
+                <h3>
+                    Recent Mentions
+                </h3>
+
+            </div>
+
+
+            <a
+                href="/mentions"
+                class="view-all"
+            >
+                View all →
+            </a>
+
+
+        </div>
+
+
+        <div
+            id="recent-mentions"
+            class="recent-mentions"
+        >
+
+            <div class="dashboard-empty">
+
+                <div class="empty-icon">
+                    ◉
+                </div>
+
+                <h4>
+                    No mentions yet
+                </h4>
+
+                <p>
+                    Once CivicLens starts receiving public
+                    conversation data, your latest mentions
+                    will appear here.
+                </p>
+
+                <a
+                    href="/platforms"
+                    class="empty-link"
+                >
+                    View Platforms →
+                </a>
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <footer class="dashboard-footer">
+
+        <span>
+            © 2026 CivicLens
+        </span>
+
+        <span>
+            Public Conversation Intelligence Platform
+        </span>
+
+    </footer>
+
+
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll('a[href="/platforms"]').forEach(function (link) {
+        link.onclick = function () {
+            window.location.href = "/platforms";
+        };
+    });
+
+    document.querySelectorAll('a[href="/reports"]').forEach(function (link) {
+        link.onclick = function () {
+            window.location.href = "/reports";
+        };
+    });
+
+    document.querySelectorAll('a[href="/settings"]').forEach(function (link) {
+        link.onclick = function () {
+            window.location.href = "/settings";
+        };
+    });
+
+});
+</script>
+
+<script src="/static/js/dashboard.js"></script>
+
+</body>
+
+</html>

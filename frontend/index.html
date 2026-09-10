@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="CivicLens - Public Conversation Monitoring & Insights Platform"
+    >
+
+    <title>CivicLens | Monitor • Understand • Build Better</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/css/style.css"
+    >
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="site-header">
+
+        <div class="container nav-container">
+
+            <a href="/" class="brand">
+                <img
+                    src="/static/images/civiclens-logo.png"
+                    alt="CivicLens"
+                    class="brand-logo"
+                >
+            </a>
+
+            <nav class="main-nav">
+
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#about">About</a>
+
+            </nav>
+
+            <div class="nav-actions">
+
+                <a href="/login" class="btn btn-outline">
+                    Login
+                </a>
+
+                <a href="/register" class="btn btn-primary">
+                    Create Account
+                </a>
+
+            </div>
+
+            <button
+                class="mobile-menu-btn"
+                id="mobileMenuBtn"
+                aria-label="Open navigation"
+            >
+                ☰
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- ================= HERO ================= -->
+
+    <main>
+
+        <section class="hero">
+
+            <div class="hero-glow glow-one"></div>
+            <div class="hero-glow glow-two"></div>
+
+            <div class="container hero-grid">
+
+                <div class="hero-content">
+
+                    <div class="hero-badge">
+                        <span class="status-dot"></span>
+                        Public Conversation Intelligence
+                    </div>
+
+                    <h1>
+                        See the Conversation.
+                        <span>Understand the Pulse.</span>
+                    </h1>
+
+                    <p class="hero-description">
+                        CivicLens helps authorized users monitor,
+                        organize and understand publicly available
+                        conversations across supported digital platforms.
+                    </p>
+
+                    <div class="hero-buttons">
+
+                        <a href="/register" class="btn btn-primary btn-large">
+                            Get Started
+                            <span>→</span>
+                        </a>
+
+                        <a href="#how-it-works" class="btn btn-glass btn-large">
+                            Explore CivicLens
+                        </a>
+
+                    </div>
+
+                    <div class="hero-trust">
+
+                        <div>
+                            <strong>Public Data</strong>
+                            <span>Responsible monitoring</span>
+                        </div>
+
+                        <div>
+                            <strong>Smart Insights</strong>
+                            <span>Clearer conversations</span>
+                        </div>
+
+                        <div>
+                            <strong>Secure</strong>
+                            <span>Built with privacy in mind</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DASHBOARD PREVIEW -->
+
+                <div class="dashboard-preview">
+
+                    <div class="preview-window">
+
+                        <div class="preview-topbar">
+
+                            <div class="window-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+
+                            <div class="preview-title">
+                                CivicLens Dashboard
+                            </div>
+
+                            <div class="preview-status">
+                                ● Live
+                            </div>
+
+                        </div>
+
+
+                        <div class="preview-body">
+
+                            <aside class="preview-sidebar">
+
+                                <div class="mini-logo">
+                                    <span class="mini-eye">◉</span>
+                                    CivicLens
+                                </div>
+
+                                <div class="side-item active">
+                                    ◈ Dashboard
+                                </div>
+
+                                <div class="side-item">
+                                    ◉ Mentions
+                                </div>
+
+                                <div class="side-item">
+                                    ◇ Profiles
+                                </div>
+
+                                <div class="side-item">
+                                    ◌ Analytics
+                                </div>
+
+                                <div class="side-item">
+                                    ◇ Alerts
+                                </div>
+
+                                <div class="side-item">
+                                    ▣ Reports
+                                </div>
+
+                            </aside>
+
+
+                            <div class="preview-main">
+
+                                <div class="preview-heading">
+                                    <div>
+                                        <small>OVERVIEW</small>
+                                        <h3>Public Conversation</h3>
+                                    </div>
+
+                                    <span class="date-pill">
+                                        Last 7 days ▾
+                                    </span>
+                                </div>
+
+
+                                <div class="stat-grid">
+
+                                    <div class="stat-card">
+                                        <span>Total Mentions</span>
+                                        <strong>12,482</strong>
+                                        <small class="positive">
+                                            ↑ 18.4%
+                                        </small>
+                                    </div>
+
+                                    <div class="stat-card">
+                                        <span>Positive</span>
+                                        <strong>6,826</strong>
+                                        <small class="positive">
+                                            ↑ 12.1%
+                                        </small>
+                                    </div>
+
+                                    <div class="stat-card">
+                                        <span>Neutral</span>
+                                        <strong>3,914</strong>
+                                        <small>31.4%</small>
+                                    </div>
+
+                                    <div class="stat-card">
+                                        <span>Negative</span>
+                                        <strong>1,742</strong>
+                                        <small>13.9%</small>
+                                    </div>
+
+                                </div>
+
+
+                                <div class="chart-row">
+
+                                    <div class="chart-card">
+
+                                        <div class="card-heading">
+                                            <strong>Mention Activity</strong>
+                                            <span>7 Days</span>
+                                        </div>
+
+                                        <div class="fake-chart">
+
+                                            <div class="chart-line"></div>
+
+                                            <div class="chart-bars">
+                                                <i></i>
+                                                <i></i>
+                                                <i></i>
+                                                <i></i>
+                                                <i></i>
+                                                <i></i>
+                                                <i></i>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="chart-card platform-card">
+
+                                        <div class="card-heading">
+                                            <strong>Platforms</strong>
+                                        </div>
+
+                                        <div class="platform-circle">
+                                            <strong>12.4K</strong>
+                                            <span>mentions</span>
+                                        </div>
+
+                                        <div class="platform-list">
+
+                                            <span>
+                                                <i class="facebook-dot"></i>
+                                                Facebook
+                                            </span>
+
+                                            <span>
+                                                <i class="x-dot"></i>
+                                                X
+                                            </span>
+
+                                            <span>
+                                                <i class="youtube-dot"></i>
+                                                YouTube
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="mention-preview">
+
+                                    <div class="card-heading">
+                                        <strong>Latest Mentions</strong>
+                                        <span>View all →</span>
+                                    </div>
+
+                                    <div class="mention-item">
+
+                                        <div class="mention-icon">
+                                            F
+                                        </div>
+
+                                        <div>
+                                            <strong>
+                                                Public Facebook Post
+                                            </strong>
+
+                                            <p>
+                                                A new public conversation
+                                                matching a monitored keyword...
+                                            </p>
+                                        </div>
+
+                                        <span class="mention-time">
+                                            2m
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="floating-alert">
+
+                        <div class="alert-icon">
+                            🔔
+                        </div>
+
+                        <div>
+                            <strong>New Mention</strong>
+                            <span>
+                                A new public mention was detected
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= FEATURES ================= -->
+
+        <section class="section features-section" id="features">
+
+            <div class="container">
+
+                <div class="section-heading">
+
+                    <span class="eyebrow">
+                        POWERFUL CAPABILITIES
+                    </span>
+
+                    <h2>
+                        Everything you need to
+                        <span>understand the conversation.</span>
+                    </h2>
+
+                    <p>
+                        CivicLens brings monitoring, organization,
+                        analysis and reporting together in one
+                        professional platform.
+                    </p>
+
+                </div>
+
+
+                <div class="feature-grid">
+
+                    <article class="feature-card">
+
+                        <div class="feature-icon">
+                            ◉
+                        </div>
+
+                        <h3>Public Mention Monitoring</h3>
+
+                        <p>
+                            Discover relevant publicly available
+                            mentions across supported platforms.
+                        </p>
+
+                    </article>
+
+
+                    <article class="feature-card">
+
+                        <div class="feature-icon">
+                            ⌕
+                        </div>
+
+                        <h3>Advanced Search</h3>
+
+                        <p>
+                            Filter conversations by profile,
+                            platform, keyword and date.
+                        </p>
+
+                    </article>
+
+
+                    <article class="feature-card">
+
+                        <div class="feature-icon">
+                            ◇
+                        </div>
+
+                        <h3>Intelligent Insights</h3>
+
+                        <p>
+                            Turn large volumes of conversation
+                            into clear trends and useful insights.
+                        </p>
+
+                    </article>
+
+
+                    <article class="feature-card">
+
+                        <div class="feature-icon">
+                            ♢
+                        </div>
+
+                        <h3>Instant Alerts</h3>
+
+                        <p>
+                            Receive notifications whenever a new
+                            matching mention is detected.
+                        </p>
+
+                    </article>
+
+
+                    <article class="feature-card">
+
+                        <div class="feature-icon">
+                            ▣
+                        </div>
+
+                        <h3>Professional Reports</h3>
+
+                        <p>
+                            Generate clear reports for monitoring,
+                            analysis and decision-making.
+                        </p>
+
+                    </article>
+
+
+                    <article class="feature-card">
+
+                        <div class="feature-icon">
+                            ◈
+                        </div>
+
+                        <h3>Privacy & Security</h3>
+
+                        <p>
+                            Designed around responsible monitoring,
+                            access control and data protection.
+                        </p>
+
+                    </article>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= HOW IT WORKS ================= -->
+
+        <section class="section workflow-section" id="how-it-works">
+
+            <div class="container">
+
+                <div class="section-heading">
+
+                    <span class="eyebrow">
+                        SIMPLE PROCESS
+                    </span>
+
+                    <h2>
+                        From keywords to
+                        <span>clear insights.</span>
+                    </h2>
+
+                </div>
+
+
+                <div class="workflow">
+
+                    <div class="workflow-step">
+
+                        <div class="step-number">01</div>
+
+                        <h3>Create your profile</h3>
+
+                        <p>
+                            Register and set up your authorized
+                            monitoring profile.
+                        </p>
+
+                    </div>
+
+
+                    <div class="workflow-connector"></div>
+
+
+                    <div class="workflow-step">
+
+                        <div class="step-number">02</div>
+
+                        <h3>Define identifiers</h3>
+
+                        <p>
+                            Add names, aliases, keywords and
+                            supported social handles.
+                        </p>
+
+                    </div>
+
+
+                    <div class="workflow-connector"></div>
+
+
+                    <div class="workflow-step">
+
+                        <div class="step-number">03</div>
+
+                        <h3>Monitor</h3>
+
+                        <p>
+                            CivicLens identifies matching public
+                            conversations from supported sources.
+                        </p>
+
+                    </div>
+
+
+                    <div class="workflow-connector"></div>
+
+
+                    <div class="workflow-step">
+
+                        <div class="step-number">04</div>
+
+                        <h3>Understand</h3>
+
+                        <p>
+                            Explore mentions, trends, alerts and
+                            reports from one dashboard.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= PRICING ================= -->
+
+        <section class="section pricing-section" id="pricing">
+
+            <div class="container">
+
+                <div class="section-heading">
+
+                    <span class="eyebrow">
+                        SIMPLE PRICING
+                    </span>
+
+                    <h2>
+                        Choose the plan that
+                        <span>fits your needs.</span>
+                    </h2>
+
+                    <p>
+                        Flexible plans designed for individuals,
+                        organizations and government institutions.
+                    </p>
+
+                </div>
+
+
+                <div class="pricing-grid">
+
+                    <article class="pricing-card">
+
+                        <div class="pricing-header">
+                            <span>Basic</span>
+
+                            <h3>
+                                $10
+                                <small>/month</small>
+                            </h3>
+
+                            <p>
+                                For individuals and small monitoring needs.
+                            </p>
+                        </div>
+
+                        <ul>
+                            <li>✓ Public mention monitoring</li>
+                            <li>✓ Basic dashboard</li>
+                            <li>✓ Search & filtering</li>
+                            <li>✓ Mention history</li>
+                            <li>✓ Original-post links</li>
+                        </ul>
+
+                        <a href="/register" class="pricing-btn">
+                            Get Started
+                        </a>
+
+                    </article>
+
+
+                    <article class="pricing-card featured">
+
+                        <div class="popular-badge">
+                            MOST POPULAR
+                        </div>
+
+                        <div class="pricing-header">
+                            <span>Professional</span>
+
+                            <h3>
+                                $27
+                                <small>/month</small>
+                            </h3>
+
+                            <p>
+                                For leaders, offices and organizations.
+                            </p>
+                        </div>
+
+                        <ul>
+                            <li>✓ Everything in Basic</li>
+                            <li>✓ Advanced analytics</li>
+                            <li>✓ Sentiment insights</li>
+                            <li>✓ Topic & trend analysis</li>
+                            <li>✓ Instant mention alerts</li>
+                            <li>✓ Professional reports</li>
+                        </ul>
+
+                        <a href="/register" class="pricing-btn primary">
+                            Choose Professional
+                        </a>
+
+                    </article>
+
+
+                    <article class="pricing-card">
+
+                        <div class="pricing-header">
+                            <span>Enterprise / Government</span>
+
+                            <h3>
+                                $50
+                                <small>/month</small>
+                            </h3>
+
+                            <p>
+                                For government offices and larger organizations.
+                            </p>
+                        </div>
+
+                        <ul>
+                            <li>✓ Everything in Professional</li>
+                            <li>✓ Multiple authorized users</li>
+                            <li>✓ Organization management</li>
+                            <li>✓ Role-based access</li>
+                            <li>✓ Audit logs</li>
+                            <li>✓ Advanced reporting</li>
+                        </ul>
+
+                        <a href="/register" class="pricing-btn">
+                            Get Started
+                        </a>
+
+                    </article>
+
+                </div>
+
+                <p class="pricing-note">
+                    Mobile-money payment support will be available
+                    within the CivicLens subscription system.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ABOUT ================= -->
+
+        <section class="section about-section" id="about">
+
+            <div class="container about-grid">
+
+                <div>
+
+                    <span class="eyebrow">
+                        ABOUT CIVICLENS
+                    </span>
+
+                    <h2>
+                        A clearer lens on
+                        <span>public conversation.</span>
+                    </h2>
+
+                </div>
+
+                <div>
+
+                    <p>
+                        CivicLens is designed to help authorized
+                        users understand publicly accessible
+                        conversations across supported digital
+                        platforms.
+                    </p>
+
+                    <p>
+                        The platform is built around responsible
+                        monitoring, transparency, security and
+                        useful information—not private communications.
+                    </p>
+
+                    <div class="about-points">
+
+                        <span>✓ Public information focused</span>
+                        <span>✓ Responsible data handling</span>
+                        <span>✓ Secure access controls</span>
+                        <span>✓ Source verification through original links</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer class="site-footer">
+
+        <div class="container footer-grid">
+
+            <div class="footer-brand">
+
+                <img
+                    src="/static/images/civiclens-logo.png"
+                    alt="CivicLens"
+                >
+
+                <p>
+                    Monitor • Understand • Build Better
+                </p>
+
+            </div>
+
+
+            <div class="footer-links">
+
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#about">About</a>
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+
+            </div>
+
+
+            <div class="footer-right">
+
+                <span>
+                    Secure • Responsible • Transparent
+                </span>
+
+                <small>
+                    © 2026 CivicLens. All rights reserved.
+                </small>
+
+            </div>
+
+        </div>
+
+    </footer>
+
+
+    <script src="/static/js/main.js"></script>
+
+</body>
+</html>

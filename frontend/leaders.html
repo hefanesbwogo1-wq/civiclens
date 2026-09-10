@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>CivicLens | Leaders</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/css/dashboard.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/static/css/leaders.css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="/config.js"></script>
+
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <img
+                src="/static/images/civiclens-logo.png"
+                alt="CivicLens"
+            >
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a
+                href="/dashboard"
+                class="nav-item"
+            >
+                <span>▣</span>
+                <span>Dashboard</span>
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span>◉</span>
+                <span>Mentions</span>
+            </a>
+
+
+            <a
+                href="/leaders"
+                class="nav-item active"
+            >
+                <span>♟</span>
+                <span>Leaders</span>
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span>◌</span>
+                <span>Platforms</span>
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span>▤</span>
+                <span>Reports</span>
+            </a>
+
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span>⚙</span>
+                <span>Settings</span>
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <button
+                id="logout-button"
+                class="logout-button"
+                type="button"
+            >
+
+                <span>↪</span>
+
+                <span>Sign Out</span>
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main-content">
+
+
+        <!-- HEADER -->
+
+        <header class="topbar">
+
+            <div>
+
+                <p class="eyebrow">
+                    PUBLIC CONVERSATION INTELLIGENCE
+                </p>
+
+                <h1>
+                    Leaders
+                </h1>
+
+            </div>
+
+
+            <div class="topbar-right">
+
+                <div class="notification">
+                    🔔
+                    <span class="notification-dot"></span>
+                </div>
+
+
+                <div class="user-profile">
+
+                    <div
+                        class="avatar"
+                        id="user-avatar"
+                    >
+                        C
+                    </div>
+
+
+                    <div class="user-info">
+
+                        <strong id="user-name">
+                            CivicLens User
+                        </strong>
+
+                        <span id="user-email">
+                            Loading...
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- PAGE INTRO -->
+
+        <section class="leaders-intro">
+
+            <div>
+
+                <span class="panel-kicker">
+                    LEADER MONITORING
+                </span>
+
+                <h2>
+                    Manage Your Leaders
+                </h2>
+
+                <p>
+                    Add leaders, public figures, organizations,
+                    or political personalities you want CivicLens
+                    to monitor across supported public platforms.
+                </p>
+
+            </div>
+
+
+            <button
+                id="add-leader-button"
+                class="primary-button"
+                type="button"
+            >
+                <span>+</span>
+                Add Leader
+            </button>
+
+        </section>
+
+
+        <!-- SEARCH -->
+
+        <section class="toolbar">
+
+            <div class="search-box">
+
+                <span>
+                    ⌕
+                </span>
+
+                <input
+                    id="search-input"
+                    type="search"
+                    placeholder="Search leaders..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="leader-count">
+
+                <span>
+                    TOTAL
+                </span>
+
+                <strong id="leader-count">
+                    0
+                </strong>
+
+            </div>
+
+        </section>
+
+
+        <!-- LEADERS -->
+
+        <section
+            id="leaders-grid"
+            class="leaders-grid"
+        >
+
+            <div class="loading-state">
+
+                <div class="loading-spinner"></div>
+
+                <p>
+                    Loading leaders...
+                </p>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- =====================================================
+         MODAL
+    ====================================================== -->
+
+    <div
+        id="leader-modal"
+        class="modal-overlay hidden"
+    >
+
+        <div class="leader-modal">
+
+            <div class="modal-header">
+
+                <div>
+
+                    <span class="panel-kicker">
+                        LEADER PROFILE
+                    </span>
+
+                    <h3 id="modal-title">
+                        Add Leader
+                    </h3>
+
+                </div>
+
+
+                <button
+                    id="close-modal"
+                    class="close-button"
+                    type="button"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form
+                id="leader-form"
+                novalidate
+            >
+
+                <input
+                    type="hidden"
+                    id="leader-id"
+                >
+
+
+                <div class="form-grid">
+
+                    <div class="form-group full">
+
+                        <label for="full-name">
+                            Full Name
+                        </label>
+
+                        <input
+                            id="full-name"
+                            type="text"
+                            placeholder="e.g. John Doe"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="public-name">
+                            Public / Official Name
+                        </label>
+
+                        <input
+                            id="public-name"
+                            type="text"
+                            placeholder="e.g. Hon. John Doe"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="position">
+                            Position
+                        </label>
+
+                        <input
+                            id="position"
+                            type="text"
+                            placeholder="e.g. Senator"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group full">
+
+                        <label for="organization">
+                            Organization / Party
+                        </label>
+
+                        <input
+                            id="organization"
+                            type="text"
+                            placeholder="e.g. Government of Kenya"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group full">
+
+                        <label for="keywords">
+                            Keywords
+                        </label>
+
+                        <textarea
+                            id="keywords"
+                            rows="3"
+                            placeholder="Separate keywords with commas"
+                        ></textarea>
+
+                        <small>
+                            Example: John Doe, Hon John Doe,
+                            John, Senator Doe
+                        </small>
+
+                    </div>
+
+
+                    <div class="form-group full">
+
+                        <label for="nicknames">
+                            Nicknames / Alternate Names
+                        </label>
+
+                        <textarea
+                            id="nicknames"
+                            rows="3"
+                            placeholder="Separate nicknames with commas"
+                        ></textarea>
+
+                        <small>
+                            Include public nicknames or commonly
+                            used alternate names.
+                        </small>
+
+                    </div>
+
+
+                    <div class="monitoring-setting">
+
+                        <div>
+
+                            <strong>
+                                Enable Monitoring
+                            </strong>
+
+                            <p>
+                                CivicLens will include this leader
+                                in future public conversation monitoring.
+                            </p>
+
+                        </div>
+
+
+                        <label class="switch">
+
+                            <input
+                                type="checkbox"
+                                id="monitoring-enabled"
+                                checked
+                            >
+
+                            <span class="slider"></span>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="form-message"
+                    class="form-message"
+                ></div>
+
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        id="cancel-button"
+                        class="secondary-button"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        type="submit"
+                        id="save-button"
+                        class="primary-button"
+                    >
+                        Save Leader
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <script src="/static/js/leaders.js"></script>
+
+</body>
+
+</html>

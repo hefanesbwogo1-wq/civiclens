@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>CivicLens | Settings</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/css/dashboard.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/static/css/settings.css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="/config.js"></script>
+
+</head>
+
+
+<body>
+
+
+<aside class="sidebar">
+
+    <div class="sidebar-brand">
+
+        <img
+            src="/static/images/civiclens-logo.png"
+            alt="CivicLens"
+        >
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+        <a href="/dashboard" class="nav-item">
+            <span>▣</span>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="/mentions" class="nav-item">
+            <span>◉</span>
+            <span>Mentions</span>
+        </a>
+
+        <a href="/leaders" class="nav-item">
+            <span>♟</span>
+            <span>Leaders</span>
+        </a>
+
+        <a href="/platforms" class="nav-item">
+            <span>◌</span>
+            <span>Platforms</span>
+        </a>
+
+        <a href="/reports" class="nav-item">
+            <span>▤</span>
+            <span>Reports</span>
+        </a>
+
+        <a href="/settings" class="nav-item active">
+            <span>⚙</span>
+            <span>Settings</span>
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <button
+            id="logout-button"
+            class="logout-button"
+            type="button"
+        >
+            <span>↪</span>
+            <span>Sign Out</span>
+        </button>
+
+    </div>
+
+</aside>
+
+
+
+<main class="main-content">
+
+
+    <header class="topbar">
+
+        <div>
+
+            <p class="eyebrow">
+                CIVICLENS CONFIGURATION
+            </p>
+
+            <h1>
+                Settings
+            </h1>
+
+        </div>
+
+
+        <div class="topbar-right">
+
+            <div class="user-profile">
+
+                <div
+                    class="avatar"
+                    id="user-avatar"
+                >
+                    C
+                </div>
+
+                <div class="user-info">
+
+                    <strong id="user-name">
+                        CivicLens User
+                    </strong>
+
+                    <span id="user-email">
+                        Loading...
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <section class="settings-hero">
+
+        <span>
+            ACCOUNT CONTROL CENTER
+        </span>
+
+        <h2>
+            Manage your CivicLens account
+        </h2>
+
+        <p>
+            Update your profile and monitoring preferences.
+        </p>
+
+    </section>
+
+
+
+    <div
+        id="settings-message"
+        class="settings-message"
+    ></div>
+
+
+
+    <section class="settings-grid">
+
+
+        <!-- PROFILE -->
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <span class="panel-kicker">
+                        ACCOUNT
+                    </span>
+
+                    <h3>
+                        Profile Information
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <form id="profile-form">
+
+
+                <label>
+                    Full Name
+                </label>
+
+                <input
+                    id="full-name"
+                    type="text"
+                    placeholder="Your full name"
+                    required
+                >
+
+
+                <label>
+                    Email
+                </label>
+
+                <input
+                    id="email"
+                    type="email"
+                    readonly
+                >
+
+
+                <label>
+                    Organization
+                </label>
+
+                <input
+                    id="organization"
+                    type="text"
+                    placeholder="Organization"
+                >
+
+
+                <label>
+                    Phone
+                </label>
+
+                <input
+                    id="phone"
+                    type="tel"
+                    placeholder="Phone number"
+                >
+
+
+                <button
+                    type="submit"
+                    class="save-button"
+                >
+                    Save Profile
+                </button>
+
+
+            </form>
+
+        </div>
+
+
+
+        <!-- PREFERENCES -->
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <span class="panel-kicker">
+                        MONITORING
+                    </span>
+
+                    <h3>
+                        Notification Preferences
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="preference">
+
+                <div>
+
+                    <strong>
+                        Mention Alerts
+                    </strong>
+
+                    <span>
+                        Notify me when a new mention is detected.
+                    </span>
+
+                </div>
+
+                <label class="switch">
+
+                    <input
+                        id="mention-alerts"
+                        type="checkbox"
+                        checked
+                    >
+
+                    <span></span>
+
+                </label>
+
+            </div>
+
+
+            <div class="preference">
+
+                <div>
+
+                    <strong>
+                        Daily Summary
+                    </strong>
+
+                    <span>
+                        Receive a daily monitoring summary.
+                    </span>
+
+                </div>
+
+                <label class="switch">
+
+                    <input
+                        id="daily-summary"
+                        type="checkbox"
+                    >
+
+                    <span></span>
+
+                </label>
+
+            </div>
+
+
+            <div class="preference">
+
+                <div>
+
+                    <strong>
+                        Email Notifications
+                    </strong>
+
+                    <span>
+                        Allow CivicLens account notifications.
+                    </span>
+
+                </div>
+
+                <label class="switch">
+
+                    <input
+                        id="email-notifications"
+                        type="checkbox"
+                        checked
+                    >
+
+                    <span></span>
+
+                </label>
+
+            </div>
+
+
+            <button
+                id="save-preferences"
+                class="save-button"
+                type="button"
+            >
+                Save Preferences
+            </button>
+
+        </div>
+
+
+    </section>
+
+
+
+    <section class="panel subscription-panel">
+
+        <div class="panel-header">
+
+            <div>
+
+                <span class="panel-kicker">
+                    SUBSCRIPTION
+                </span>
+
+                <h3>
+                    CivicLens Plan
+                </h3>
+
+            </div>
+
+        </div>
+
+
+        <div class="subscription-card">
+
+            <div>
+
+                <span>
+                    CURRENT PLAN
+                </span>
+
+                <strong id="subscription-plan">
+                    Loading...
+                </strong>
+
+            </div>
+
+
+            <span class="subscription-status">
+                ACCOUNT ACTIVE
+            </span>
+
+        </div>
+
+    </section>
+
+
+
+    <footer class="dashboard-footer">
+
+        <span>
+            © 2026 CivicLens
+        </span>
+
+        <span>
+            Public Conversation Intelligence Platform
+        </span>
+
+    </footer>
+
+
+</main>
+
+
+<script src="/static/js/settings.js"></script>
+
+</body>
+
+</html>
