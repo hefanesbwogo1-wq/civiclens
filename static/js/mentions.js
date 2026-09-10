@@ -1,6 +1,5 @@
 "use strict";
 
-
 /* =========================================================
    CIVICLENS MENTIONS
 ========================================================= */
@@ -10,9 +9,7 @@ document.addEventListener(
     initializeMentions
 );
 
-
 let supabaseClient = null;
-
 
 const elements = {};
 
@@ -36,13 +33,12 @@ async function initializeMentions() {
         return;
     }
 
-
-    const authenticated = await verifySession();
+    const authenticated =
+        await verifySession();
 
     if (!authenticated) {
         return;
     }
-
 
     await loadUser();
 
@@ -53,6 +49,10 @@ async function initializeMentions() {
     await loadMentions();
 
     setupEvents();
+
+    console.log(
+        "CivicLens: mentions.js loaded successfully."
+    );
 }
 
 
@@ -109,6 +109,16 @@ function cacheElements() {
 
     elements.logout =
         document.getElementById("logout-button");
+
+    /*
+       Optional test button.
+       We will add this to mentions.html.
+    */
+    elements.testMention =
+        document.getElementById("test-mention-button");
+
+    elements.testStatus =
+        document.getElementById("test-mention-status");
 }
 
 
@@ -130,7 +140,6 @@ function initializeSupabase() {
 
         return;
     }
-
 
     supabaseClient =
         window.supabase.createClient(
@@ -154,7 +163,6 @@ async function verifySession() {
         } =
             await supabaseClient.auth.getSession();
 
-
         if (
             error ||
             !data.session
@@ -165,7 +173,6 @@ async function verifySession() {
 
             return false;
         }
-
 
         return true;
 
@@ -200,7 +207,6 @@ async function civicLensFetch(
     } =
         await supabaseClient.auth.getSession();
 
-
     if (
         error ||
         !data.session
@@ -214,23 +220,20 @@ async function civicLensFetch(
         );
     }
 
-
-    const headers = new Headers(
-        options.headers || {}
-    );
-
+    const headers =
+        new Headers(
+            options.headers || {}
+        );
 
     headers.set(
         "Authorization",
         `Bearer ${data.session.access_token}`
     );
 
-
     headers.set(
         "Accept",
         "application/json"
     );
-
 
     return fetch(
         url,
@@ -256,7 +259,6 @@ async function loadUser() {
         } =
             await supabaseClient.auth.getUser();
 
-
         if (
             error ||
             !data.user
@@ -264,19 +266,16 @@ async function loadUser() {
             return;
         }
 
-
-        const user = data.user;
-
+        const user =
+            data.user;
 
         const metadata =
             user.user_metadata || {};
-
 
         const name =
             metadata.full_name ||
             user.email?.split("@")[0] ||
             "CivicLens User";
-
 
         if (elements.userName) {
 
@@ -284,13 +283,11 @@ async function loadUser() {
                 name;
         }
 
-
         if (elements.userEmail) {
 
             elements.userEmail.textContent =
                 user.email || "";
         }
-
 
         if (elements.userAvatar) {
 
@@ -326,7 +323,6 @@ async function loadStats() {
                 "/api/mentions/stats"
             );
 
-
         if (!response.ok) {
 
             throw new Error(
@@ -334,30 +330,36 @@ async function loadStats() {
             );
         }
 
-
         const result =
             await response.json();
-
 
         if (!result.success) {
             return;
         }
 
+        if (elements.statTotal) {
 
-        elements.statTotal.textContent =
-            result.total || 0;
+            elements.statTotal.textContent =
+                result.total || 0;
+        }
 
+        if (elements.statPositive) {
 
-        elements.statPositive.textContent =
-            result.positive || 0;
+            elements.statPositive.textContent =
+                result.positive || 0;
+        }
 
+        if (elements.statNeutral) {
 
-        elements.statNeutral.textContent =
-            result.neutral || 0;
+            elements.statNeutral.textContent =
+                result.neutral || 0;
+        }
 
+        if (elements.statNegative) {
 
-        elements.statNegative.textContent =
-            result.negative || 0;
+            elements.statNegative.textContent =
+                result.negative || 0;
+        }
 
     }
     catch (error) {
@@ -383,7 +385,6 @@ async function loadLeaders() {
                 "/api/mentions/leaders"
             );
 
-
         if (!response.ok) {
 
             throw new Error(
@@ -391,26 +392,21 @@ async function loadLeaders() {
             );
         }
 
-
         const result =
             await response.json();
-
 
         if (!result.success) {
             return;
         }
 
-
         const currentValue =
             elements.leader.value;
-
 
         elements.leader.innerHTML = `
             <option value="">
                 All Leaders
             </option>
         `;
-
 
         for (
             const leader of result.leaders || []
@@ -421,20 +417,16 @@ async function loadLeaders() {
                     "option"
                 );
 
-
             option.value =
                 leader;
 
-
             option.textContent =
                 leader;
-
 
             elements.leader.appendChild(
                 option
             );
         }
-
 
         if (
             result.leaders.includes(
@@ -465,28 +457,22 @@ async function loadMentions() {
 
     showLoading();
 
-
     try {
 
         const params =
             new URLSearchParams();
 
-
         const search =
             elements.search.value.trim();
-
 
         const leader =
             elements.leader.value;
 
-
         const platform =
             elements.platform.value;
 
-
         const sentiment =
             elements.sentiment.value;
-
 
         if (search) {
 
@@ -496,7 +482,6 @@ async function loadMentions() {
             );
         }
 
-
         if (leader) {
 
             params.set(
@@ -504,7 +489,6 @@ async function loadMentions() {
                 leader
             );
         }
-
 
         if (platform) {
 
@@ -514,7 +498,6 @@ async function loadMentions() {
             );
         }
 
-
         if (sentiment) {
 
             params.set(
@@ -523,22 +506,18 @@ async function loadMentions() {
             );
         }
 
-
         const query =
             params.toString();
-
 
         const url =
             query
                 ? `/api/mentions?${query}`
                 : "/api/mentions";
 
-
         const response =
             await civicLensFetch(
                 url
             );
-
 
         if (!response.ok) {
 
@@ -547,10 +526,8 @@ async function loadMentions() {
             );
         }
 
-
         const result =
             await response.json();
-
 
         if (!result.success) {
 
@@ -559,7 +536,6 @@ async function loadMentions() {
                 "Unable to load mentions."
             );
         }
-
 
         renderMentions(
             result.mentions || []
@@ -572,7 +548,6 @@ async function loadMentions() {
             "CivicLens mentions error:",
             error
         );
-
 
         showError(
             "Unable to load mentions. Please refresh and try again."
@@ -589,13 +564,15 @@ function renderMentions(
     mentions
 ) {
 
-    elements.count.textContent =
-        `${mentions.length} ${
-            mentions.length === 1
-                ? "mention"
-                : "mentions"
-        }`;
+    if (elements.count) {
 
+        elements.count.textContent =
+            `${mentions.length} ${
+                mentions.length === 1
+                    ? "mention"
+                    : "mentions"
+            }`;
+    }
 
     if (!mentions.length) {
 
@@ -626,7 +603,6 @@ function renderMentions(
         return;
     }
 
-
     elements.container.innerHTML =
         mentions
             .map(
@@ -648,21 +624,17 @@ function createMentionCard(
         mention.author_name ||
         "Public User";
 
-
     const handle =
         mention.author_handle ||
         "";
-
 
     const leader =
         mention.leader_name ||
         "Tracked leader";
 
-
     const platform =
         mention.platform ||
         "Unknown";
-
 
     let sentiment =
         String(
@@ -670,13 +642,11 @@ function createMentionCard(
             "neutral"
         ).toLowerCase();
 
-
     const allowedSentiments = [
         "positive",
         "neutral",
         "negative"
     ];
-
 
     if (
         !allowedSentiments.includes(
@@ -687,12 +657,10 @@ function createMentionCard(
         sentiment = "neutral";
     }
 
-
     const content =
         escapeHtml(
             mention.content || ""
         );
-
 
     const avatar =
         escapeHtml(
@@ -703,29 +671,23 @@ function createMentionCard(
             "P"
         );
 
-
     const authorSafe =
         escapeHtml(author);
-
 
     const handleSafe =
         escapeHtml(handle);
 
-
     const leaderSafe =
         escapeHtml(leader);
 
-
     const platformSafe =
         escapeHtml(platform);
-
 
     const date =
         formatDate(
             mention.published_at ||
             mention.created_at
         );
-
 
     const postLink =
         isValidHttpUrl(
@@ -746,7 +708,6 @@ function createMentionCard(
 
             `
             : "";
-
 
     return `
 
@@ -774,7 +735,6 @@ function createMentionCard(
 
                 </div>
 
-
                 <div class="mention-meta">
 
                     <span class="platform-badge">
@@ -791,11 +751,9 @@ function createMentionCard(
 
             </div>
 
-
             <p class="mention-content">
                 ${content}
             </p>
-
 
             <div class="mention-bottom">
 
@@ -811,7 +769,6 @@ function createMentionCard(
 
                 </span>
 
-
                 ${postLink}
 
             </div>
@@ -823,6 +780,138 @@ function createMentionCard(
 
 
 /* =========================================================
+   TEST MENTION
+========================================================= */
+
+async function createTestMention() {
+
+    if (!elements.testMention) {
+        return;
+    }
+
+    elements.testMention.disabled =
+        true;
+
+    if (elements.testStatus) {
+
+        elements.testStatus.textContent =
+            "Creating test mention...";
+    }
+
+    console.log(
+        "CivicLens: Starting test mention."
+    );
+
+    try {
+
+        const uniqueId =
+            `civiclens-test-${Date.now()}`;
+
+        const response =
+            await civicLensFetch(
+                "/api/collector/test-ingest",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        platform: "x",
+
+                        external_id:
+                            uniqueId,
+
+                        author_name:
+                            "CivicLens Test User",
+
+                        author_handle:
+                            "@civiclens_test",
+
+                        content:
+                            "This is a CivicLens test mention about William Ruto and Ruto.",
+
+                        post_url:
+                            "https://x.com/",
+
+                        sentiment:
+                            "neutral",
+
+                        published_at:
+                            new Date().toISOString()
+                    })
+                }
+            );
+
+        console.log(
+            "CivicLens: test-ingest HTTP status:",
+            response.status
+        );
+
+        let result;
+
+        try {
+
+            result =
+                await response.json();
+
+        }
+        catch {
+
+            result = null;
+        }
+
+        console.log(
+            "CivicLens: test-ingest response:",
+            result
+        );
+
+        if (!response.ok) {
+
+            throw new Error(
+                result?.detail ||
+                "Test mention could not be created."
+            );
+        }
+
+        if (elements.testStatus) {
+
+            elements.testStatus.textContent =
+                "Test mention created successfully.";
+        }
+
+        await loadStats();
+
+        await loadLeaders();
+
+        await loadMentions();
+
+    }
+    catch (error) {
+
+        console.error(
+            "CivicLens test mention error:",
+            error
+        );
+
+        if (elements.testStatus) {
+
+            elements.testStatus.textContent =
+                `Test failed: ${error.message}`;
+        }
+    }
+    finally {
+
+        elements.testMention.disabled =
+            false;
+    }
+}
+
+
+/* =========================================================
    EVENTS
 ========================================================= */
 
@@ -830,69 +919,87 @@ function setupEvents() {
 
     let searchTimer;
 
+    if (elements.search) {
 
-    elements.search.addEventListener(
-        "input",
-        function () {
+        elements.search.addEventListener(
+            "input",
+            function () {
 
-            clearTimeout(
-                searchTimer
-            );
-
-
-            searchTimer =
-                setTimeout(
-                    loadMentions,
-                    350
+                clearTimeout(
+                    searchTimer
                 );
-        }
-    );
 
+                searchTimer =
+                    setTimeout(
+                        loadMentions,
+                        350
+                    );
+            }
+        );
+    }
 
-    elements.leader.addEventListener(
-        "change",
-        loadMentions
-    );
+    if (elements.leader) {
 
+        elements.leader.addEventListener(
+            "change",
+            loadMentions
+        );
+    }
 
-    elements.platform.addEventListener(
-        "change",
-        loadMentions
-    );
+    if (elements.platform) {
 
+        elements.platform.addEventListener(
+            "change",
+            loadMentions
+        );
+    }
 
-    elements.sentiment.addEventListener(
-        "change",
-        loadMentions
-    );
+    if (elements.sentiment) {
 
+        elements.sentiment.addEventListener(
+            "change",
+            loadMentions
+        );
+    }
 
-    elements.clear.addEventListener(
-        "click",
-        function () {
+    if (elements.clear) {
 
-            elements.search.value =
-                "";
+        elements.clear.addEventListener(
+            "click",
+            function () {
 
-            elements.leader.value =
-                "";
+                elements.search.value =
+                    "";
 
-            elements.platform.value =
-                "";
+                elements.leader.value =
+                    "";
 
-            elements.sentiment.value =
-                "";
+                elements.platform.value =
+                    "";
 
-            loadMentions();
-        }
-    );
+                elements.sentiment.value =
+                    "";
 
+                loadMentions();
+            }
+        );
+    }
 
-    elements.refresh.addEventListener(
-        "click",
-        refreshMentions
-    );
+    if (elements.refresh) {
 
+        elements.refresh.addEventListener(
+            "click",
+            refreshMentions
+        );
+    }
+
+    if (elements.testMention) {
+
+        elements.testMention.addEventListener(
+            "click",
+            createTestMention
+        );
+    }
 
     if (elements.logout) {
 
@@ -910,13 +1017,14 @@ function setupEvents() {
 
 async function refreshMentions() {
 
-    elements.refresh.disabled =
-        true;
+    if (elements.refresh) {
 
+        elements.refresh.disabled =
+            true;
 
-    elements.refresh.textContent =
-        "↻ Refreshing...";
-
+        elements.refresh.textContent =
+            "↻ Refreshing...";
+    }
 
     try {
 
@@ -929,11 +1037,14 @@ async function refreshMentions() {
     }
     finally {
 
-        elements.refresh.disabled =
-            false;
+        if (elements.refresh) {
 
-        elements.refresh.textContent =
-            "↻ Refresh";
+            elements.refresh.disabled =
+                false;
+
+            elements.refresh.textContent =
+                "↻ Refresh";
+        }
     }
 }
 
@@ -958,9 +1069,7 @@ async function logoutUser() {
             "CivicLens logout error:",
             error
         );
-
     }
-
 
     window.location.href =
         "/login";
@@ -972,6 +1081,10 @@ async function logoutUser() {
 ========================================================= */
 
 function showLoading() {
+
+    if (!elements.container) {
+        return;
+    }
 
     elements.container.innerHTML = `
 
@@ -997,6 +1110,10 @@ function showError(
     message
 ) {
 
+    if (!elements.container) {
+        return;
+    }
+
     elements.container.innerHTML = `
 
         <div class="mentions-error">
@@ -1020,10 +1137,8 @@ function formatDate(
         return "Date unavailable";
     }
 
-
     const date =
         new Date(value);
-
 
     if (
         Number.isNaN(
@@ -1033,7 +1148,6 @@ function formatDate(
 
         return String(value);
     }
-
 
     return date.toLocaleString(
         undefined,
@@ -1056,7 +1170,6 @@ function capitalize(
     if (!value) {
         return "";
     }
-
 
     return (
         value.charAt(0).toUpperCase() +
@@ -1146,12 +1259,10 @@ function isValidHttpUrl(
         return false;
     }
 
-
     try {
 
         const url =
             new URL(value);
-
 
         return (
             url.protocol === "http:" ||

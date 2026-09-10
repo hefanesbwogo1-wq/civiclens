@@ -1,13 +1,9 @@
 from fastapi import APIRouter, Request, Query, HTTPException
 from typing import Optional
-
 import os
+
 from supabase import create_client, Client
 
-
-# =========================================================
-# CIVICLENS MENTIONS ROUTER
-# =========================================================
 
 router = APIRouter(
     prefix="/api/mentions",
@@ -15,20 +11,18 @@ router = APIRouter(
 )
 
 
-# =========================================================
+# ============================================================
 # SUPABASE CONFIGURATION
-# =========================================================
+# ============================================================
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "").strip()
 
 
-# =========================================================
-# SUPABASE CLIENT
-# =========================================================
-
 def get_supabase() -> Client:
-
+    """
+    Create a Supabase client using the public/anon key.
+    """
     if not SUPABASE_URL or not SUPABASE_ANON_KEY:
         raise HTTPException(
             status_code=500,
@@ -41,11 +35,15 @@ def get_supabase() -> Client:
     )
 
 
-# =========================================================
-# AUTHENTICATED SUPABASE CLIENT
-# =========================================================
+# ============================================================
+# AUTHENTICATION
+# ============================================================
 
 def get_authenticated_supabase(request: Request):
+    """
+    Authenticate the current CivicLens user using the
+    Supabase access token supplied by the frontend.
+    """
 
     authorization = request.headers.get("Authorization", "")
 
@@ -68,7 +66,6 @@ def get_authenticated_supabase(request: Request):
         )
 
     try:
-
         supabase = get_supabase()
 
         user_response = supabase.auth.get_user(
@@ -83,7 +80,9 @@ def get_authenticated_supabase(request: Request):
                 detail="Invalid or expired session."
             )
 
-        # Make Supabase REST requests run as this user.
+        # Important:
+        # Run database queries using the authenticated user's
+        # access token so Supabase RLS applies correctly.
         supabase.postgrest.auth(access_token)
 
         return supabase, user
@@ -92,7 +91,6 @@ def get_authenticated_supabase(request: Request):
         raise
 
     except Exception as error:
-
         print(
             "CivicLens authentication error:",
             error
@@ -104,14 +102,16 @@ def get_authenticated_supabase(request: Request):
         )
 
 
-# =========================================================
-# GET MENTION STATISTICS
-# =========================================================
+# ============================================================
+# MENTION STATISTICS
+# ============================================================
 
 @router.get("/stats")
-async def mention_stats(
-    request: Request
-):
+async def mention_stats(request: Request):
+    """
+    Return total and sentiment statistics for the
+    authenticated user's mentions.
+    """
 
     supabase, user = get_authenticated_supabase(
         request
@@ -176,31 +176,27 @@ async def mention_stats(
         )
 
 
-# =========================================================
-# GET MENTIONS
-# =========================================================
+# ============================================================
+# GET ALL MENTIONS
+# ============================================================
 
 @router.get("")
 async def get_mentions(
-
     request: Request,
-
-    search: Optional[str] = Query(
-        default=None
-    ),
-
-    leader: Optional[str] = Query(
-        default=None
-    ),
-
-    platform: Optional[str] = Query(
-        default=None
-    ),
-
-    sentiment: Optional[str] = Query(
-        default=None
-    )
+    search: Optional[str] = Query(default=None),
+    leader: Optional[str] = Query(default=None),
+    platform: Optional[str] = Query(default=None),
+    sentiment: Optional[str] = Query(default=None)
 ):
+    """
+    Return mentions belonging to the authenticated user.
+
+    Optional filters:
+        search
+        leader
+        platform
+        sentiment
+    """
 
     supabase, user = get_authenticated_supabase(
         request
@@ -226,10 +222,7 @@ async def get_mentions(
                 created_at
                 """
             )
-            .eq(
-                "user_id",
-                user.id
-            )
+            .eq("user_id", user.id)
             .order(
                 "published_at",
                 desc=True
@@ -237,10 +230,9 @@ async def get_mentions(
             .limit(100)
         )
 
-
-        # =================================================
+        # ----------------------------------------------------
         # SEARCH
-        # =================================================
+        # ----------------------------------------------------
 
         if search:
 
@@ -249,63 +241,74 @@ async def get_mentions(
             if value:
 
                 query = query.or_(
-                    "content.ilike.%{}%,"
-                    "author_name.ilike.%{}%,"
-                    "author_handle.ilike.%{}%,"
-                    "leader_name.ilike.%{}%"
-                    .format(
-                        value,
-                        value,
-                        value,
-                        value
-                    )
+                    (
+                        "content.ilike.%{0}%,"
+                        "author_name.ilike.%{0}%,"
+                        "author_handle.ilike.%{0}%,"
+                        "leader_name.ilike.%{0}%"
+                    ).format(value)
                 )
 
-
-        # =================================================
-        # LEADER
-        # =================================================
+        # ----------------------------------------------------
+        # LEADER FILTER
+        # ----------------------------------------------------
 
         if leader:
 
-            query = query.eq(
-                "leader_name",
-                leader
-            )
+            leader_value = leader.strip()
 
+            if leader_value:
 
-        # =================================================
-        # PLATFORM
-        # =================================================
+                query = query.eq(
+                    "leader_name",
+                    leader_value
+                )
+
+        # ----------------------------------------------------
+        # PLATFORM FILTER
+        # ----------------------------------------------------
 
         if platform:
 
-            query = query.eq(
-                "platform",
+            platform_value = (
                 platform
+                .strip()
+                .lower()
             )
 
+            if platform_value:
 
-        # =================================================
-        # SENTIMENT
-        # =================================================
+                query = query.eq(
+                    "platform",
+                    platform_value
+                )
+
+        # ----------------------------------------------------
+        # SENTIMENT FILTER
+        # ----------------------------------------------------
 
         if sentiment:
 
-            query = query.ilike(
-                "sentiment",
+            sentiment_value = (
                 sentiment
+                .strip()
+                .lower()
             )
 
+            if sentiment_value:
+
+                query = query.ilike(
+                    "sentiment",
+                    sentiment_value
+                )
 
         response = query.execute()
 
         mentions = response.data or []
 
-
-        # =================================================
-        # SORT WITH CREATED DATE FALLBACK
-        # =================================================
+        # ----------------------------------------------------
+        # SAFETY SORT
+        # ----------------------------------------------------
 
         def sort_key(item):
 
@@ -319,7 +322,6 @@ async def get_mentions(
             key=sort_key,
             reverse=True
         )
-
 
         return {
             "success": True,
@@ -340,14 +342,23 @@ async def get_mentions(
         )
 
 
-# =========================================================
-# GET AVAILABLE LEADERS
-# =========================================================
+# ============================================================
+# REGISTERED LEADERS
+# ============================================================
 
 @router.get("/leaders")
-async def mention_leaders(
-    request: Request
-):
+async def mention_leaders(request: Request):
+    """
+    Return ALL leaders registered by the authenticated user.
+
+    IMPORTANT:
+    This endpoint intentionally reads from the `leaders`
+    table rather than the `mentions` table.
+
+    Therefore a newly registered leader will appear on the
+    Mentions page even when that leader currently has ZERO
+    mentions.
+    """
 
     supabase, user = get_authenticated_supabase(
         request
@@ -357,63 +368,100 @@ async def mention_leaders(
 
         response = (
             supabase
-            .table("mentions")
-            .select("leader_name")
-            .eq(
-                "user_id",
-                user.id
+            .table("leaders")
+            .select(
+                """
+                id,
+                full_name,
+                public_name,
+                position,
+                organization,
+                monitoring_enabled
+                """
             )
-            .not_.is_(
-                "leader_name",
-                "null"
+            .eq("user_id", user.id)
+            .order(
+                "full_name",
+                desc=False
             )
             .execute()
         )
 
         rows = response.data or []
 
-        leaders = sorted(
-            {
-                str(row.get("leader_name")).strip()
-                for row in rows
-                if row.get("leader_name")
-                and str(
-                    row.get("leader_name")
+        leaders = []
+
+        for row in rows:
+
+            full_name = (
+                str(
+                    row.get("full_name") or ""
                 ).strip()
-            },
-            key=str.lower
-        )
+            )
+
+            public_name = (
+                str(
+                    row.get("public_name") or ""
+                ).strip()
+            )
+
+            # Prefer public name when available.
+            display_name = (
+                public_name
+                or full_name
+            )
+
+            if not display_name:
+                continue
+
+            leaders.append(
+                {
+                    "id": row.get("id"),
+                    "full_name": full_name,
+                    "public_name": public_name,
+                    "display_name": display_name,
+                    "position": row.get("position"),
+                    "organization": row.get("organization"),
+                    "monitoring_enabled": (
+                        row.get("monitoring_enabled")
+                        if row.get("monitoring_enabled")
+                        is not None
+                        else True
+                    )
+                }
+            )
 
         return {
             "success": True,
+            "count": len(leaders),
             "leaders": leaders
         }
 
     except Exception as error:
 
         print(
-            "CivicLens mention leaders error:",
+            "CivicLens registered leaders error:",
             error
         )
 
         raise HTTPException(
             status_code=500,
-            detail="Unable to load mention leaders."
+            detail="Unable to load registered leaders."
         )
 
 
-# =========================================================
-# GET SINGLE MENTION
-# =========================================================
+# ============================================================
+# SINGLE MENTION
+# ============================================================
 
 @router.get("/{mention_id}")
 async def get_mention(
-
     request: Request,
-
     mention_id: int
-
 ):
+    """
+    Return one mention belonging to the authenticated user.
+    """
 
     supabase, user = get_authenticated_supabase(
         request

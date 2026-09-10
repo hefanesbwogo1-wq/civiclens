@@ -54,95 +54,61 @@
 
     <nav class="sidebar-nav">
 
-
-        <!-- DASHBOARD -->
-
         <a
             href="/dashboard"
             class="nav-item active"
         >
-
             <span>▣</span>
-
             <span>Dashboard</span>
-
         </a>
 
-
-        <!-- MENTIONS -->
 
         <a
             href="/mentions"
             class="nav-item"
         >
-
             <span>◉</span>
-
             <span>Mentions</span>
-
         </a>
 
-
-        <!-- LEADERS -->
 
         <a
             href="/leaders"
             class="nav-item"
         >
-
             <span>♟</span>
-
             <span>Leaders</span>
-
         </a>
 
-
-        <!-- PLATFORMS -->
 
         <a
             href="/platforms"
             class="nav-item"
         >
-
             <span>◌</span>
-
             <span>Platforms</span>
-
         </a>
 
-
-        <!-- REPORTS -->
 
         <a
             href="/reports"
             class="nav-item"
         >
-
             <span>▤</span>
-
             <span>Reports</span>
-
         </a>
 
-
-        <!-- SETTINGS -->
 
         <a
             href="/settings"
             class="nav-item"
         >
-
             <span>⚙</span>
-
             <span>Settings</span>
-
         </a>
-
 
     </nav>
 
-
-    <!-- SIDEBAR BOTTOM -->
 
     <div class="sidebar-bottom">
 
@@ -151,15 +117,11 @@
             class="logout-button"
             type="button"
         >
-
             <span>↪</span>
-
             <span>Sign Out</span>
-
         </button>
 
     </div>
-
 
 </aside>
 
@@ -172,10 +134,11 @@
 <main class="main-content">
 
 
-    <!-- TOPBAR -->
+    <!-- =================================================
+         TOPBAR
+    ================================================== -->
 
     <header class="topbar">
-
 
         <div>
 
@@ -192,7 +155,6 @@
 
         <div class="topbar-right">
 
-
             <div class="notification">
 
                 <span>🔔</span>
@@ -203,7 +165,6 @@
 
 
             <div class="user-profile">
-
 
                 <div
                     class="avatar"
@@ -225,12 +186,9 @@
 
                 </div>
 
-
             </div>
 
-
         </div>
-
 
     </header>
 
@@ -242,9 +200,7 @@
 
     <section class="dashboard-hero">
 
-
         <div class="hero-content">
-
 
             <span class="hero-kicker">
                 CIVICLENS INTELLIGENCE
@@ -263,8 +219,12 @@
             </p>
 
 
+            <!-- HERO ACTIONS -->
+
             <div class="hero-actions">
 
+
+                <!-- MANAGE LEADERS -->
 
                 <a
                     href="/leaders"
@@ -274,6 +234,8 @@
                 </a>
 
 
+                <!-- VIEW MENTIONS -->
+
                 <a
                     href="/mentions"
                     class="secondary-button"
@@ -282,11 +244,28 @@
                 </a>
 
 
+                <!-- RUN COLLECTION -->
+
+                <button
+                    id="run-collection"
+                    class="secondary-button"
+                    type="button"
+                >
+                    Run Collection
+                </button>
+
             </div>
 
 
-        </div>
+            <!-- COLLECTION STATUS -->
 
+            <div
+                id="collection-status"
+                class="collection-status"
+                aria-live="polite"
+            ></div>
+
+        </div>
 
     </section>
 
@@ -297,7 +276,6 @@
     ================================================== -->
 
     <section class="section-header">
-
 
         <div>
 
@@ -319,7 +297,6 @@
         >
             ↻ Refresh
         </button>
-
 
     </section>
 
@@ -446,7 +423,6 @@
 
         </div>
 
-
     </section>
 
 
@@ -462,9 +438,7 @@
 
         <div class="panel">
 
-
             <div class="panel-header">
-
 
                 <div>
 
@@ -477,7 +451,6 @@
                     </h3>
 
                 </div>
-
 
             </div>
 
@@ -638,9 +611,7 @@
 
                 </a>
 
-
             </div>
-
 
         </div>
 
@@ -650,9 +621,7 @@
 
         <div class="panel">
 
-
             <div class="panel-header">
-
 
                 <div>
 
@@ -670,7 +639,6 @@
                 <span class="online-status">
                     ● ONLINE
                 </span>
-
 
             </div>
 
@@ -764,12 +732,9 @@
 
                 </div>
 
-
             </div>
 
-
         </div>
-
 
     </section>
 
@@ -781,9 +746,7 @@
 
     <section class="panel recent-panel">
 
-
         <div class="panel-header">
-
 
             <div>
 
@@ -805,7 +768,6 @@
                 View all →
             </a>
 
-
         </div>
 
 
@@ -820,15 +782,18 @@
                     ◉
                 </div>
 
+
                 <h4>
                     No mentions yet
                 </h4>
+
 
                 <p>
                     Once CivicLens starts receiving public
                     conversation data, your latest mentions
                     will appear here.
                 </p>
+
 
                 <a
                     href="/platforms"
@@ -840,7 +805,6 @@
             </div>
 
         </div>
-
 
     </section>
 
@@ -865,31 +829,61 @@
 
 </main>
 
+
+
+<!-- =====================================================
+     NAVIGATION SUPPORT
+====================================================== -->
+
 <script>
+
 document.addEventListener("DOMContentLoaded", function () {
 
-    document.querySelectorAll('a[href="/platforms"]').forEach(function (link) {
-        link.onclick = function () {
-            window.location.href = "/platforms";
-        };
-    });
 
-    document.querySelectorAll('a[href="/reports"]').forEach(function (link) {
-        link.onclick = function () {
-            window.location.href = "/reports";
-        };
-    });
+    document
+        .querySelectorAll('a[href="/platforms"]')
+        .forEach(function (link) {
 
-    document.querySelectorAll('a[href="/settings"]').forEach(function (link) {
-        link.onclick = function () {
-            window.location.href = "/settings";
-        };
-    });
+            link.onclick = function () {
+                window.location.href = "/platforms";
+            };
+
+        });
+
+
+    document
+        .querySelectorAll('a[href="/reports"]')
+        .forEach(function (link) {
+
+            link.onclick = function () {
+                window.location.href = "/reports";
+            };
+
+        });
+
+
+    document
+        .querySelectorAll('a[href="/settings"]')
+        .forEach(function (link) {
+
+            link.onclick = function () {
+                window.location.href = "/settings";
+            };
+
+        });
 
 });
+
 </script>
 
+
+
+<!-- =====================================================
+     DASHBOARD JAVASCRIPT
+====================================================== -->
+
 <script src="/static/js/dashboard.js"></script>
+
 
 </body>
 

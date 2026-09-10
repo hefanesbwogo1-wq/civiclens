@@ -129,14 +129,17 @@
 </aside>
 
 
+
 <!-- =====================================================
-     MAIN
+     MAIN CONTENT
 ====================================================== -->
 
 <main class="main-content">
 
 
-    <!-- TOP BAR -->
+    <!-- =================================================
+         TOP BAR
+    ================================================== -->
 
     <header class="topbar">
 
@@ -154,6 +157,7 @@
 
 
         <div class="topbar-right">
+
 
             <div class="notification">
 
@@ -193,21 +197,25 @@
     </header>
 
 
+
     <!-- =================================================
          HERO
     ================================================== -->
 
     <section class="mentions-hero">
 
-        <div>
+
+        <div class="mentions-hero-content">
 
             <span class="page-kicker">
                 LIVE MONITORING
             </span>
 
+
             <h2>
                 Public Mentions
             </h2>
+
 
             <p>
                 Monitor public conversations mentioning
@@ -217,15 +225,47 @@
         </div>
 
 
-        <button
-            id="refresh-button"
-            class="refresh-button"
-            type="button"
-        >
-            ↻ Refresh
-        </button>
+        <div class="mentions-hero-actions">
+
+
+            <!-- REFRESH -->
+
+            <button
+                id="refresh-button"
+                class="refresh-button"
+                type="button"
+            >
+                ↻ Refresh
+            </button>
+
+
+            <!-- INTERNAL TEST -->
+
+            <button
+                id="test-mention-button"
+                class="secondary-button"
+                type="button"
+            >
+                🧪 Create Test Mention
+            </button>
+
+
+        </div>
+
 
     </section>
+
+
+    <!-- =================================================
+         TEST STATUS
+    ================================================== -->
+
+    <div
+        id="test-mention-status"
+        class="test-mention-status"
+        aria-live="polite"
+    ></div>
+
 
 
     <!-- =================================================
@@ -235,17 +275,21 @@
     <section class="mention-stats">
 
 
+        <!-- TOTAL -->
+
         <div class="mention-stat-card">
 
             <div class="mention-stat-icon">
                 ◉
             </div>
 
+
             <div>
 
                 <span>
                     TOTAL MENTIONS
                 </span>
+
 
                 <strong id="stat-total">
                     0
@@ -256,17 +300,22 @@
         </div>
 
 
+
+        <!-- POSITIVE -->
+
         <div class="mention-stat-card positive">
 
             <div class="mention-stat-icon">
                 +
             </div>
 
+
             <div>
 
                 <span>
                     POSITIVE
                 </span>
+
 
                 <strong id="stat-positive">
                     0
@@ -277,17 +326,22 @@
         </div>
 
 
+
+        <!-- NEUTRAL -->
+
         <div class="mention-stat-card neutral">
 
             <div class="mention-stat-icon">
                 =
             </div>
 
+
             <div>
 
                 <span>
                     NEUTRAL
                 </span>
+
 
                 <strong id="stat-neutral">
                     0
@@ -298,17 +352,22 @@
         </div>
 
 
+
+        <!-- NEGATIVE -->
+
         <div class="mention-stat-card negative">
 
             <div class="mention-stat-icon">
                 −
             </div>
 
+
             <div>
 
                 <span>
                     NEGATIVE
                 </span>
+
 
                 <strong id="stat-negative">
                     0
@@ -318,7 +377,9 @@
 
         </div>
 
+
     </section>
+
 
 
     <!-- =================================================
@@ -328,9 +389,14 @@
     <section class="mention-filters">
 
 
+        <!-- SEARCH -->
+
         <div class="search-box">
 
-            <span>🔎</span>
+            <span>
+                🔎
+            </span>
+
 
             <input
                 id="search-input"
@@ -342,6 +408,9 @@
         </div>
 
 
+
+        <!-- LEADER -->
+
         <select id="leader-filter">
 
             <option value="">
@@ -351,22 +420,28 @@
         </select>
 
 
+
+        <!-- PLATFORM -->
+
         <select id="platform-filter">
 
             <option value="">
                 All Platforms
             </option>
 
-            <option value="X">
+            <option value="x">
                 X
             </option>
 
-            <option value="Facebook">
+            <option value="facebook">
                 Facebook
             </option>
 
         </select>
 
+
+
+        <!-- SENTIMENT -->
 
         <select id="sentiment-filter">
 
@@ -389,6 +464,9 @@
         </select>
 
 
+
+        <!-- CLEAR -->
+
         <button
             id="clear-filters"
             class="clear-filters"
@@ -397,7 +475,9 @@
             Clear
         </button>
 
+
     </section>
+
 
 
     <!-- =================================================
@@ -407,13 +487,17 @@
     <section class="panel mentions-main-panel">
 
 
+        <!-- PANEL HEADER -->
+
         <div class="panel-header">
+
 
             <div>
 
                 <span class="panel-kicker">
                     PUBLIC CONVERSATIONS
                 </span>
+
 
                 <h3>
                     Recent Mentions
@@ -429,17 +513,23 @@
                 0 mentions
             </span>
 
+
         </div>
 
+
+
+        <!-- MENTIONS -->
 
         <div
             id="mentions-container"
             class="mentions-container"
         >
 
+
             <div class="mentions-loading">
 
                 <div class="loading-spinner"></div>
+
 
                 <p>
                     Loading mentions...
@@ -447,10 +537,12 @@
 
             </div>
 
+
         </div>
 
 
     </section>
+
 
 
     <!-- =================================================
@@ -459,13 +551,16 @@
 
     <footer class="dashboard-footer">
 
+
         <span>
             © 2026 CivicLens
         </span>
 
+
         <span>
             Public Conversation Intelligence Platform
         </span>
+
 
     </footer>
 
@@ -473,7 +568,13 @@
 </main>
 
 
+
+<!-- =====================================================
+     JAVASCRIPT
+====================================================== -->
+
 <script src="/static/js/mentions.js"></script>
+
 
 </body>
 

@@ -1165,3 +1165,36 @@ button {
         gap: 5px;
     }
 }
+
+/* ============================================================
+   COLLECTION STATUS
+============================================================ */
+
+.collection-status {
+    margin-top: 14px;
+    min-height: 22px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.collection-status[data-status="loading"] {
+    opacity: 0.75;
+}
+
+.collection-status[data-status="success"] {
+    opacity: 1;
+}
+
+.collection-status[data-status="warning"] {
+    opacity: 1;
+}
+
+.collection-status[data-status="error"] {
+    opacity: 1;
+}
+
+#run-collection:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
