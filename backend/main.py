@@ -102,3 +102,6 @@ async def settings_page(): return FileResponse(BASE_DIR / "frontend" / "settings
 @app.get("/health")
 async def health():
     return {"system": "CivicLens", "status": "online", "message": "CivicLens is running successfully."}
+from .debug import router as debug_router
+app.include_router(debug_router)
+
