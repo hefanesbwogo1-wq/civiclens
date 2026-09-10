@@ -1,233 +1,197 @@
 "use strict";
 
-/*
- * ============================================================
- * CIVICLENS LEADERS MANAGEMENT
- * Authenticated CRUD
- * ============================================================
- */
+/* =========================================================
+CIVICLENS — LEADERS
+========================================================= */
 
 let supabaseClient = null;
 let leaders = [];
-let editingLeaderId = null;
 
-/* ============================================================
-   INITIALIZE SUPABASE
-============================================================ */
+const elements = {};
+
+/* =========================================================
+INITIALIZE
+========================================================= */
+
+document.addEventListener(
+"DOMContentLoaded",
+initializeLeaders
+);
+
+async function initializeLeaders() {
+console.log("CivicLens: leaders.js initializing...");
+
+```
+cacheElements();
+
+initializeSupabase();
+
+if (!supabaseClient) {
+    showPageError(
+        "CivicLens configuration is unavailable."
+    );
+    return;
+}
+
+const authenticated =
+    await verifySession();
+
+if (!authenticated) {
+    return;
+}
+
+setupEventHandlers();
+
+await loadUserProfile();
+
+await loadLeaders();
+
+console.log(
+    "CivicLens: leaders.js loaded successfully."
+);
+```
+
+}
+
+/* =========================================================
+CACHE ELEMENTS
+========================================================= */
+
+function cacheElements() {
+elements.userName =
+document.getElementById("user-name");
+
+```
+elements.userEmail =
+    document.getElementById("user-email");
+
+elements.userAvatar =
+    document.getElementById("user-avatar");
+
+elements.leadersContainer =
+    document.getElementById("leaders-container");
+
+elements.leadersTable =
+    document.getElementById("leaders-table");
+
+elements.leaderCount =
+    document.getElementById("leader-count");
+
+elements.search =
+    document.getElementById("leader-search") ||
+    document.getElementById("search-input");
+
+elements.addButton =
+    document.getElementById("add-leader-button");
+
+elements.refreshButton =
+    document.getElementById("refresh-button");
+
+elements.logoutButton =
+    document.getElementById("logout-button");
+
+elements.modal =
+    document.getElementById("leader-modal");
+
+elements.modalTitle =
+    document.getElementById("modal-title");
+
+elements.form =
+    document.getElementById("leader-form");
+
+elements.closeModal =
+    document.getElementById("close-modal");
+
+elements.cancelButton =
+    document.getElementById("cancel-button");
+
+elements.fullName =
+    document.getElementById("full-name");
+
+elements.publicName =
+    document.getElementById("public-name");
+
+elements.position =
+    document.getElementById("position");
+
+elements.organization =
+    document.getElementById("organization");
+
+elements.keywords =
+    document.getElementById("keywords");
+
+elements.nicknames =
+    document.getElementById("nicknames");
+
+elements.monitoringEnabled =
+    document.getElementById("monitoring-enabled");
+
+elements.submitButton =
+    document.getElementById("save-leader-button");
+
+elements.formError =
+    document.getElementById("form-error");
+
+elements.pageError =
+    document.getElementById("page-error");
+```
+
+}
+
+/* =========================================================
+SUPABASE
+========================================================= */
 
 function initializeSupabase() {
-
-    if (supabaseClient) {
-        return supabaseClient;
-    }
-
-    if (
-        !window.supabase ||
-        !window.SUPABASE_URL ||
-        !window.SUPABASE_ANON_KEY
-    ) {
-        console.error(
-            "CivicLens: Supabase configuration unavailable."
-        );
-
-        showError(
-            "Supabase configuration is unavailable."
-        );
-
-        return null;
-    }
-
-    supabaseClient = window.supabase.createClient(
-        window.SUPABASE_URL,
-        window.SUPABASE_ANON_KEY
-    );
-
-    return supabaseClient;
-}
-
-/* ============================================================
-   AUTHENTICATED FETCH
-============================================================ */
-
-async function civicLensFetch(
-    url,
-    options = {}
+if (
+!window.supabase ||
+!window.SUPABASE_URL ||
+!window.SUPABASE_ANON_KEY
 ) {
+console.error(
+"CivicLens: Supabase configuration unavailable."
+);
 
-    const client = initializeSupabase();
+```
+    return;
+}
 
-    if (!client) {
-        throw new Error(
-            "Supabase is not configured."
+try {
+    supabaseClient =
+        window.supabase.createClient(
+            window.SUPABASE_URL,
+            window.SUPABASE_ANON_KEY
         );
-    }
 
-    const {
-        data: { session },
+    console.log(
+        "CivicLens: Supabase initialized."
+    );
+} catch (error) {
+    console.error(
+        "CivicLens: Supabase initialization failed:",
         error
-    } = await client.auth.getSession();
-
-    if (error) {
-        console.error(
-            "Session error:",
-            error
-        );
-
-        throw new Error(
-            "Unable to verify your login session."
-        );
-    }
-
-    if (
-        !session ||
-        !session.access_token
-    ) {
-        window.location.href = "/login";
-        return null;
-    }
-
-    const headers = new Headers(
-        options.headers || {}
     );
+}
+```
 
-    headers.set(
-        "Authorization",
-        `Bearer ${session.access_token}`
-    );
-
-    headers.set(
-        "Accept",
-        "application/json"
-    );
-
-    if (
-        options.body &&
-        !headers.has("Content-Type")
-    ) {
-        headers.set(
-            "Content-Type",
-            "application/json"
-        );
-    }
-
-    const response = await fetch(
-        url,
-        {
-            ...options,
-            headers
-        }
-    );
-
-    if (response.status === 401) {
-
-        console.warn(
-            "CivicLens: Session expired."
-        );
-
-        await client.auth.signOut();
-
-        window.location.href = "/login";
-
-        return null;
-    }
-
-    return response;
 }
 
-/* ============================================================
-   DOM HELPERS
-============================================================ */
-
-function getElement(id) {
-    return document.getElementById(id);
-}
-
-function showElement(id) {
-    const element = getElement(id);
-
-    if (element) {
-        element.classList.remove("hidden");
-    }
-}
-
-function hideElement(id) {
-    const element = getElement(id);
-
-    if (element) {
-        element.classList.add("hidden");
-    }
-}
-
-/* ============================================================
-   MESSAGES
-============================================================ */
-
-let messageTimer = null;
-
-function showSuccess(message) {
-
-    const element =
-        getElement("leaders-success");
-
-    if (!element) {
-        return;
-    }
-
-    element.textContent = message;
-
-    element.classList.remove(
-        "hidden"
-    );
-
-    hideElement("leaders-error");
-
-    clearTimeout(messageTimer);
-
-    messageTimer = setTimeout(() => {
-        hideElement("leaders-success");
-    }, 4500);
-}
-
-function showError(message) {
-
-    const element =
-        getElement("leaders-error");
-
-    if (!element) {
-        return;
-    }
-
-    element.textContent = message;
-
-    element.classList.remove(
-        "hidden"
-    );
-
-    hideElement("leaders-success");
-}
-
-/* ============================================================
-   INITIAL SESSION
-============================================================ */
+/* =========================================================
+VERIFY SESSION
+========================================================= */
 
 async function verifySession() {
+try {
+const {
+data,
+error
+} =
+await supabaseClient.auth.getSession();
 
-    const client =
-        initializeSupabase();
-
-    if (!client) {
-        return false;
-    }
-
-    const {
-        data: { session },
-        error
-    } = await client.auth.getSession();
-
+```
     if (error) {
-
         console.error(
-            "Session verification error:",
+            "CivicLens session error:",
             error
         );
 
@@ -237,10 +201,7 @@ async function verifySession() {
         return false;
     }
 
-    if (
-        !session ||
-        !session.access_token
-    ) {
+    if (!data?.session) {
         window.location.href =
             "/login";
 
@@ -248,306 +209,547 @@ async function verifySession() {
     }
 
     return true;
+
+} catch (error) {
+    console.error(
+        "CivicLens session verification failed:",
+        error
+    );
+
+    window.location.href =
+        "/login";
+
+    return false;
+}
+```
+
 }
 
-/* ============================================================
-   LOAD USER
-============================================================ */
+/* =========================================================
+AUTHENTICATED API FETCH
+========================================================= */
+
+async function civicLensFetch(
+url,
+options = {}
+) {
+if (!supabaseClient) {
+throw new Error(
+"Supabase client is unavailable."
+);
+}
+
+```
+const {
+    data,
+    error
+} =
+    await supabaseClient.auth.getSession();
+
+if (
+    error ||
+    !data?.session
+) {
+    window.location.href =
+        "/login";
+
+    throw new Error(
+        "Authentication session expired."
+    );
+}
+
+const headers =
+    new Headers(
+        options.headers || {}
+    );
+
+headers.set(
+    "Authorization",
+    `Bearer ${data.session.access_token}`
+);
+
+headers.set(
+    "Accept",
+    "application/json"
+);
+
+return fetch(
+    url,
+    {
+        ...options,
+        headers
+    }
+);
+```
+
+}
+
+/* =========================================================
+LOAD USER PROFILE
+========================================================= */
 
 async function loadUserProfile() {
+try {
+const {
+data,
+error
+} =
+await supabaseClient.auth.getUser();
 
-    try {
-
-        const client =
-            initializeSupabase();
-
-        if (!client) {
-            return;
-        }
-
-        const {
-            data: { user }
-        } = await client.auth.getUser();
-
-        if (!user) {
-            return;
-        }
-
-        const name =
-            user.user_metadata?.full_name ||
-            user.user_metadata?.name ||
-            user.email?.split("@")[0] ||
-            "CivicLens User";
-
-        const nameElement =
-            getElement("user-name");
-
-        const emailElement =
-            getElement("user-email");
-
-        if (nameElement) {
-            nameElement.textContent =
-                name;
-        }
-
-        if (emailElement) {
-            emailElement.textContent =
-                user.email || "";
-        }
-
-    } catch (error) {
-
-        console.error(
-            "User profile error:",
-            error
-        );
-    }
-}
-
-/* ============================================================
-   LOAD LEADERS
-============================================================ */
-
-async function loadLeaders() {
-
-    showElement(
-        "leaders-loading"
-    );
-
-    hideElement(
-        "leaders-empty"
-    );
-
-    hideElement(
-        "leaders-error"
-    );
-
-    const grid =
-        getElement("leaders-grid");
-
-    if (grid) {
-        grid.innerHTML = "";
-    }
-
-    try {
-
-        const response =
-            await civicLensFetch(
-                "/api/leaders"
-            );
-
-        if (!response) {
-            return;
-        }
-
-        if (!response.ok) {
-
-            let message =
-                `Unable to load leaders (${response.status}).`;
-
-            try {
-
-                const errorData =
-                    await response.json();
-
-                if (errorData?.detail) {
-                    message =
-                        errorData.detail;
-                }
-
-            } catch (_) {
-                // Ignore JSON parsing failure.
-            }
-
-            throw new Error(
-                message
-            );
-        }
-
-        const data =
-            await response.json();
-
-        if (Array.isArray(data)) {
-
-            leaders = data;
-
-        } else if (
-            data &&
-            Array.isArray(data.leaders)
-        ) {
-
-            leaders =
-                data.leaders;
-
-        } else {
-
-            leaders = [];
-        }
-
-        renderLeaders(
-            leaders
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Load leaders error:",
-            error
-        );
-
-        showError(
-            error.message ||
-            "Unable to load leaders."
-        );
-
-    } finally {
-
-        hideElement(
-            "leaders-loading"
-        );
-    }
-}
-
-/* ============================================================
-   RENDER LEADERS
-============================================================ */
-
-function renderLeaders(
-    leaderList
-) {
-
-    const grid =
-        getElement("leaders-grid");
-
-    const empty =
-        getElement("leaders-empty");
-
-    if (!grid) {
-        return;
-    }
-
-    grid.innerHTML = "";
-
+```
     if (
-        !leaderList ||
-        leaderList.length === 0
+        error ||
+        !data?.user
     ) {
-
-        if (empty) {
-            empty.classList.remove(
-                "hidden"
-            );
-        }
-
         return;
     }
 
-    if (empty) {
-        empty.classList.add(
-            "hidden"
-        );
-    }
+    const user =
+        data.user;
 
-    leaderList.forEach(
-        leader => {
-
-            grid.appendChild(
-                createLeaderCard(
-                    leader
-                )
-            );
-        }
-    );
-}
-
-/* ============================================================
-   CREATE LEADER CARD
-============================================================ */
-
-function createLeaderCard(
-    leader
-) {
-
-    const card =
-        document.createElement(
-            "article"
-        );
-
-    card.className =
-        "leader-card";
+    const metadata =
+        user.user_metadata || {};
 
     const name =
-        leader.full_name ||
-        "Unnamed Leader";
+        metadata.full_name ||
+        user.email?.split("@")[0] ||
+        "CivicLens User";
 
-    const publicName =
-        leader.public_name ||
-        "";
+    if (elements.userName) {
+        elements.userName.textContent =
+            name;
+    }
 
-    const position =
-        leader.position ||
-        "Position not specified";
+    if (elements.userEmail) {
+        elements.userEmail.textContent =
+            user.email || "";
+    }
 
-    const organization =
-        leader.organization ||
-        "Organization not specified";
+    if (elements.userAvatar) {
+        elements.userAvatar.textContent =
+            name
+                .trim()
+                .charAt(0)
+                .toUpperCase() || "C";
+    }
 
-    const monitoring =
-        leader.monitoring_enabled !== false;
+} catch (error) {
+    console.error(
+        "CivicLens user profile error:",
+        error
+    );
+}
+```
 
-    const initials =
-        getInitials(name);
+}
 
-    const keywords =
-        parseList(
-            leader.keywords
+/* =========================================================
+LOAD LEADERS
+========================================================= */
+
+async function loadLeaders() {
+showLoading();
+
+```
+try {
+    console.log(
+        "CivicLens: Loading leaders..."
+    );
+
+    const response =
+        await civicLensFetch(
+            "/api/leaders"
         );
 
-    const nicknames =
-        parseList(
-            leader.nicknames
+    const result =
+        await readJson(
+            response
         );
 
-    const tags = [
-        ...keywords,
-        ...nicknames
-    ].slice(0, 6);
+    if (!response.ok) {
+        throw new Error(
+            result?.detail ||
+            result?.message ||
+            "Unable to load leaders."
+        );
+    }
 
-    const tagHTML =
-        tags.length
-            ? `
-                <div class="leader-tags">
-                    ${tags.map(
-                        tag =>
-                            `
-                            <span class="leader-tag">
-                                ${escapeHTML(tag)}
+    if (
+        result &&
+        result.success === false
+    ) {
+        throw new Error(
+            result.message ||
+            "Unable to load leaders."
+        );
+    }
+
+    leaders =
+        Array.isArray(result?.leaders)
+            ? result.leaders
+            : [];
+
+    console.log(
+        "CivicLens: Leaders loaded:",
+        leaders.length
+    );
+
+    renderLeaders(
+        leaders
+    );
+
+    updateLeaderCount();
+
+} catch (error) {
+    console.error(
+        "CivicLens leaders loading error:",
+        error
+    );
+
+    leaders = [];
+
+    showPageError(
+        error.message ||
+        "Unable to load leaders. Please refresh and try again."
+    );
+
+}
+```
+
+}
+
+/* =========================================================
+READ JSON SAFELY
+========================================================= */
+
+async function readJson(response) {
+const contentType =
+response.headers.get(
+"content-type"
+) || "";
+
+```
+if (
+    contentType.includes(
+        "application/json"
+    )
+) {
+    return await response.json();
+}
+
+const text =
+    await response.text();
+
+if (!text) {
+    return {};
+}
+
+try {
+    return JSON.parse(text);
+} catch {
+    return {
+        message: text
+    };
+}
+```
+
+}
+
+/* =========================================================
+RENDER LEADERS
+========================================================= */
+
+function renderLeaders(
+leaderList
+) {
+if (!elements.leadersContainer) {
+console.warn(
+"CivicLens: leaders-container not found."
+);
+
+```
+    return;
+}
+
+if (!leaderList.length) {
+    elements.leadersContainer.innerHTML = `
+        <div class="leaders-empty">
+
+            <div class="empty-icon">
+                ◉
+            </div>
+
+            <h3>
+                No leaders yet
+            </h3>
+
+            <p>
+                Add your first leader to begin monitoring
+                public conversations.
+            </p>
+
+            <button
+                type="button"
+                class="primary-button"
+                data-action="add-leader"
+            >
+                + Add Leader
+            </button>
+
+        </div>
+    `;
+
+    return;
+}
+
+/*
+ * Support either a table-style container
+ * or a normal card/list container.
+ */
+
+const tableBody =
+    elements.leadersContainer.querySelector(
+        "tbody"
+    );
+
+if (tableBody) {
+    renderLeaderRows(
+        tableBody,
+        leaderList
+    );
+
+    return;
+}
+
+elements.leadersContainer.innerHTML =
+    leaderList
+        .map(
+            createLeaderCard
+        )
+        .join("");
+```
+
+}
+
+/* =========================================================
+RENDER TABLE ROWS
+========================================================= */
+
+function renderLeaderRows(
+tbody,
+leaderList
+) {
+tbody.innerHTML =
+leaderList
+.map(
+leader => {
+const id =
+escapeAttribute(
+leader.id || ""
+);
+
+```
+                const fullName =
+                    escapeHtml(
+                        leader.full_name ||
+                        ""
+                    );
+
+                const publicName =
+                    escapeHtml(
+                        leader.public_name ||
+                        ""
+                    );
+
+                const position =
+                    escapeHtml(
+                        leader.position ||
+                        ""
+                    );
+
+                const organization =
+                    escapeHtml(
+                        leader.organization ||
+                        ""
+                    );
+
+                const monitoring =
+                    Boolean(
+                        leader.monitoring_enabled
+                    );
+
+                return `
+                    <tr>
+
+                        <td>
+                            <strong>
+                                ${fullName}
+                            </strong>
+
+                            ${
+                                publicName
+                                    ? `<small>${publicName}</small>`
+                                    : ""
+                            }
+                        </td>
+
+                        <td>
+                            ${position || "—"}
+                        </td>
+
+                        <td>
+                            ${organization || "—"}
+                        </td>
+
+                        <td>
+                            <span
+                                class="status-badge ${
+                                    monitoring
+                                        ? "active"
+                                        : "inactive"
+                                }"
+                            >
+                                ${
+                                    monitoring
+                                        ? "Monitoring"
+                                        : "Paused"
+                                }
                             </span>
-                            `
-                    ).join("")}
-                </div>
-            `
-            : "";
+                        </td>
 
-    card.innerHTML = `
+                        <td>
+                            <div class="leader-actions">
+
+                                <button
+                                    type="button"
+                                    class="secondary-button"
+                                    data-action="edit-leader"
+                                    data-leader-id="${id}"
+                                >
+                                    Edit
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="secondary-button"
+                                    data-action="toggle-monitoring"
+                                    data-leader-id="${id}"
+                                >
+                                    ${
+                                        monitoring
+                                            ? "Pause"
+                                            : "Monitor"
+                                    }
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="danger-button"
+                                    data-action="delete-leader"
+                                    data-leader-id="${id}"
+                                >
+                                    Delete
+                                </button>
+
+                            </div>
+                        </td>
+
+                    </tr>
+                `;
+            }
+        )
+        .join("");
+```
+
+}
+
+/* =========================================================
+CREATE LEADER CARD
+========================================================= */
+
+function createLeaderCard(
+leader
+) {
+const id =
+escapeAttribute(
+leader.id || ""
+);
+
+```
+const fullName =
+    escapeHtml(
+        leader.full_name ||
+        "Unnamed Leader"
+    );
+
+const publicName =
+    escapeHtml(
+        leader.public_name ||
+        ""
+    );
+
+const position =
+    escapeHtml(
+        leader.position ||
+        ""
+    );
+
+const organization =
+    escapeHtml(
+        leader.organization ||
+        ""
+    );
+
+const monitoring =
+    Boolean(
+        leader.monitoring_enabled
+    );
+
+const keywords =
+    escapeHtml(
+        leader.keywords ||
+        ""
+    );
+
+const nicknames =
+    escapeHtml(
+        leader.nicknames ||
+        ""
+    );
+
+return `
+    <article
+        class="leader-card"
+        data-leader-id="${id}"
+    >
+
         <div class="leader-card-header">
 
             <div class="leader-avatar">
-                ${escapeHTML(initials)}
+                ${escapeHtml(
+                    (
+                        leader.public_name ||
+                        leader.full_name ||
+                        "L"
+                    )
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase()
+                )}
             </div>
 
-            <div class="leader-info">
+            <div class="leader-card-title">
 
                 <h3>
-                    ${escapeHTML(name)}
+                    ${fullName}
                 </h3>
 
                 ${
                     publicName
                         ? `
-                            <div class="leader-public-name">
-                                ${escapeHTML(publicName)}
-                            </div>
+                            <span>
+                                ${publicName}
+                            </span>
                         `
                         : ""
                 }
@@ -555,7 +757,7 @@ function createLeaderCard(
             </div>
 
             <span
-                class="leader-status ${
+                class="status-badge ${
                     monitoring
                         ? "active"
                         : "inactive"
@@ -570,780 +772,1007 @@ function createLeaderCard(
 
         </div>
 
-        <div class="leader-details">
+        <div class="leader-card-body">
 
-            <div class="detail-row">
+            ${
+                position
+                    ? `
+                        <p>
+                            <strong>
+                                Position:
+                            </strong>
+                            ${position}
+                        </p>
+                    `
+                    : ""
+            }
 
-                <span class="detail-label">
-                    Position
-                </span>
+            ${
+                organization
+                    ? `
+                        <p>
+                            <strong>
+                                Organization:
+                            </strong>
+                            ${organization}
+                        </p>
+                    `
+                    : ""
+            }
 
-                <span class="detail-value">
-                    ${escapeHTML(position)}
-                </span>
+            ${
+                keywords
+                    ? `
+                        <p>
+                            <strong>
+                                Keywords:
+                            </strong>
+                            ${keywords}
+                        </p>
+                    `
+                    : ""
+            }
 
-            </div>
-
-            <div class="detail-row">
-
-                <span class="detail-label">
-                    Organization
-                </span>
-
-                <span class="detail-value">
-                    ${escapeHTML(organization)}
-                </span>
-
-            </div>
+            ${
+                nicknames
+                    ? `
+                        <p>
+                            <strong>
+                                Nicknames:
+                            </strong>
+                            ${nicknames}
+                        </p>
+                    `
+                    : ""
+            }
 
         </div>
 
-        ${tagHTML}
-
-        <div class="leader-actions">
+        <div class="leader-card-actions">
 
             <button
                 type="button"
-                class="action-btn edit"
-                data-action="edit"
-                data-id="${escapeHTML(
-                    String(leader.id)
-                )}"
+                class="secondary-button"
+                data-action="edit-leader"
+                data-leader-id="${id}"
             >
                 Edit
             </button>
 
             <button
                 type="button"
-                class="action-btn"
-                data-action="toggle"
-                data-id="${escapeHTML(
-                    String(leader.id)
-                )}"
+                class="secondary-button"
+                data-action="toggle-monitoring"
+                data-leader-id="${id}"
             >
                 ${
                     monitoring
-                        ? "Pause"
-                        : "Enable"
+                        ? "Pause Monitoring"
+                        : "Start Monitoring"
                 }
             </button>
 
             <button
                 type="button"
-                class="action-btn delete"
-                data-action="delete"
-                data-id="${escapeHTML(
-                    String(leader.id)
-                )}"
+                class="danger-button"
+                data-action="delete-leader"
+                data-leader-id="${id}"
             >
                 Delete
             </button>
 
         </div>
-    `;
 
-    return card;
+    </article>
+`;
+```
+
 }
 
-/* ============================================================
-   INITIALS
-============================================================ */
+/* =========================================================
+EVENT HANDLERS
+========================================================= */
 
-function getInitials(
-    name
+function setupEventHandlers() {
+/*
+* Remove old listeners by cloning only where appropriate.
+* Delegated events are used for dynamically generated
+* leader buttons.
+*/
+
+```
+if (
+    elements.addButton &&
+    !elements.addButton.dataset.civicLensBound
 ) {
+    elements.addButton.dataset.civicLensBound =
+        "true";
 
-    return name
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map(
-            part =>
-                part.charAt(0)
-                    .toUpperCase()
-        )
-        .join("");
+    elements.addButton.addEventListener(
+        "click",
+        function (event) {
+            event.preventDefault();
+            openAddModal();
+        }
+    );
 }
 
-/* ============================================================
-   PARSE LIST
-============================================================ */
-
-function parseList(value) {
-
-    if (!value) {
-        return [];
-    }
-
-    if (Array.isArray(value)) {
-        return value;
-    }
-
-    return String(value)
-        .split(",")
-        .map(
-            item => item.trim()
-        )
-        .filter(Boolean);
-}
-
-/* ============================================================
-   ESCAPE HTML
-============================================================ */
-
-function escapeHTML(
-    value
+if (
+    elements.refreshButton &&
+    !elements.refreshButton.dataset.civicLensBound
 ) {
+    elements.refreshButton.dataset.civicLensBound =
+        "true";
 
-    const div =
-        document.createElement(
-            "div"
-        );
+    elements.refreshButton.addEventListener(
+        "click",
+        async function (event) {
+            event.preventDefault();
 
-    div.textContent =
-        value ?? "";
-
-    return div.innerHTML;
+            await refreshLeaders();
+        }
+    );
 }
 
-/* ============================================================
-   OPEN ADD MODAL
-============================================================ */
+if (
+    elements.logoutButton &&
+    !elements.logoutButton.dataset.civicLensBound
+) {
+    elements.logoutButton.dataset.civicLensBound =
+        "true";
+
+    elements.logoutButton.addEventListener(
+        "click",
+        async function (event) {
+            event.preventDefault();
+
+            await logoutUser();
+        }
+    );
+}
+
+if (
+    elements.closeModal &&
+    !elements.closeModal.dataset.civicLensBound
+) {
+    elements.closeModal.dataset.civicLensBound =
+        "true";
+
+    elements.closeModal.addEventListener(
+        "click",
+        function (event) {
+            event.preventDefault();
+            closeModal();
+        }
+    );
+}
+
+if (
+    elements.cancelButton &&
+    !elements.cancelButton.dataset.civicLensBound
+) {
+    elements.cancelButton.dataset.civicLensBound =
+        "true";
+
+    elements.cancelButton.addEventListener(
+        "click",
+        function (event) {
+            event.preventDefault();
+            closeModal();
+        }
+    );
+}
+
+if (
+    elements.form &&
+    !elements.form.dataset.civicLensBound
+) {
+    elements.form.dataset.civicLensBound =
+        "true";
+
+    elements.form.addEventListener(
+        "submit",
+        async function (event) {
+            event.preventDefault();
+
+            await saveLeader();
+        }
+    );
+}
+
+if (
+    elements.search &&
+    !elements.search.dataset.civicLensBound
+) {
+    elements.search.dataset.civicLensBound =
+        "true";
+
+    elements.search.addEventListener(
+        "input",
+        function () {
+            searchLeaders(
+                this.value
+            );
+        }
+    );
+}
+
+/*
+ * Event delegation for dynamically created
+ * Edit / Delete / Monitoring buttons.
+ */
+
+if (
+    elements.leadersContainer &&
+    !elements.leadersContainer.dataset.civicLensBound
+) {
+    elements.leadersContainer.dataset.civicLensBound =
+        "true";
+
+    elements.leadersContainer.addEventListener(
+        "click",
+        handleLeaderContainerClick
+    );
+}
+
+/*
+ * Global safety net for buttons rendered dynamically.
+ */
+
+if (
+    !document.body.dataset.civicLensLeaderGlobalBound
+) {
+    document.body.dataset.civicLensLeaderGlobalBound =
+        "true";
+
+    document.addEventListener(
+        "click",
+        handleGlobalLeaderClick
+    );
+}
+
+/*
+ * Close modal when clicking outside it.
+ */
+
+if (
+    elements.modal &&
+    !elements.modal.dataset.civicLensBound
+) {
+    elements.modal.dataset.civicLensBound =
+        "true";
+
+    elements.modal.addEventListener(
+        "click",
+        function (event) {
+            if (
+                event.target ===
+                elements.modal
+            ) {
+                closeModal();
+            }
+        }
+    );
+}
+
+/*
+ * Escape key closes modal.
+ */
+
+if (
+    !document.body.dataset.civicLensEscapeBound
+) {
+    document.body.dataset.civicLensEscapeBound =
+        "true";
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+            if (
+                event.key === "Escape"
+            ) {
+                closeModal();
+            }
+        }
+    );
+}
+```
+
+}
+
+/* =========================================================
+CONTAINER BUTTON HANDLER
+========================================================= */
+
+async function handleLeaderContainerClick(
+event
+) {
+const button =
+event.target.closest(
+"[data-action]"
+);
+
+```
+if (!button) {
+    return;
+}
+
+event.preventDefault();
+event.stopPropagation();
+
+await handleLeaderAction(
+    button
+);
+```
+
+}
+
+/* =========================================================
+GLOBAL BUTTON SAFETY NET
+========================================================= */
+
+async function handleGlobalLeaderClick(
+event
+) {
+const button =
+event.target.closest(
+"[data-action]"
+);
+
+```
+if (!button) {
+    return;
+}
+
+/*
+ * Only handle CivicLens leader actions.
+ */
+
+const action =
+    button.dataset.action;
+
+if (
+    ![
+        "add-leader",
+        "edit-leader",
+        "delete-leader",
+        "toggle-monitoring"
+    ].includes(action)
+) {
+    return;
+}
+
+/*
+ * If the leaders container already handled it,
+ * don't process it twice.
+ */
+
+if (
+    elements.leadersContainer &&
+    elements.leadersContainer.contains(
+        button
+    )
+) {
+    return;
+}
+
+event.preventDefault();
+
+await handleLeaderAction(
+    button
+);
+```
+
+}
+
+/* =========================================================
+LEADER ACTION ROUTER
+========================================================= */
+
+async function handleLeaderAction(
+button
+) {
+const action =
+button.dataset.action;
+
+```
+const leaderId =
+    button.dataset.leaderId;
+
+switch (action) {
+
+    case "add-leader":
+        openAddModal();
+        break;
+
+    case "edit-leader":
+        if (leaderId) {
+            openEditModal(
+                leaderId
+            );
+        }
+        break;
+
+    case "delete-leader":
+        if (leaderId) {
+            await deleteLeader(
+                leaderId
+            );
+        }
+        break;
+
+    case "toggle-monitoring":
+        if (leaderId) {
+            await toggleMonitoring(
+                leaderId
+            );
+        }
+        break;
+
+    default:
+        break;
+}
+```
+
+}
+
+/* =========================================================
+OPEN ADD MODAL
+========================================================= */
 
 function openAddModal() {
+console.log(
+"CivicLens: Opening Add Leader modal."
+);
 
-    editingLeaderId = null;
+```
+clearForm();
 
-    const title =
-        getElement("modal-title");
-
-    const saveButton =
-        getElement(
-            "save-leader-btn"
-        );
-
-    if (title) {
-        title.textContent =
-            "Add Leader";
-    }
-
-    if (saveButton) {
-        saveButton.textContent =
-            "Save Leader";
-    }
-
-    resetLeaderForm();
-
-    openModal();
+if (elements.modalTitle) {
+    elements.modalTitle.textContent =
+        "Add Leader";
 }
 
-/* ============================================================
-   OPEN EDIT MODAL
-============================================================ */
+if (elements.submitButton) {
+    elements.submitButton.textContent =
+        "Save Leader";
+}
+
+elements.form?.removeAttribute(
+    "data-edit-id"
+);
+
+showModal();
+```
+
+}
+
+/* =========================================================
+OPEN EDIT MODAL
+========================================================= */
 
 function openEditModal(
+leaderId
+) {
+const leader =
+leaders.find(
+item =>
+String(item.id) ===
+String(leaderId)
+);
+
+```
+if (!leader) {
+    showFormError(
+        "Leader could not be found."
+    );
+
+    return;
+}
+
+console.log(
+    "CivicLens: Editing leader:",
     leaderId
-) {
+);
 
-    const leader =
-        leaders.find(
-            item =>
-                String(item.id) ===
-                String(leaderId)
-        );
+if (elements.modalTitle) {
+    elements.modalTitle.textContent =
+        "Edit Leader";
+}
 
-    if (!leader) {
-        showError(
-            "Leader could not be found."
-        );
+if (elements.submitButton) {
+    elements.submitButton.textContent =
+        "Update Leader";
+}
 
-        return;
-    }
-
-    editingLeaderId =
+if (elements.form) {
+    elements.form.dataset.editId =
         leader.id;
-
-    const title =
-        getElement("modal-title");
-
-    const saveButton =
-        getElement(
-            "save-leader-btn"
-        );
-
-    if (title) {
-        title.textContent =
-            "Edit Leader";
-    }
-
-    if (saveButton) {
-        saveButton.textContent =
-            "Update Leader";
-    }
-
-    setValue(
-        "leader-id",
-        leader.id
-    );
-
-    setValue(
-        "full-name",
-        leader.full_name || ""
-    );
-
-    setValue(
-        "public-name",
-        leader.public_name || ""
-    );
-
-    setValue(
-        "position",
-        leader.position || ""
-    );
-
-    setValue(
-        "organization",
-        leader.organization || ""
-    );
-
-    setValue(
-        "keywords",
-        leader.keywords || ""
-    );
-
-    setValue(
-        "nicknames",
-        leader.nicknames || ""
-    );
-
-    const monitoring =
-        getElement(
-            "monitoring-enabled"
-        );
-
-    if (monitoring) {
-        monitoring.checked =
-            leader.monitoring_enabled !== false;
-    }
-
-    openModal();
 }
 
-/* ============================================================
-   FORM VALUE
-============================================================ */
-
-function setValue(
-    id,
-    value
-) {
-
-    const element =
-        getElement(id);
-
-    if (element) {
-        element.value =
-            value ?? "";
-    }
+if (elements.fullName) {
+    elements.fullName.value =
+        leader.full_name || "";
 }
 
-/* ============================================================
-   RESET FORM
-============================================================ */
-
-function resetLeaderForm() {
-
-    const form =
-        getElement(
-            "leader-form"
-        );
-
-    if (form) {
-        form.reset();
-    }
-
-    setValue(
-        "leader-id",
-        ""
-    );
-
-    const monitoring =
-        getElement(
-            "monitoring-enabled"
-        );
-
-    if (monitoring) {
-        monitoring.checked = true;
-    }
+if (elements.publicName) {
+    elements.publicName.value =
+        leader.public_name || "";
 }
 
-/* ============================================================
-   OPEN MODAL
-============================================================ */
-
-function openModal() {
-
-    const modal =
-        getElement(
-            "leader-modal"
-        );
-
-    if (!modal) {
-        return;
-    }
-
-    modal.classList.remove(
-        "hidden"
-    );
-
-    modal.setAttribute(
-        "aria-hidden",
-        "false"
-    );
-
-    document.body.style.overflow =
-        "hidden";
-
-    setTimeout(() => {
-
-        const input =
-            getElement(
-                "full-name"
-            );
-
-        if (input) {
-            input.focus();
-        }
-
-    }, 100);
+if (elements.position) {
+    elements.position.value =
+        leader.position || "";
 }
 
-/* ============================================================
-   CLOSE MODAL
-============================================================ */
+if (elements.organization) {
+    elements.organization.value =
+        leader.organization || "";
+}
+
+if (elements.keywords) {
+    elements.keywords.value =
+        leader.keywords || "";
+}
+
+if (elements.nicknames) {
+    elements.nicknames.value =
+        leader.nicknames || "";
+}
+
+if (elements.monitoringEnabled) {
+    elements.monitoringEnabled.checked =
+        leader.monitoring_enabled !== false;
+}
+
+clearFormError();
+
+showModal();
+```
+
+}
+
+/* =========================================================
+CLOSE MODAL
+========================================================= */
 
 function closeModal() {
-
-    const modal =
-        getElement(
-            "leader-modal"
-        );
-
-    if (!modal) {
-        return;
-    }
-
-    modal.classList.add(
-        "hidden"
-    );
-
-    modal.setAttribute(
-        "aria-hidden",
-        "true"
-    );
-
-    document.body.style.overflow =
-        "";
-
-    editingLeaderId = null;
+if (!elements.modal) {
+return;
 }
 
-/* ============================================================
-   COLLECT FORM
-============================================================ */
+```
+elements.modal.classList.remove(
+    "open",
+    "active",
+    "show"
+);
 
-function collectLeaderForm() {
+elements.modal.setAttribute(
+    "aria-hidden",
+    "true"
+);
 
-    const fullName =
-        getElement(
-            "full-name"
-        )?.value.trim();
-
-    if (!fullName) {
-
-        showError(
-            "Full name is required."
-        );
-
-        getElement(
-            "full-name"
-        )?.focus();
-
-        return null;
-    }
-
-    const payload = {
-
-        full_name:
-            fullName,
-
-        public_name:
-            getElement(
-                "public-name"
-            )?.value.trim() || null,
-
-        position:
-            getElement(
-                "position"
-            )?.value.trim() || null,
-
-        organization:
-            getElement(
-                "organization"
-            )?.value.trim() || null,
-
-        keywords:
-            getElement(
-                "keywords"
-            )?.value.trim() || null,
-
-        nicknames:
-            getElement(
-                "nicknames"
-            )?.value.trim() || null,
-
-        monitoring_enabled:
-            getElement(
-                "monitoring-enabled"
-            )?.checked !== false
-    };
-
-    return payload;
-}
-
-/* ============================================================
-   SAVE LEADER
-============================================================ */
-
-async function saveLeader(
-    event
+if (
+    elements.form &&
+    elements.form.dataset.editId
 ) {
+    delete elements.form.dataset.editId;
+}
 
-    event.preventDefault();
+clearFormError();
+```
 
-    hideElement(
-        "leaders-error"
+}
+
+/* =========================================================
+SHOW MODAL
+========================================================= */
+
+function showModal() {
+if (!elements.modal) {
+console.warn(
+"CivicLens: leader modal not found."
+);
+
+```
+    return;
+}
+
+elements.modal.classList.add(
+    "open"
+);
+
+elements.modal.classList.add(
+    "active"
+);
+
+elements.modal.classList.add(
+    "show"
+);
+
+elements.modal.setAttribute(
+    "aria-hidden",
+    "false"
+);
+
+setTimeout(
+    function () {
+        elements.fullName?.focus();
+    },
+    50
+);
+```
+
+}
+
+/* =========================================================
+SAVE LEADER
+========================================================= */
+
+async function saveLeader() {
+clearFormError();
+
+```
+const fullName =
+    elements.fullName?.value.trim() ||
+    "";
+
+if (!fullName) {
+    showFormError(
+        "Full name is required."
     );
 
-    const payload =
-        collectLeaderForm();
+    elements.fullName?.focus();
 
-    if (!payload) {
-        return;
-    }
+    return;
+}
 
-    const button =
-        getElement(
-            "save-leader-btn"
+const payload = {
+    full_name:
+        fullName,
+
+    public_name:
+        elements.publicName?.value.trim() ||
+        null,
+
+    position:
+        elements.position?.value.trim() ||
+        null,
+
+    organization:
+        elements.organization?.value.trim() ||
+        null,
+
+    keywords:
+        elements.keywords?.value.trim() ||
+        null,
+
+    nicknames:
+        elements.nicknames?.value.trim() ||
+        null,
+
+    monitoring_enabled:
+        elements.monitoringEnabled
+            ? elements.monitoringEnabled.checked
+            : true
+};
+
+const editId =
+    elements.form?.dataset.editId;
+
+const isEditing =
+    Boolean(editId);
+
+if (elements.submitButton) {
+    elements.submitButton.disabled =
+        true;
+
+    elements.submitButton.textContent =
+        isEditing
+            ? "Updating..."
+            : "Saving...";
+}
+
+try {
+    const url =
+        isEditing
+            ? `/api/leaders/${encodeURIComponent(
+                  editId
+              )}`
+            : "/api/leaders";
+
+    const method =
+        isEditing
+            ? "PUT"
+            : "POST";
+
+    console.log(
+        `CivicLens: ${method} ${url}`
+    );
+
+    const response =
+        await civicLensFetch(
+            url,
+            {
+                method,
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body:
+                    JSON.stringify(
+                        payload
+                    )
+            }
         );
 
-    const originalText =
-        button?.textContent ||
-        "Save Leader";
-
-    if (button) {
-        button.disabled = true;
-        button.textContent =
-            editingLeaderId
-                ? "Updating..."
-                : "Saving...";
-    }
-
-    try {
-
-        let response;
-
-        if (editingLeaderId) {
-
-            response =
-                await civicLensFetch(
-                    `/api/leaders/${encodeURIComponent(
-                        editingLeaderId
-                    )}`,
-                    {
-                        method: "PUT",
-                        body:
-                            JSON.stringify(
-                                payload
-                            )
-                    }
-                );
-
-        } else {
-
-            response =
-                await civicLensFetch(
-                    "/api/leaders",
-                    {
-                        method: "POST",
-                        body:
-                            JSON.stringify(
-                                payload
-                            )
-                    }
-                );
-        }
-
-        if (!response) {
-            return;
-        }
-
-        if (!response.ok) {
-
-            let message =
-                "Unable to save leader.";
-
-            try {
-
-                const data =
-                    await response.json();
-
-                if (data?.detail) {
-                    message =
-                        data.detail;
-                }
-
-            } catch (_) {}
-
-            throw new Error(
-                message
-            );
-        }
-
-        closeModal();
-
-        showSuccess(
-            editingLeaderId
-                ? "Leader updated successfully."
-                : "Leader added successfully."
+    const result =
+        await readJson(
+            response
         );
 
-        await loadLeaders();
-
-    } catch (error) {
-
-        console.error(
-            "Save leader error:",
-            error
-        );
-
-        showError(
-            error.message ||
+    if (!response.ok) {
+        throw new Error(
+            result?.detail ||
+            result?.message ||
             "Unable to save leader."
         );
+    }
 
-    } finally {
+    if (
+        result &&
+        result.success === false
+    ) {
+        throw new Error(
+            result.message ||
+            "Unable to save leader."
+        );
+    }
 
-        if (button) {
-            button.disabled = false;
-            button.textContent =
-                originalText;
-        }
+    console.log(
+        "CivicLens: Leader saved successfully."
+    );
+
+    closeModal();
+
+    await loadLeaders();
+
+} catch (error) {
+    console.error(
+        "CivicLens leader save error:",
+        error
+    );
+
+    showFormError(
+        error.message ||
+        "Unable to save leader."
+    );
+
+} finally {
+    if (elements.submitButton) {
+        elements.submitButton.disabled =
+            false;
+
+        elements.submitButton.textContent =
+            isEditing
+                ? "Update Leader"
+                : "Save Leader";
     }
 }
+```
 
-/* ============================================================
-   TOGGLE MONITORING
-============================================================ */
-
-async function toggleMonitoring(
-    leaderId
-) {
-
-    const leader =
-        leaders.find(
-            item =>
-                String(item.id) ===
-                String(leaderId)
-        );
-
-    if (!leader) {
-        return;
-    }
-
-    const newStatus =
-        leader.monitoring_enabled === false;
-
-    try {
-
-        const response =
-            await civicLensFetch(
-                `/api/leaders/${encodeURIComponent(
-                    leaderId
-                )}`,
-                {
-                    method: "PUT",
-                    body:
-                        JSON.stringify({
-                            monitoring_enabled:
-                                newStatus
-                        })
-                }
-            );
-
-        if (!response) {
-            return;
-        }
-
-        if (!response.ok) {
-
-            let message =
-                "Unable to update monitoring status.";
-
-            try {
-
-                const data =
-                    await response.json();
-
-                if (data?.detail) {
-                    message =
-                        data.detail;
-                }
-
-            } catch (_) {}
-
-            throw new Error(
-                message
-            );
-        }
-
-        showSuccess(
-            newStatus
-                ? "Monitoring enabled."
-                : "Monitoring paused."
-        );
-
-        await loadLeaders();
-
-    } catch (error) {
-
-        console.error(
-            "Toggle monitoring error:",
-            error
-        );
-
-        showError(
-            error.message ||
-            "Unable to update monitoring status."
-        );
-    }
 }
 
-/* ============================================================
-   DELETE LEADER
-============================================================ */
+/* =========================================================
+DELETE LEADER
+========================================================= */
 
 async function deleteLeader(
-    leaderId
+leaderId
 ) {
+const leader =
+leaders.find(
+item =>
+String(item.id) ===
+String(leaderId)
+);
 
-    const leader =
-        leaders.find(
-            item =>
-                String(item.id) ===
-                String(leaderId)
+```
+const leaderName =
+    leader?.full_name ||
+    leader?.public_name ||
+    "this leader";
+
+const confirmed =
+    window.confirm(
+        `Delete ${leaderName}? This action cannot be undone.`
+    );
+
+if (!confirmed) {
+    return;
+}
+
+console.log(
+    "CivicLens: Deleting leader:",
+    leaderId
+);
+
+try {
+    const response =
+        await civicLensFetch(
+            `/api/leaders/${encodeURIComponent(
+                leaderId
+            )}`,
+            {
+                method: "DELETE"
+            }
         );
 
-    if (!leader) {
-        return;
-    }
-
-    const confirmed =
-        window.confirm(
-            `Delete ${leader.full_name || "this leader"}?\n\nThis action cannot be undone.`
+    const result =
+        await readJson(
+            response
         );
 
-    if (!confirmed) {
-        return;
-    }
-
-    try {
-
-        const response =
-            await civicLensFetch(
-                `/api/leaders/${encodeURIComponent(
-                    leaderId
-                )}`,
-                {
-                    method: "DELETE"
-                }
-            );
-
-        if (!response) {
-            return;
-        }
-
-        if (!response.ok) {
-
-            let message =
-                "Unable to delete leader.";
-
-            try {
-
-                const data =
-                    await response.json();
-
-                if (data?.detail) {
-                    message =
-                        data.detail;
-                }
-
-            } catch (_) {}
-
-            throw new Error(
-                message
-            );
-        }
-
-        showSuccess(
-            "Leader deleted successfully."
-        );
-
-        await loadLeaders();
-
-    } catch (error) {
-
-        console.error(
-            "Delete leader error:",
-            error
-        );
-
-        showError(
-            error.message ||
+    if (!response.ok) {
+        throw new Error(
+            result?.detail ||
+            result?.message ||
             "Unable to delete leader."
         );
     }
-}
 
-/* ============================================================
-   SEARCH
-============================================================ */
-
-function searchLeaders(
-    searchTerm
-) {
-
-    const term =
-        String(
-            searchTerm || ""
-        )
-        .trim()
-        .toLowerCase();
-
-    if (!term) {
-
-        renderLeaders(
-            leaders
+    if (
+        result &&
+        result.success === false
+    ) {
+        throw new Error(
+            result.message ||
+            "Unable to delete leader."
         );
-
-        return;
     }
 
-    const filtered =
-        leaders.filter(
-            leader => {
+    console.log(
+        "CivicLens: Leader deleted successfully."
+    );
 
-                const searchable = [
+    await loadLeaders();
+
+} catch (error) {
+    console.error(
+        "CivicLens leader delete error:",
+        error
+    );
+
+    showPageError(
+        error.message ||
+        "Unable to delete leader."
+    );
+}
+```
+
+}
+
+/* =========================================================
+TOGGLE MONITORING
+========================================================= */
+
+async function toggleMonitoring(
+leaderId
+) {
+const leader =
+leaders.find(
+item =>
+String(item.id) ===
+String(leaderId)
+);
+
+```
+if (!leader) {
+    return;
+}
+
+const newStatus =
+    leader.monitoring_enabled === false;
+
+console.log(
+    "CivicLens: Changing monitoring:",
+    leaderId,
+    newStatus
+);
+
+try {
+    const response =
+        await civicLensFetch(
+            `/api/leaders/${encodeURIComponent(
+                leaderId
+            )}`,
+            {
+                method: "PUT",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body:
+                    JSON.stringify({
+                        monitoring_enabled:
+                            newStatus
+                    })
+            }
+        );
+
+    const result =
+        await readJson(
+            response
+        );
+
+    if (!response.ok) {
+        throw new Error(
+            result?.detail ||
+            result?.message ||
+            "Unable to update monitoring status."
+        );
+    }
+
+    if (
+        result &&
+        result.success === false
+    ) {
+        throw new Error(
+            result.message ||
+            "Unable to update monitoring status."
+        );
+    }
+
+    await loadLeaders();
+
+} catch (error) {
+    console.error(
+        "CivicLens monitoring update error:",
+        error
+    );
+
+    showPageError(
+        error.message ||
+        "Unable to update monitoring status."
+    );
+}
+```
+
+}
+
+/* =========================================================
+SEARCH LEADERS
+========================================================= */
+
+function searchLeaders(
+query
+) {
+const normalized =
+String(query || "")
+.trim()
+.toLowerCase();
+
+```
+if (!normalized) {
+    renderLeaders(
+        leaders
+    );
+
+    updateLeaderCount();
+
+    return;
+}
+
+const filtered =
+    leaders.filter(
+        leader => {
+            const searchable =
+                [
                     leader.full_name,
                     leader.public_name,
                     leader.position,
@@ -1355,270 +1784,261 @@ function searchLeaders(
                     .join(" ")
                     .toLowerCase();
 
-                return searchable.includes(
-                    term
-                );
-            }
-        );
-
-    renderLeaders(
-        filtered
-    );
-}
-
-/* ============================================================
-   EVENT HANDLERS
-============================================================ */
-
-function setupEventHandlers() {
-
-    const addButton =
-        getElement(
-            "add-leader-btn"
-        );
-
-    if (addButton) {
-        addButton.addEventListener(
-            "click",
-            openAddModal
-        );
-    }
-
-    const emptyAdd =
-        getElement(
-            "empty-add-leader"
-        );
-
-    if (emptyAdd) {
-        emptyAdd.addEventListener(
-            "click",
-            openAddModal
-        );
-    }
-
-    const refresh =
-        getElement(
-            "refresh-leaders"
-        );
-
-    if (refresh) {
-
-        refresh.addEventListener(
-            "click",
-            async () => {
-
-                refresh.disabled =
-                    true;
-
-                try {
-                    await loadLeaders();
-                } finally {
-                    refresh.disabled =
-                        false;
-                }
-            }
-        );
-    }
-
-    const form =
-        getElement(
-            "leader-form"
-        );
-
-    if (form) {
-        form.addEventListener(
-            "submit",
-            saveLeader
-        );
-    }
-
-    const closeButton =
-        getElement(
-            "close-modal"
-        );
-
-    if (closeButton) {
-        closeButton.addEventListener(
-            "click",
-            closeModal
-        );
-    }
-
-    const cancelButton =
-        getElement(
-            "cancel-modal"
-        );
-
-    if (cancelButton) {
-        cancelButton.addEventListener(
-            "click",
-            closeModal
-        );
-    }
-
-    const overlay =
-        getElement(
-            "modal-overlay"
-        );
-
-    if (overlay) {
-        overlay.addEventListener(
-            "click",
-            closeModal
-        );
-    }
-
-    const search =
-        getElement(
-            "leader-search"
-        );
-
-    if (search) {
-
-        search.addEventListener(
-            "input",
-            event => {
-
-                searchLeaders(
-                    event.target.value
-                );
-            }
-        );
-    }
-
-    const grid =
-        getElement(
-            "leaders-grid"
-        );
-
-    if (grid) {
-
-        grid.addEventListener(
-            "click",
-            event => {
-
-                const button =
-                    event.target.closest(
-                        "[data-action]"
-                    );
-
-                if (!button) {
-                    return;
-                }
-
-                const action =
-                    button.dataset.action;
-
-                const id =
-                    button.dataset.id;
-
-                if (!id) {
-                    return;
-                }
-
-                if (action === "edit") {
-
-                    openEditModal(id);
-
-                } else if (
-                    action === "delete"
-                ) {
-
-                    deleteLeader(id);
-
-                } else if (
-                    action === "toggle"
-                ) {
-
-                    toggleMonitoring(id);
-                }
-            }
-        );
-    }
-
-    const logout =
-        getElement(
-            "logout-btn"
-        );
-
-    if (logout) {
-
-        logout.addEventListener(
-            "click",
-            async event => {
-
-                event.preventDefault();
-
-                const client =
-                    initializeSupabase();
-
-                if (client) {
-                    await client.auth.signOut();
-                }
-
-                window.location.href =
-                    "/login";
-            }
-        );
-    }
-
-    document.addEventListener(
-        "keydown",
-        event => {
-
-            if (
-                event.key === "Escape"
-            ) {
-                closeModal();
-            }
+            return searchable.includes(
+                normalized
+            );
         }
     );
-}
 
-/* ============================================================
-   START
-============================================================ */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    async () => {
-
-        initializeSupabase();
-
-        const authenticated =
-            await verifySession();
-
-        if (!authenticated) {
-            return;
-        }
-
-        setupEventHandlers();
-
-        await loadUserProfile();
-
-        await loadLeaders();
-    }
+renderLeaders(
+    filtered
 );
 
-/* ============================================================
-   GLOBAL API
-============================================================ */
+updateLeaderCount(
+    filtered.length
+);
+```
+
+}
+
+/* =========================================================
+REFRESH
+========================================================= */
+
+async function refreshLeaders() {
+if (elements.refreshButton) {
+elements.refreshButton.disabled =
+true;
+
+```
+    elements.refreshButton.textContent =
+        "↻ Refreshing...";
+}
+
+try {
+    await loadLeaders();
+
+} finally {
+    if (elements.refreshButton) {
+        elements.refreshButton.disabled =
+            false;
+
+        elements.refreshButton.textContent =
+            "↻ Refresh";
+    }
+}
+```
+
+}
+
+/* =========================================================
+LOGOUT
+========================================================= */
+
+async function logoutUser() {
+console.log(
+"CivicLens: Logging out..."
+);
+
+```
+try {
+    if (supabaseClient) {
+        await supabaseClient.auth.signOut();
+    }
+} catch (error) {
+    console.error(
+        "CivicLens logout error:",
+        error
+    );
+}
+
+window.location.href =
+    "/login";
+```
+
+}
+
+/* =========================================================
+FORM HELPERS
+========================================================= */
+
+function clearForm() {
+if (elements.form) {
+elements.form.reset();
+
+```
+    delete elements.form.dataset.editId;
+}
+
+if (elements.monitoringEnabled) {
+    elements.monitoringEnabled.checked =
+        true;
+}
+
+clearFormError();
+```
+
+}
+
+function clearFormError() {
+if (elements.formError) {
+elements.formError.textContent =
+"";
+
+```
+    elements.formError.style.display =
+        "none";
+}
+```
+
+}
+
+function showFormError(
+message
+) {
+if (!elements.formError) {
+window.alert(message);
+return;
+}
+
+```
+elements.formError.textContent =
+    message;
+
+elements.formError.style.display =
+    "block";
+```
+
+}
+
+/* =========================================================
+PAGE ERROR
+========================================================= */
+
+function showPageError(
+message
+) {
+if (elements.pageError) {
+elements.pageError.textContent =
+message;
+
+```
+    elements.pageError.style.display =
+        "block";
+}
+
+if (elements.leadersContainer) {
+    elements.leadersContainer.innerHTML = `
+        <div class="leaders-error">
+            ${escapeHtml(message)}
+        </div>
+    `;
+}
+```
+
+}
+
+/* =========================================================
+LOADING
+========================================================= */
+
+function showLoading() {
+if (!elements.leadersContainer) {
+return;
+}
+
+```
+elements.leadersContainer.innerHTML = `
+    <div class="leaders-loading">
+
+        <div class="loading-spinner"></div>
+
+        <p>
+            Loading leaders...
+        </p>
+
+    </div>
+`;
+```
+
+}
+
+/* =========================================================
+COUNT
+========================================================= */
+
+function updateLeaderCount(
+count = leaders.length
+) {
+if (!elements.leaderCount) {
+return;
+}
+
+```
+elements.leaderCount.textContent =
+    count;
+```
+
+}
+
+/* =========================================================
+HTML ESCAPE
+========================================================= */
+
+function escapeHtml(
+value
+) {
+return String(value)
+.replace(
+/&/g,
+"&"
+)
+.replace(
+/</g,
+"<"
+)
+.replace(
+/>/g,
+">"
+)
+.replace(
+/"/g,
+"""
+)
+.replace(
+/'/g,
+"'"
+);
+}
+
+/* =========================================================
+ATTRIBUTE ESCAPE
+========================================================= */
+
+function escapeAttribute(
+value
+) {
+return escapeHtml(
+value
+);
+}
+
+/* =========================================================
+GLOBAL API
+========================================================= */
 
 window.civicLensLeaders = {
-
-    loadLeaders,
-
-    openAddModal,
-
-    openEditModal,
-
-    closeModal,
-
-    deleteLeader,
-
-    toggleMonitoring,
-
-    searchLeaders,
-
-    civicLensFetch
+loadLeaders,
+openAddModal,
+openEditModal,
+closeModal,
+deleteLeader,
+toggleMonitoring,
+searchLeaders,
+refreshLeaders,
+civicLensFetch
 };
+
+console.log(
+"CivicLens: leaders.js file loaded."
+);
