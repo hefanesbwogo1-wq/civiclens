@@ -3,3 +3,7 @@ uvicorn
 python-dotenv
 python-multipart
 supabase
+bcrypt
+python-jose[cryptography]
+passlib[bcrypt]
+pydantic[email]
