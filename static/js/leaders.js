@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const text=await response.text();
         let result;
         try{ result=JSON.parse(text); } catch{ throw new Error(text.slice(0,300) || `HTTP ${response.status}`); }
-        if(!response.ok){ throw new Error(result.message || result.error || `Request failed: ${response.status}`); }
+        if(!response.ok){ throw new Error((result && (result.detail || result.message || result.error)) || text.slice(0,500) || `Request failed: ${response.status}`); }
         return result;
     }
 
