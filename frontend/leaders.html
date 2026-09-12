@@ -5,121 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Leaders | CivicLens</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/static/js/config.js?v=5"></script>
+  <script src="/static/js/config.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:Inter,system-ui,sans-serif;background:#f6f8fb;display:flex;min-height:100vh}
-    .sidebar{width:240px;background:#0f1e3a;color:#8fa0bf;display:flex;flex-direction:column;padding:18px 12px;position:fixed;height:100vh;left:0;top:0;z-index:10}
+    .sidebar{width:240px;background:#0f1e3a;color:#8fa0bf;display:flex;flex-direction:column;padding:18px 12px;position:fixed;height:100vh;left:0;top:0}
     .sidebar-brand{display:flex;align-items:center;gap:10px;padding:10px 8px;margin-bottom:20px}
-    .brand-icon{width:34px;height:34px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#0f1e3a;font-weight:900;font-size:14px}
-    .brand-text{color:#fff;font-weight:800;font-size:15px;line-height:1.1} .brand-text span{display:block;font-size:9px;letter-spacing:1px;color:#7c8db0;font-weight:600;margin-top:2px}
-    .nav-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;color:#8fa0bf;text-decoration:none;font-size:13px;font-weight:500;margin-bottom:4px}
-    .nav-item.active,.nav-item:hover{background:#1a2e5a;color:#fff}
-    .main{margin-left:240px;flex:1;min-height:100vh}
+    .brand-icon{width:34px;height:34px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#0f1e3a;font-weight:900}
+    .brand-text{color:#fff;font-weight:800;font-size:15px} .brand-text span{display:block;font-size:9px;color:#7c8db0}
+    .nav-item{display:flex;gap:10px;padding:11px 12px;border-radius:10px;color:#8fa0bf;text-decoration:none;font-size:13px;margin-bottom:4px}
+    .nav-item.active{background:#1a2e5a;color:#fff}
+    .main{margin-left:240px;flex:1}
     .topbar{background:#fff;border-bottom:1px solid #e6eaf0;padding:16px 28px;display:flex;justify-content:space-between;align-items:center}
-    .topbar h1{font-size:20px;color:#10223b;font-weight:800} .topbar p{font-size:11px;color:#7b8797;margin-top:3px}
     .content{padding:24px 28px}
-    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
-    .search-box{position:relative} .search-box input{width:300px;padding:10px 12px 10px 36px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none;background:#fff}
+    .toolbar{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px}
+    .search-box input{width:280px;padding:10px 12px 10px 36px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px}
     .btn{padding:10px 16px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;border:0}
-    .btn-secondary{background:#fff;border:1px solid #e2e8f0;color:#334155} .btn-primary{background:#1769e0;color:#fff}
+    .btn-primary{background:#1769e0;color:#fff} .btn-secondary{background:#fff;border:1px solid #e2e8f0}
     .leaders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
-    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
   <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-icon">CL</div>
-      <div class="brand-text">CivicLens <span>POLITICAL INTELLIGENCE</span></div>
-    </div>
-    <a href="/dashboard" class="nav-item">◉ Dashboard</a>
-    <a href="/mentions" class="nav-item">◉ Mentions</a>
-    <a href="/leaders" class="nav-item active">◉ Leaders</a>
-    <a href="/platforms" class="nav-item">◉ Platforms</a>
-    <a href="/reports" class="nav-item">◉ Reports</a>
-    <a href="/settings" class="nav-item">◉ Settings</a>
-    <div style="margin-top:auto;padding:10px">
-      <button id="logout-btn" style="width:100%;padding:10px;background:#162a56;border:0;border-radius:10px;color:#8fa0bf;font-weight:700;font-size:12px;cursor:pointer">Logout</button>
-    </div>
+    <div class="sidebar-brand"><div class="brand-icon">CL</div><div class="brand-text">CivicLens <span>POLITICAL INTELLIGENCE</span></div></div>
+    <a href="/dashboard" class="nav-item">Dashboard</a>
+    <a href="/mentions" class="nav-item">Mentions</a>
+    <a href="/leaders" class="nav-item active">Leaders</a>
+    <a href="/settings" class="nav-item">Settings</a>
   </aside>
-
   <div class="main">
-    <div class="topbar">
-      <div>
-        <div style="font-size:9px;letter-spacing:1.5px;color:#1769e0;font-weight:800;margin-bottom:2px">MONITORING</div>
-        <h1>Leaders</h1>
-        <p>Manage leaders and the keywords used to monitor public mentions.</p>
-      </div>
-    </div>
-
+    <div class="topbar"><div><h1 style="font-size:20px;color:#10223b;font-weight:800">Leaders</h1><p style="font-size:11px;color:#7b8797">Manage leaders and monitoring</p></div></div>
     <div class="content">
       <div class="toolbar">
-        <div class="search-box">
-          <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8">⌕</span>
-          <input id="search-leaders" type="text" placeholder="Search leaders..." />
-        </div>
-        <div style="display:flex;gap:10px">
-          <button id="refresh-leaders" class="btn btn-secondary">↻ Refresh</button>
-          <button id="add-leader-btn" class="btn btn-primary">+ Add Leader</button>
-        </div>
+        <div class="search-box"><input id="search-leaders" type="text" placeholder="Search leaders..." /></div>
+        <div style="display:flex;gap:10px"><button id="refresh-leaders" class="btn btn-secondary">Refresh</button><button id="add-leader-btn" class="btn btn-primary">+ Add Leader</button></div>
       </div>
-
-      <!-- THIS IS THE FIX - THIS DIV WAS MISSING BEFORE - NOW IT EXISTS -->
-      <div id="leaders-container" class="leaders-grid">
-        <div style="grid-column:1/-1;text-align:center;padding:80px 20px;color:#94a3b8">
-          <div style="width:32px;height:32px;margin:0 auto 12px;border:3px solid #e7edf5;border-top-color:#1769e0;border-radius:50%;animation:spin .8s linear infinite"></div>
-          Loading leaders...
-        </div>
+      <!-- FIX: THIS DIV WAS MISSING - NOW IT EXISTS -->
+      <div id="leaders-container" class="leaders-grid" style="min-height:200px">
+        <div style="grid-column:1/-1;text-align:center;padding:60px;color:#94a3b8">Loading leaders...</div>
       </div>
-
     </div>
   </div>
-
-  <!-- Add Leader Modal -->
-  <div id="add-leader-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:9999;align-items:center;justify-content:center">
-    <div style="background:#fff;width:90%;max-width:460px;border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-      <h3 style="font-size:16px;font-weight:800;color:#10223b;margin-bottom:14px">Add New Leader</h3>
-      <form id="add-leader-form" style="display:flex;flex-direction:column;gap:12px">
-        <input id="leader-name" type="text" placeholder="Full name e.g. William Ruto" required style="padding:11px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px" />
-        <input id="leader-position" type="text" placeholder="Position e.g. President" style="padding:11px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px" />
-        <input id="leader-org" type="text" placeholder="Organization" style="padding:11px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px" />
-        <div style="display:flex;gap:10px;margin-top:6px">
-          <button type="button" id="close-modal" style="flex:1;padding:11px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;font-weight:700;cursor:pointer">Cancel</button>
-          <button type="submit" style="flex:1;padding:11px;background:#1769e0;color:#fff;border:0;border-radius:10px;font-weight:700;cursor:pointer">Add Leader</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- USE NEW FILE TO BUST CACHE - THIS FIXES THE 450 ERROR -->
-  <script src="/static/js/leaders-final.js?v=5"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", ()=>{
-      const modal = document.getElementById("add-leader-modal");
-      document.getElementById("add-leader-btn")?.addEventListener("click", ()=> modal.style.display="flex");
-      document.getElementById("close-modal")?.addEventListener("click", ()=> modal.style.display="none");
-      modal?.addEventListener("click", (e)=>{ if(e.target===modal) modal.style.display="none"; });
-      
-      document.getElementById("add-leader-form")?.addEventListener("submit", async (e)=>{
-        e.preventDefault();
-        const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-        const { data:{user} } = await supabase.auth.getUser();
-        const name = document.getElementById("leader-name").value.trim();
-        const pos = document.getElementById("leader-position").value.trim();
-        const org = document.getElementById("leader-org").value.trim();
-        if(!name) return;
-        const { error } = await supabase.from("leaders").insert({ user_id:user.id, full_name:name, public_name:name, position:pos, organization:org, monitoring_enabled:true });
-        if(error) alert(error.message); else { modal.style.display="none"; e.target.reset(); location.reload(); }
-      });
-      
-      document.getElementById("logout-btn")?.addEventListener("click", async ()=>{
-        const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-        await supabase.auth.signOut(); location.href="/login";
-      });
-      
-      document.getElementById("refresh-leaders")?.addEventListener("click", ()=> location.reload());
-    });
-  </script>
+  <div id="add-leader-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center"><div style="background:#fff;width:90%;max-width:440px;border-radius:16px;padding:20px"><h3 style="margin-bottom:12px">Add Leader</h3><form id="add-leader-form" style="display:flex;flex-direction:column;gap:10px"><input id="leader-name" required placeholder="Full name" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px"/><input id="leader-position" placeholder="Position" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px"/><input id="leader-org" placeholder="Organization" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px"/><div style="display:flex;gap:10px"><button type="button" id="close-modal" style="flex:1;padding:10px">Cancel</button><button type="submit" style="flex:1;padding:10px;background:#1769e0;color:#fff;border:0;border-radius:8px">Add</button></div></form></div></div>
+  <script src="/static/js/leaders.js?v=5"></script>
 </body>
 </html>
