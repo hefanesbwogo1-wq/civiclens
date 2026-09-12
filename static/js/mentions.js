@@ -1,1277 +1,214 @@
 "use strict";
-
-/* =========================================================
-   CIVICLENS MENTIONS
-========================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    initializeMentions
-);
-
+document.addEventListener("DOMContentLoaded", initializeMentions);
 let supabaseClient = null;
-
 const elements = {};
-
-
-/* =========================================================
-   INITIALIZE
-========================================================= */
+let allMentions = [];
+let allLeaders = [];
 
 async function initializeMentions() {
-
-    cacheElements();
-
-    initializeSupabase();
-
-    if (!supabaseClient) {
-
-        showError(
-            "CivicLens configuration is unavailable."
-        );
-
-        return;
-    }
-
-    const authenticated =
-        await verifySession();
-
-    if (!authenticated) {
-        return;
-    }
-
-    await loadUser();
-
-    await loadStats();
-
-    await loadLeaders();
-
-    await loadMentions();
-
-    setupEvents();
-
-    console.log(
-        "CivicLens: mentions.js loaded successfully."
-    );
+  cacheElements();
+  initializeSupabase();
+  if (!supabaseClient) { showError("CivicLens configuration is unavailable."); return; }
+  const auth = await verifySession();
+  if (!auth) return;
+  await loadUser();
+  await loadLeaders();
+  await loadMentions();
+  setupEvents();
+  console.log("CivicLens: mentions.js loaded successfully.");
 }
-
-
-/* =========================================================
-   CACHE ELEMENTS
-========================================================= */
 
 function cacheElements() {
-
-    elements.userName =
-        document.getElementById("user-name");
-
-    elements.userEmail =
-        document.getElementById("user-email");
-
-    elements.userAvatar =
-        document.getElementById("user-avatar");
-
-    elements.search =
-        document.getElementById("search-input");
-
-    elements.leader =
-        document.getElementById("leader-filter");
-
-    elements.platform =
-        document.getElementById("platform-filter");
-
-    elements.sentiment =
-        document.getElementById("sentiment-filter");
-
-    elements.clear =
-        document.getElementById("clear-filters");
-
-    elements.refresh =
-        document.getElementById("refresh-button");
-
-    elements.container =
-        document.getElementById("mentions-container");
-
-    elements.count =
-        document.getElementById("mention-count");
-
-    elements.statTotal =
-        document.getElementById("stat-total");
-
-    elements.statPositive =
-        document.getElementById("stat-positive");
-
-    elements.statNeutral =
-        document.getElementById("stat-neutral");
-
-    elements.statNegative =
-        document.getElementById("stat-negative");
-
-    elements.logout =
-        document.getElementById("logout-button");
-
-    /*
-       Optional test button.
-       We will add this to mentions.html.
-    */
-    elements.testMention =
-        document.getElementById("test-mention-button");
-
-    elements.testStatus =
-        document.getElementById("test-mention-status");
+  elements.userName = document.getElementById("user-name");
+  elements.userEmail = document.getElementById("user-email");
+  elements.userAvatar = document.getElementById("user-avatar");
+  elements.search = document.getElementById("search-input");
+  elements.leader = document.getElementById("leader-filter");
+  elements.platform = document.getElementById("platform-filter");
+  elements.sentiment = document.getElementById("sentiment-filter");
+  elements.clear = document.getElementById("clear-filters");
+  elements.refresh = document.getElementById("refresh-button");
+  elements.container = document.getElementById("mentions-container");
+  elements.count = document.getElementById("mention-count");
+  elements.statTotal = document.getElementById("stat-total");
+  elements.statPositive = document.getElementById("stat-positive");
+  elements.statNeutral = document.getElementById("stat-neutral");
+  elements.statNegative = document.getElementById("stat-negative");
+  elements.logout = document.getElementById("logout-button");
+  elements.testMention = document.getElementById("test-mention-button");
+  elements.testStatus = document.getElementById("test-mention-status");
 }
-
-
-/* =========================================================
-   SUPABASE
-========================================================= */
 
 function initializeSupabase() {
-
-    if (
-        !window.supabase ||
-        !window.SUPABASE_URL ||
-        !window.SUPABASE_ANON_KEY
-    ) {
-
-        console.warn(
-            "CivicLens: Supabase configuration unavailable."
-        );
-
-        return;
-    }
-
-    supabaseClient =
-        window.supabase.createClient(
-            window.SUPABASE_URL,
-            window.SUPABASE_ANON_KEY
-        );
+  if (!window.supabase || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
+  supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 }
-
-
-/* =========================================================
-   VERIFY SESSION
-========================================================= */
-
 async function verifySession() {
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient.auth.getSession();
-
-        if (
-            error ||
-            !data.session
-        ) {
-
-            window.location.href =
-                "/login";
-
-            return false;
-        }
-
-        return true;
-
-    }
-    catch (error) {
-
-        console.error(
-            "CivicLens session error:",
-            error
-        );
-
-        window.location.href =
-            "/login";
-
-        return false;
-    }
+  try { const { data } = await supabaseClient.auth.getSession(); if (!data?.session) { window.location.href="/login"; return false; } return true; } 
+  catch { window.location.href="/login"; return false; }
 }
-
-
-/* =========================================================
-   AUTHENTICATED API REQUEST
-========================================================= */
-
-async function civicLensFetch(
-    url,
-    options = {}
-) {
-
-    const {
-        data,
-        error
-    } =
-        await supabaseClient.auth.getSession();
-
-    if (
-        error ||
-        !data.session
-    ) {
-
-        window.location.href =
-            "/login";
-
-        throw new Error(
-            "Authentication session expired."
-        );
-    }
-
-    const headers =
-        new Headers(
-            options.headers || {}
-        );
-
-    headers.set(
-        "Authorization",
-        `Bearer ${data.session.access_token}`
-    );
-
-    headers.set(
-        "Accept",
-        "application/json"
-    );
-
-    return fetch(
-        url,
-        {
-            ...options,
-            headers
-        }
-    );
+async function civicLensFetch(url, options={}) {
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data?.session) { window.location.href="/login"; throw new Error("Session expired"); }
+  const headers = new Headers(options.headers||{});
+  headers.set("Authorization", `Bearer ${data.session.access_token}`);
+  headers.set("Accept", "application/json");
+  return fetch(url, {...options, headers});
 }
-
-
-/* =========================================================
-   LOAD USER
-========================================================= */
 
 async function loadUser() {
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient.auth.getUser();
-
-        if (
-            error ||
-            !data.user
-        ) {
-            return;
-        }
-
-        const user =
-            data.user;
-
-        const metadata =
-            user.user_metadata || {};
-
-        const name =
-            metadata.full_name ||
-            user.email?.split("@")[0] ||
-            "CivicLens User";
-
-        if (elements.userName) {
-
-            elements.userName.textContent =
-                name;
-        }
-
-        if (elements.userEmail) {
-
-            elements.userEmail.textContent =
-                user.email || "";
-        }
-
-        if (elements.userAvatar) {
-
-            elements.userAvatar.textContent =
-                name
-                    .trim()
-                    .charAt(0)
-                    .toUpperCase() ||
-                "C";
-        }
-
-    }
-    catch (error) {
-
-        console.error(
-            "CivicLens user error:",
-            error
-        );
-    }
+  try { const { data } = await supabaseClient.auth.getUser(); if(!data?.user) return; const name = data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User"; if(elements.userName) elements.userName.textContent=name; if(elements.userEmail) elements.userEmail.textContent=data.user.email; if(elements.userAvatar) elements.userAvatar.textContent=name.charAt(0).toUpperCase(); } catch {}
 }
-
-
-/* =========================================================
-   LOAD STATS
-========================================================= */
-
-async function loadStats() {
-
-    try {
-
-        const response =
-            await civicLensFetch(
-                "/api/mentions/stats"
-            );
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Unable to load mention statistics."
-            );
-        }
-
-        const result =
-            await response.json();
-
-        if (!result.success) {
-            return;
-        }
-
-        if (elements.statTotal) {
-
-            elements.statTotal.textContent =
-                result.total || 0;
-        }
-
-        if (elements.statPositive) {
-
-            elements.statPositive.textContent =
-                result.positive || 0;
-        }
-
-        if (elements.statNeutral) {
-
-            elements.statNeutral.textContent =
-                result.neutral || 0;
-        }
-
-        if (elements.statNegative) {
-
-            elements.statNegative.textContent =
-                result.negative || 0;
-        }
-
-    }
-    catch (error) {
-
-        console.error(
-            "CivicLens statistics error:",
-            error
-        );
-    }
-}
-
-
-/* =========================================================
-   LOAD LEADERS
-========================================================= */
 
 async function loadLeaders() {
-
-    try {
-
-        const response =
-            await civicLensFetch(
-                "/api/mentions/leaders"
-            );
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Unable to load leaders."
-            );
-        }
-
-        const result =
-            await response.json();
-
-        if (!result.success) {
-            return;
-        }
-
-        const currentValue =
-            elements.leader.value;
-
-        elements.leader.innerHTML = `
-            <option value="">
-                All Leaders
-            </option>
-        `;
-
-        for (
-            const leader of result.leaders || []
-        ) {
-
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-            option.value =
-                leader;
-
-            option.textContent =
-                leader;
-
-            elements.leader.appendChild(
-                option
-            );
-        }
-
-        if (
-            result.leaders.includes(
-                currentValue
-            )
-        ) {
-
-            elements.leader.value =
-                currentValue;
-        }
-
-    }
-    catch (error) {
-
-        console.error(
-            "CivicLens leader filter error:",
-            error
-        );
-    }
+  try {
+    const res = await civicLensFetch("/api/leaders");
+    const result = await res.json();
+    const leaders = result.leaders || result || [];
+    allLeaders = leaders;
+    if(!elements.leader) return;
+    const current = elements.leader.value;
+    elements.leader.innerHTML = `<option value="">All Leaders</option>`;
+    leaders.forEach(l => {
+      const opt = document.createElement("option");
+      opt.value = l.id; // use ID for filtering
+      opt.textContent = l.full_name || l.public_name || "Unnamed";
+      opt.dataset.name = (l.full_name||"").toLowerCase();
+      elements.leader.appendChild(opt);
+    });
+    if(current) elements.leader.value = current;
+  } catch(e){ console.error("Leader filter error", e); }
 }
-
-
-/* =========================================================
-   LOAD MENTIONS
-========================================================= */
 
 async function loadMentions() {
-
-    showLoading();
-
-    try {
-
-        const params =
-            new URLSearchParams();
-
-        const search =
-            elements.search.value.trim();
-
-        const leader =
-            elements.leader.value;
-
-        const platform =
-            elements.platform.value;
-
-        const sentiment =
-            elements.sentiment.value;
-
-        if (search) {
-
-            params.set(
-                "search",
-                search
-            );
-        }
-
-        if (leader) {
-
-            params.set(
-                "leader",
-                leader
-            );
-        }
-
-        if (platform) {
-
-            params.set(
-                "platform",
-                platform
-            );
-        }
-
-        if (sentiment) {
-
-            params.set(
-                "sentiment",
-                sentiment
-            );
-        }
-
-        const query =
-            params.toString();
-
-        const url =
-            query
-                ? `/api/mentions?${query}`
-                : "/api/mentions";
-
-        const response =
-            await civicLensFetch(
-                url
-            );
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Unable to load mentions."
-            );
-        }
-
-        const result =
-            await response.json();
-
-        if (!result.success) {
-
-            throw new Error(
-                result.message ||
-                "Unable to load mentions."
-            );
-        }
-
-        renderMentions(
-            result.mentions || []
-        );
-
+  showLoading();
+  try {
+    const res = await civicLensFetch("/api/mentions");
+    const result = await res.json();
+    if(!res.ok) throw new Error(result.error||"Unable to load mentions");
+    allMentions = result.mentions || [];
+    // If empty, auto-collect real news once
+    if(allMentions.length===0 && !sessionStorage.getItem("autoCollected")){
+      sessionStorage.setItem("autoCollected","1");
+      await triggerCollect(true);
+      return;
     }
-    catch (error) {
-
-        console.error(
-            "CivicLens mentions error:",
-            error
-        );
-
-        showError(
-            "Unable to load mentions. Please refresh and try again."
-        );
-    }
+    applyFiltersAndRender();
+  } catch(e){
+    console.error(e);
+    showError("Unable to load mentions. Click Refresh to collect real news.");
+  }
 }
 
+function applyFiltersAndRender() {
+  let filtered = [...allMentions];
+  const search = (elements.search?.value||"").toLowerCase().trim();
+  const leaderId = elements.leader?.value||"";
+  const platform = elements.platform?.value||"";
+  const sentiment = elements.sentiment?.value||"";
 
-/* =========================================================
-   RENDER MENTIONS
-========================================================= */
+  if(search) filtered = filtered.filter(m => `${m.content} ${m.author} ${m.platform} ${m.leaders?.full_name||""}`.toLowerCase().includes(search));
+  if(leaderId) filtered = filtered.filter(m => String(m.leader_id)===String(leaderId));
+  if(platform) filtered = filtered.filter(m => (m.platform||"").toLowerCase()===platform.toLowerCase());
+  if(sentiment) filtered = filtered.filter(m => (m.sentiment||"").toLowerCase()===sentiment.toLowerCase());
 
-function renderMentions(
-    mentions
-) {
-
-    if (elements.count) {
-
-        elements.count.textContent =
-            `${mentions.length} ${
-                mentions.length === 1
-                    ? "mention"
-                    : "mentions"
-            }`;
-    }
-
-    if (!mentions.length) {
-
-        elements.container.innerHTML = `
-
-            <div class="mentions-empty">
-
-                <div class="empty-mention-icon">
-                    ◉
-                </div>
-
-                <h4>
-                    No mentions found
-                </h4>
-
-                <p>
-                    CivicLens has not collected any public
-                    mentions matching your current filters.
-                    Once monitoring begins, conversations
-                    mentioning your tracked leaders will
-                    appear here.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
-    }
-
-    elements.container.innerHTML =
-        mentions
-            .map(
-                createMentionCard
-            )
-            .join("");
+  renderMentions(filtered);
+  updateStats(filtered);
 }
 
-
-/* =========================================================
-   CREATE MENTION CARD
-========================================================= */
-
-function createMentionCard(
-    mention
-) {
-
-    const author =
-        mention.author_name ||
-        "Public User";
-
-    const handle =
-        mention.author_handle ||
-        "";
-
-    const leader =
-        mention.leader_name ||
-        "Tracked leader";
-
-    const platform =
-        mention.platform ||
-        "Unknown";
-
-    let sentiment =
-        String(
-            mention.sentiment ||
-            "neutral"
-        ).toLowerCase();
-
-    const allowedSentiments = [
-        "positive",
-        "neutral",
-        "negative"
-    ];
-
-    if (
-        !allowedSentiments.includes(
-            sentiment
-        )
-    ) {
-
-        sentiment = "neutral";
-    }
-
-    const content =
-        escapeHtml(
-            mention.content || ""
-        );
-
-    const avatar =
-        escapeHtml(
-            author
-                .trim()
-                .charAt(0)
-                .toUpperCase() ||
-            "P"
-        );
-
-    const authorSafe =
-        escapeHtml(author);
-
-    const handleSafe =
-        escapeHtml(handle);
-
-    const leaderSafe =
-        escapeHtml(leader);
-
-    const platformSafe =
-        escapeHtml(platform);
-
-    const date =
-        formatDate(
-            mention.published_at ||
-            mention.created_at
-        );
-
-    const postLink =
-        isValidHttpUrl(
-            mention.post_url
-        )
-            ? `
-
-                <a
-                    class="view-post"
-                    href="${escapeAttribute(
-                        mention.post_url
-                    )}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    View Original Post →
-                </a>
-
-            `
-            : "";
-
-    return `
-
-        <article class="mention-card">
-
-            <div class="mention-top">
-
-                <div class="mention-author">
-
-                    <div class="author-avatar">
-                        ${avatar}
-                    </div>
-
-                    <div>
-
-                        <span class="author-name">
-                            ${authorSafe}
-                        </span>
-
-                        <span class="author-handle">
-                            ${handleSafe}
-                        </span>
-
-                    </div>
-
-                </div>
-
-                <div class="mention-meta">
-
-                    <span class="platform-badge">
-                        ${platformSafe}
-                    </span>
-
-                    <span
-                        class="sentiment-badge ${sentiment}"
-                    >
-                        ${capitalize(sentiment)}
-                    </span>
-
-                </div>
-
-            </div>
-
-            <p class="mention-content">
-                ${content}
-            </p>
-
-            <div class="mention-bottom">
-
-                <span class="mention-leader">
-
-                    Mentioning:
-
-                    <strong>
-                        ${leaderSafe}
-                    </strong>
-
-                    · ${escapeHtml(date)}
-
-                </span>
-
-                ${postLink}
-
-            </div>
-
-        </article>
-
-    `;
+function renderMentions(mentions) {
+  if(elements.count) elements.count.textContent = `${mentions.length} ${mentions.length===1?"mention":"mentions"}`;
+  if(!mentions.length){
+    elements.container.innerHTML = `
+      <div class="empty-state" style="border-style:dashed">
+        <div class="empty-icon">◉</div>
+        <h2>No mentions found</h2>
+        <p>No public mentions matching your filters. Click Refresh to collect real news for your tracked leaders.</p>
+        <button class="btn btn-primary" style="margin-top:14px" onclick="triggerCollect()">↻ Collect Real News</button>
+      </div>`;
+    return;
+  }
+  elements.container.innerHTML = mentions.map(createMentionCard).join("");
 }
 
+function createMentionCard(m) {
+  const leader = m.leaders || allLeaders.find(l=>String(l.id)===String(m.leader_id));
+  const author = escapeHtml(m.author||"News Source");
+  const content = escapeHtml(m.content||"");
+  const platform = escapeHtml(m.platform||"News");
+  const sentiment = (m.sentiment||"neutral").toLowerCase();
+  const avatar = author.charAt(0).toUpperCase();
+  const date = formatDate(m.published_at||m.created_at);
+  const link = isValidHttpUrl(m.url||m.post_url) ? `<a class="cl-m-link" href="${escapeAttribute(m.url||m.post_url)}" target="_blank" rel="noopener">View Source →</a>` : "";
+  const sentClass = sentiment==="positive"?"pos":sentiment==="negative"?"neg":"neu";
+  
+  return `
+  <article class="cl-mention">
+    <div class="cl-m-top">
+      <div class="cl-m-author-row"><div class="cl-m-avatar">${avatar}</div><div><span class="cl-m-author-name">${author}</span><span class="cl-m-platform-inline">${platform}</span></div></div>
+      <span class="cl-m-sent ${sentClass}">${capitalize(sentiment)}</span>
+    </div>
+    <p class="cl-m-content">${content}</p>
+    <div class="cl-m-bottom">
+      <span class="cl-m-leader">📌 ${escapeHtml(leader?.full_name||leader?.public_name||"Tracked Leader")} • ${escapeHtml(date)}</span>
+      ${link}
+    </div>
+  </article>`;
+}
 
-/* =========================================================
-   TEST MENTION
-========================================================= */
+async function triggerCollect(silent=false) {
+  if(elements.refresh){ elements.refresh.disabled=true; elements.refresh.textContent="🔎 Collecting real news..."; }
+  if(elements.testStatus) elements.testStatus.textContent="Collecting real public mentions...";
+  try {
+    const res = await civicLensFetch("/api/collect", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({}) });
+    const j = await res.json();
+    if(!res.ok) throw new Error(j.error||"Collect failed");
+    console.log("Collected", j.collected);
+    const mentionsRes = await civicLensFetch("/api/mentions");
+    const mentionsJson = await mentionsRes.json();
+    allMentions = mentionsJson.mentions||[];
+    applyFiltersAndRender();
+    if(elements.testStatus) elements.testStatus.textContent = j.collected>0 ? `Collected ${j.collected} new real mentions!` : "Already up to date - no new mentions.";
+  } catch(e){
+    console.error(e);
+    if(!silent) showError(e.message);
+  } finally {
+    if(elements.refresh){ elements.refresh.disabled=false; elements.refresh.textContent="↻ Refresh"; }
+  }
+}
+window.triggerCollect = triggerCollect;
 
 async function createTestMention() {
-
-    if (!elements.testMention) {
-        return;
-    }
-
-    elements.testMention.disabled =
-        true;
-
-    if (elements.testStatus) {
-
-        elements.testStatus.textContent =
-            "Creating test mention...";
-    }
-
-    console.log(
-        "CivicLens: Starting test mention."
-    );
-
-    try {
-
-        const uniqueId =
-            `civiclens-test-${Date.now()}`;
-
-        const response =
-            await civicLensFetch(
-                "/api/collector/test-ingest",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        platform: "x",
-
-                        external_id:
-                            uniqueId,
-
-                        author_name:
-                            "CivicLens Test User",
-
-                        author_handle:
-                            "@civiclens_test",
-
-                        content:
-                            "This is a CivicLens test mention about William Ruto and Ruto.",
-
-                        post_url:
-                            "https://x.com/",
-
-                        sentiment:
-                            "neutral",
-
-                        published_at:
-                            new Date().toISOString()
-                    })
-                }
-            );
-
-        console.log(
-            "CivicLens: test-ingest HTTP status:",
-            response.status
-        );
-
-        let result;
-
-        try {
-
-            result =
-                await response.json();
-
-        }
-        catch {
-
-            result = null;
-        }
-
-        console.log(
-            "CivicLens: test-ingest response:",
-            result
-        );
-
-        if (!response.ok) {
-
-            throw new Error(
-                result?.detail ||
-                "Test mention could not be created."
-            );
-        }
-
-        if (elements.testStatus) {
-
-            elements.testStatus.textContent =
-                "Test mention created successfully.";
-        }
-
-        await loadStats();
-
-        await loadLeaders();
-
-        await loadMentions();
-
-    }
-    catch (error) {
-
-        console.error(
-            "CivicLens test mention error:",
-            error
-        );
-
-        if (elements.testStatus) {
-
-            elements.testStatus.textContent =
-                `Test failed: ${error.message}`;
-        }
-    }
-    finally {
-
-        elements.testMention.disabled =
-            false;
-    }
+  await triggerCollect();
 }
-
-
-/* =========================================================
-   EVENTS
-========================================================= */
 
 function setupEvents() {
-
-    let searchTimer;
-
-    if (elements.search) {
-
-        elements.search.addEventListener(
-            "input",
-            function () {
-
-                clearTimeout(
-                    searchTimer
-                );
-
-                searchTimer =
-                    setTimeout(
-                        loadMentions,
-                        350
-                    );
-            }
-        );
-    }
-
-    if (elements.leader) {
-
-        elements.leader.addEventListener(
-            "change",
-            loadMentions
-        );
-    }
-
-    if (elements.platform) {
-
-        elements.platform.addEventListener(
-            "change",
-            loadMentions
-        );
-    }
-
-    if (elements.sentiment) {
-
-        elements.sentiment.addEventListener(
-            "change",
-            loadMentions
-        );
-    }
-
-    if (elements.clear) {
-
-        elements.clear.addEventListener(
-            "click",
-            function () {
-
-                elements.search.value =
-                    "";
-
-                elements.leader.value =
-                    "";
-
-                elements.platform.value =
-                    "";
-
-                elements.sentiment.value =
-                    "";
-
-                loadMentions();
-            }
-        );
-    }
-
-    if (elements.refresh) {
-
-        elements.refresh.addEventListener(
-            "click",
-            refreshMentions
-        );
-    }
-
-    if (elements.testMention) {
-
-        elements.testMention.addEventListener(
-            "click",
-            createTestMention
-        );
-    }
-
-    if (elements.logout) {
-
-        elements.logout.addEventListener(
-            "click",
-            logoutUser
-        );
-    }
+  let t;
+  if(elements.search) elements.search.addEventListener("input", ()=>{ clearTimeout(t); t=setTimeout(applyFiltersAndRender,250); });
+  if(elements.leader) elements.leader.addEventListener("change", applyFiltersAndRender);
+  if(elements.platform) elements.platform.addEventListener("change", applyFiltersAndRender);
+  if(elements.sentiment) elements.sentiment.addEventListener("change", applyFiltersAndRender);
+  if(elements.clear) elements.clear.addEventListener("click", ()=>{ if(elements.search) elements.search.value=""; if(elements.leader) elements.leader.value=""; if(elements.platform) elements.platform.value=""; if(elements.sentiment) elements.sentiment.value=""; applyFiltersAndRender(); });
+  if(elements.refresh) elements.refresh.addEventListener("click", ()=>triggerCollect());
+  if(elements.testMention) elements.testMention.addEventListener("click", triggerCollect);
+  if(elements.logout) elements.logout.addEventListener("click", async()=>{ await supabaseClient.auth.signOut(); window.location.href="/login"; });
 }
 
-
-/* =========================================================
-   REFRESH
-========================================================= */
-
-async function refreshMentions() {
-
-    if (elements.refresh) {
-
-        elements.refresh.disabled =
-            true;
-
-        elements.refresh.textContent =
-            "↻ Refreshing...";
-    }
-
-    try {
-
-        await loadStats();
-
-        await loadLeaders();
-
-        await loadMentions();
-
-    }
-    finally {
-
-        if (elements.refresh) {
-
-            elements.refresh.disabled =
-                false;
-
-            elements.refresh.textContent =
-                "↻ Refresh";
-        }
-    }
+function updateStats(list) {
+  const total = list.length;
+  const pos = list.filter(m=>(m.sentiment||"").toLowerCase()==="positive").length;
+  const neu = list.filter(m=>(m.sentiment||"").toLowerCase()==="neutral").length;
+  const neg = list.filter(m=>(m.sentiment||"").toLowerCase()==="negative").length;
+  if(elements.statTotal) elements.statTotal.textContent=total;
+  if(elements.statPositive) elements.statPositive.textContent=pos;
+  if(elements.statNeutral) elements.statNeutral.textContent=neu;
+  if(elements.statNegative) elements.statNegative.textContent=neg;
 }
 
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-async function logoutUser() {
-
-    try {
-
-        if (supabaseClient) {
-
-            await supabaseClient.auth.signOut();
-        }
-
-    }
-    catch (error) {
-
-        console.error(
-            "CivicLens logout error:",
-            error
-        );
-    }
-
-    window.location.href =
-        "/login";
-}
-
-
-/* =========================================================
-   LOADING
-========================================================= */
-
-function showLoading() {
-
-    if (!elements.container) {
-        return;
-    }
-
-    elements.container.innerHTML = `
-
-        <div class="mentions-loading">
-
-            <div class="loading-spinner"></div>
-
-            <p>
-                Loading mentions...
-            </p>
-
-        </div>
-
-    `;
-}
-
-
-/* =========================================================
-   ERROR
-========================================================= */
-
-function showError(
-    message
-) {
-
-    if (!elements.container) {
-        return;
-    }
-
-    elements.container.innerHTML = `
-
-        <div class="mentions-error">
-            ${escapeHtml(message)}
-        </div>
-
-    `;
-}
-
-
-/* =========================================================
-   DATE FORMAT
-========================================================= */
-
-function formatDate(
-    value
-) {
-
-    if (!value) {
-
-        return "Date unavailable";
-    }
-
-    const date =
-        new Date(value);
-
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
-
-        return String(value);
-    }
-
-    return date.toLocaleString(
-        undefined,
-        {
-            dateStyle: "medium",
-            timeStyle: "short"
-        }
-    );
-}
-
-
-/* =========================================================
-   CAPITALIZE
-========================================================= */
-
-function capitalize(
-    value
-) {
-
-    if (!value) {
-        return "";
-    }
-
-    return (
-        value.charAt(0).toUpperCase() +
-        value.slice(1)
-    );
-}
-
-
-/* =========================================================
-   HTML ESCAPE
-========================================================= */
-
-function escapeHtml(
-    value
-) {
-
-    return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-}
-
-
-/* =========================================================
-   ATTRIBUTE ESCAPE
-========================================================= */
-
-function escapeAttribute(
-    value
-) {
-
-    return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        );
-}
-
-
-/* =========================================================
-   VALIDATE POST URL
-========================================================= */
-
-function isValidHttpUrl(
-    value
-) {
-
-    if (!value) {
-        return false;
-    }
-
-    try {
-
-        const url =
-            new URL(value);
-
-        return (
-            url.protocol === "http:" ||
-            url.protocol === "https:"
-        );
-
-    }
-    catch {
-
-        return false;
-    }
-}
+function showLoading(){ if(elements.container) elements.container.innerHTML=`<div class="loading-state"><div class="spinner"></div><p>Loading mentions...</p></div>`; }
+function showError(msg){ if(elements.container) elements.container.innerHTML=`<div class="mentions-error" style="background:#fef2f2;border:1px solid #fecaca;padding:14px;border-radius:10px;color:#b42318">${escapeHtml(msg)}</div>`; }
+function formatDate(v){ if(!v) return "Recently"; const d=new Date(v); return isNaN(d.getTime())?String(v):d.toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"}); }
+function capitalize(v){ return v? v.charAt(0).toUpperCase()+v.slice(1):""; }
+function escapeHtml(v){ return String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
+function escapeAttribute(v){ return String(v).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function isValidHttpUrl(v){ try{ const u=new URL(v); return u.protocol==="http:"||u.protocol==="https:"; } catch{ return false; } }
