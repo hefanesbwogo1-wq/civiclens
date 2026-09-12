@@ -1,11 +1,13 @@
-[project]
+﻿[project]
 name = "civiclens"
 version = "0.1.0"
 requires-python = ">=3.9"
 dependencies = [
   "fastapi",
   "uvicorn",
-  "python-multipart",
+  "supabase",
+  "python-dotenv",
+  "pydantic"
 ]
 
 [tool.vercel]
