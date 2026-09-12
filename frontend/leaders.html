@@ -1,147 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="CivicLens Leaders Management">
-    <title>Leaders | CivicLens</title>
-    <script src="/config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="/static/css/leaders.css">
-</head>
-<body>
-    <div class="app-shell">
-        <aside class="sidebar">
-            <div class="sidebar-brand">
-                <img src="/static/images/civiclens-logo.png" alt="CivicLens" class="sidebar-logo">
-                <div class="brand-text">
-                    <strong>CivicLens</strong>
-                    <span>Political Intelligence</span>
-                </div>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="/dashboard" class="nav-item"><span class="nav-icon">⌂</span><span>Dashboard</span></a>
-                <a href="/mentions" class="nav-item"><span class="nav-icon">◉</span><span>Mentions</span></a>
-                <a href="/leaders" class="nav-item active"><span class="nav-icon">♙</span><span>Leaders</span></a>
-                <a href="/platforms" class="nav-item"><span class="nav-icon">◈</span><span>Platforms</span></a>
-                <a href="/reports" class="nav-item"><span class="nav-icon">▤</span><span>Reports</span></a>
-                <a href="/settings" class="nav-item"><span class="nav-icon">⚙</span><span>Settings</span></a>
-            </nav>
-            <div class="sidebar-footer">
-                <button type="button" id="logout-btn" class="logout-btn"><span>↪</span><span>Logout</span></button>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <header class="topbar">
-                <div class="mobile-brand">
-                    <img src="/static/images/civiclens-logo.png" alt="CivicLens">
-                    <strong>CivicLens</strong>
-                </div>
-                <div class="page-heading">
-                    <span class="eyebrow">MONITORING</span>
-                    <h1>Leaders</h1>
-                    <p>Manage leaders and the keywords used to monitor public mentions.</p>
-                </div>
-                <div class="topbar-user">
-                    <div class="user-avatar">CL</div>
-                    <div class="user-details">
-                        <strong id="user-name">CivicLens User</strong>
-                        <span id="user-email">Loading...</span>
-                    </div>
-                </div>
-            </header>
-
-            <section class="content-area">
-                <div class="content-toolbar">
-                    <div class="toolbar-left">
-                        <div class="search-box">
-                            <span class="search-icon">⌕</span>
-                            <input type="search" id="leader-search" placeholder="Search leaders..." autocomplete="off">
-                        </div>
-                    </div>
-                    <div class="toolbar-right">
-                        <button type="button" id="refresh-leaders" class="btn btn-secondary">↻ <span>Refresh</span></button>
-                        <button type="button" id="add-leader-btn" class="btn btn-primary">+ <span>Add Leader</span></button>
-                    </div>
-                </div>
-
-                <div id="leaders-error" class="alert alert-error hidden" role="alert"></div>
-                <div id="leaders-success" class="alert alert-success hidden" role="status"></div>
-
-                <div id="leaders-loading" class="loading-state">
-                    <div class="spinner"></div>
-                    <span>Loading leaders...</span>
-                </div>
-
-                <div id="leaders-empty" class="empty-state hidden">
-                    <div class="empty-icon">♙</div>
-                    <h2>No leaders yet</h2>
-                    <p>Add your first leader to start monitoring public mentions.</p>
-                    <button type="button" id="empty-add-leader" class="btn btn-primary">+ Add Your First Leader</button>
-                </div>
-
-                <!-- FIXED: changed id to leaders-container to match leaders.js -->
-                <div id="leaders-container" class="leaders-grid"></div>
-            </section>
-        </main>
+<!-- REPLACE YOUR MAIN CONTENT AREA WITH THIS -->
+<div style="padding:24px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <div style="position:relative">
+      <input id="search-leaders" type="text" placeholder="Search leaders..." style="width:280px;padding:10px 12px 10px 36px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;outline:none" />
+      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8">◉</span>
     </div>
-
-    <div id="leader-modal" class="modal hidden" aria-hidden="true">
-        <div class="modal-overlay" id="modal-overlay"></div>
-        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-            <div class="modal-header">
-                <div>
-                    <span class="eyebrow">LEADER PROFILE</span>
-                    <h2 id="modal-title">Add Leader</h2>
-                </div>
-                <button type="button" id="close-modal" class="modal-close" aria-label="Close">×</button>
-            </div>
-            <form id="leader-form" novalidate>
-                <input type="hidden" id="leader-id">
-                <div class="form-grid">
-                    <div class="form-group full">
-                        <label for="full-name">Full Name <span>*</span></label>
-                        <input type="text" id="full-name" name="full_name" placeholder="e.g. John Doe" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="public-name">Public Name</label>
-                        <input type="text" id="public-name" name="public_name" placeholder="e.g. Hon. John Doe">
-                    </div>
-                    <div class="form-group">
-                        <label for="position">Position</label>
-                        <input type="text" id="position" name="position" placeholder="e.g. Senator">
-                    </div>
-                    <div class="form-group full">
-                        <label for="organization">Organization</label>
-                        <input type="text" id="organization" name="organization" placeholder="e.g. County Government">
-                    </div>
-                    <div class="form-group full">
-                        <label for="keywords">Keywords</label>
-                        <textarea id="keywords" name="keywords" rows="3" placeholder="Enter keywords separated by commas"></textarea>
-                        <small>Example: John Doe, Hon John Doe, Senator Doe</small>
-                    </div>
-                    <div class="form-group full">
-                        <label for="nicknames">Nicknames</label>
-                        <textarea id="nicknames" name="nicknames" rows="3" placeholder="Enter nicknames separated by commas"></textarea>
-                        <small>Add common names or public nicknames.</small>
-                    </div>
-                    <div class="form-group full">
-                        <label class="toggle-row">
-                            <input type="checkbox" id="monitoring-enabled" checked>
-                            <span class="toggle-switch"></span>
-                            <span class="toggle-label">Enable monitoring for this leader</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" id="cancel-modal" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" id="save-leader-btn" class="btn btn-primary">Save Leader</button>
-                </div>
-            </form>
-        </div>
+    <div style="display:flex;gap:10px">
+      <button id="refresh-leaders" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;font-weight:700;font-size:12px;cursor:pointer">↻ Refresh</button>
+      <button id="add-leader-btn" style="padding:10px 16px;background:#1769e0;color:#fff;border:0;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer">+ Add Leader</button>
     </div>
+  </div>
 
-    <script src="/static/js/leaders.js"></script>
-</body>
-</html>
+  <!-- THIS IS THE CONTAINER YOUR JS WAS MISSING - THIS FIXES LINE 450 -->
+  <div id="leaders-container" class="leaders-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+    <div style="grid-column:1/-1;text-align:center;padding:60px;color:#94a3b8">
+      <div style="width:32px;height:32px;margin:0 auto 12px;border:3px solid #e7edf5;border-top-color:#1769e0;border-radius:50%;animation:spin .8s linear infinite"></div>
+      Loading leaders...
+    </div>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
