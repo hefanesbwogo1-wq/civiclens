@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import os
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, Response, JSONResponse
@@ -10,43 +10,8 @@ STATIC_DIR = BASE_DIR / "static"
 
 app = FastAPI(title="CivicLens")
 
-# Static files
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-
-# Try to load backend routers, but NEVER crash if they fail
-def try_load_routers():
-    try:
-        from backend.leaders import router as leaders_router
-        app.include_router(leaders_router)
-        print("Loaded leaders router")
-    except Exception as e:
-        print(f"leaders router failed: {e}")
-        @app.get("/api/leaders")
-        def fallback_leaders():
-            return []
-    try:
-        from backend.auth import router as auth_router
-        app.include_router(auth_router)
-    except: pass
-    try:
-        from backend.mentions import router as m
-        app.include_router(m)
-    except: pass
-    try:
-        from backend.platforms import router as p
-        app.include_router(p)
-    except: pass
-    try:
-        from backend.reports import router as r
-        app.include_router(r)
-    except: pass
-    try:
-        from backend.profiles import router as pr
-        app.include_router(pr)
-    except: pass
-
-try_load_routers()
 
 @app.get("/config.js")
 async def config_js():
@@ -59,7 +24,6 @@ async def config_js():
 async def health():
     return {"system": "CivicLens", "status": "online"}
 
-# Frontend pages - these MUST exist
 def serve_page(name: str):
     file = FRONTEND_DIR / name
     if file.exists():
