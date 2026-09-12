@@ -1,0 +1,9 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/leaders", "destination": "/frontend/leaders.html" },
+    { "source": "/mentions", "destination": "/frontend/mentions.html" },
+    { "source": "/static/:path*", "destination": "/static/:path*" },
+    { "source": "/frontend/:path*", "destination": "/frontend/:path*" }
+  ]
+}
