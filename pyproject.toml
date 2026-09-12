@@ -2,13 +2,7 @@
 name = "civiclens"
 version = "0.1.0"
 requires-python = ">=3.9"
-dependencies = [
-  "fastapi",
-  "uvicorn",
-  "supabase",
-  "python-dotenv",
-  "pydantic"
-]
+dependencies = ["fastapi", "uvicorn"]
 
 [tool.vercel]
 entrypoint = "backend.main:app"
