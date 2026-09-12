@@ -1,8 +1,11 @@
-﻿[project]
+[project]
 name = "civiclens"
 version = "0.1.0"
 requires-python = ">=3.9"
-dependencies = ["fastapi", "uvicorn"]
+dependencies = [
+  "fastapi",
+  "uvicorn"
+]
 
 [tool.vercel]
 entrypoint = "backend.main:app"
