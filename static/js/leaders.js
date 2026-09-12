@@ -105,9 +105,37 @@ function createLeaderCard(leader) {
   const position = escapeHtml(leader.position || "");
   const organization = escapeHtml(leader.organization || "");
   const monitoring = Boolean(leader.monitoring_enabled);
-  const keywords = escapeHtml(leader.keywords || "");
-  const nicknames = escapeHtml(leader.nicknames || "");
-  return `<article class="leader-card"><div class="leader-card-header"><div class="leader-avatar">${escapeHtml((leader.public_name || leader.full_name || "L").charAt(0).toUpperCase())}</div><div class="leader-card-title"><h3>${fullName}</h3>${publicName ? `<span>${publicName}</span>` : ""}</div><span class="status-badge ${monitoring ? "active" : "inactive"}">${monitoring ? "Monitoring" : "Paused"}</span></div><div class="leader-card-body">${position ? `<p><strong>Position:</strong> ${position}</p>` : ""}${organization ? `<p><strong>Org:</strong> ${organization}</p>` : ""}${keywords ? `<p><strong>Keywords:</strong> ${keywords}</p>` : ""}${nicknames ? `<p><strong>Nicknames:</strong> ${nicknames}</p>` : ""}</div><div class="leader-card-actions"><button type="button" class="secondary-button" data-action="edit-leader" data-leader-id="${id}">Edit</button><button type="button" class="secondary-button" data-action="toggle-monitoring" data-leader-id="${id}">${monitoring ? "Pause" : "Monitor"}</button><button type="button" class="danger-button" data-action="delete-leader" data-leader-id="${id}">Delete</button></div></article>`;
+  const keywords = (leader.keywords || "").split(",").map(k=>k.trim()).filter(Boolean);
+  const nicknames = (leader.nicknames || "").split(",").map(k=>k.trim()).filter(Boolean);
+
+  return `
+  <article class="cl-leader-card" data-leader-id="${id}">
+    <div class="cl-card-top">
+      <div class="cl-avatar">${escapeHtml((leader.public_name || leader.full_name || "L").charAt(0).toUpperCase())}</div>
+      <div class="cl-card-info">
+        <h3 class="cl-name">${fullName}</h3>
+        ${publicName ? `<span class="cl-public">${publicName}</span>` : ""}
+        <div class="cl-meta">
+          ${position ? `<span class="cl-pill">${position}</span>` : ""}
+          ${organization ? `<span class="cl-pill org">${organization}</span>` : ""}
+        </div>
+      </div>
+      <span class="cl-badge ${monitoring ? "is-active" : "is-paused"}">
+        <span class="dot"></span>${monitoring ? "Monitoring" : "Paused"}
+      </span>
+    </div>
+
+    <div class="cl-card-fields">
+      ${keywords.length ? `<div class="cl-field"><label>Keywords</label><div class="cl-tags">${keywords.map(k=>`<span class="cl-tag">${escapeHtml(k)}</span>`).join("")}</div></div>` : ""}
+      ${nicknames.length ? `<div class="cl-field"><label>Nicknames</label><div class="cl-tags muted">${nicknames.map(k=>`<span class="cl-tag muted">${escapeHtml(k)}</span>`).join("")}</div></div>` : ""}
+    </div>
+
+    <div class="cl-card-actions">
+      <button type="button" class="cl-btn ghost" data-action="edit-leader" data-leader-id="${id}">Edit</button>
+      <button type="button" class="cl-btn ghost" data-action="toggle-monitoring" data-leader-id="${id}">${monitoring ? "Pause" : "Resume"}</button>
+      <button type="button" class="cl-btn danger" data-action="delete-leader" data-leader-id="${id}">Delete</button>
+    </div>
+  </article>`;
 }
 function setupEventHandlers() {
   // HARD BIND - no dataset guard for critical buttons
