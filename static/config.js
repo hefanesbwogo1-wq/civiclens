@@ -1,0 +1,2 @@
+﻿window.SUPABASE_URL = "https://rkknkgumywsejmexzmls.supabase.co";
+window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJra25rZ3VteXdzZWptZXh6bWxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDc0MDQsImV4cCI6MjEwNDU4MzQwNH0.B3Yz7SvsZH19Uga84yGhgM-yKZ-rnF0sAfmlUEMr4P0";
