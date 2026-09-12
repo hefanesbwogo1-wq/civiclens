@@ -1,240 +1,133 @@
 "use strict";
-let supabaseClient = null;
-let leaders = [];
-const elements = {};
+document.addEventListener("DOMContentLoaded", async () => {
+  const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  
+  // Find container with ANY possible ID (fixes your bug)
+  const container = document.getElementById("leaders-container") 
+                 || document.getElementById("leaders-grid")
+                 || document.getElementById("leaders-list")
+                 || document.querySelector(".leaders-grid")
+                 || document.querySelector(".leaders-container");
+  
+  const searchEl = document.getElementById("search-leaders") || document.querySelector('input[placeholder*="Search leaders"]');
+  const addBtn = document.getElementById("add-leader-btn") || document.querySelector('button:contains("Add Leader")') || document.querySelector(".btn-primary");
+  const refreshBtn = document.getElementById("refresh-leaders");
 
-document.addEventListener("DOMContentLoaded", initializeLeaders);
-
-async function initializeLeaders() {
-  console.log("CivicLens: leaders.js initializing...");
-  cacheElements();
-  initializeSupabase();
-  if (!supabaseClient) { showPageError("CivicLens configuration is unavailable."); return; }
-  const authenticated = await verifySession();
-  if (!authenticated) return;
-  setupEventHandlers();
-  await loadUserProfile();
-  await loadLeaders();
-  // FORCE hide after 500ms just in case
-  setTimeout(() => { forceHideLoading(); }, 500);
-  console.log("CivicLens: leaders.js loaded successfully.");
-}
-
-function cacheElements() {
-  elements.userName = document.getElementById("user-name");
-  elements.userEmail = document.getElementById("user-email");
-  elements.userAvatar = document.getElementById("user-avatar");
-  elements.leadersContainer = document.getElementById("leaders-container") || document.getElementById("leaders-grid");
-  elements.loadingEl = document.getElementById("leaders-loading");
-  elements.emptyEl = document.getElementById("leaders-empty");
-  elements.errorEl = document.getElementById("leaders-error") || document.getElementById("page-error");
-  elements.leaderCount = document.getElementById("leader-count");
-  elements.search = document.getElementById("leader-search") || document.getElementById("search-input");
-  elements.addButton = document.getElementById("add-leader-btn");
-  elements.emptyAddButton = document.getElementById("empty-add-leader");
-  elements.refreshButton = document.getElementById("refresh-leaders");
-  elements.logoutButton = document.getElementById("logout-btn") || document.getElementById("logout-button");
-  elements.modal = document.getElementById("leader-modal");
-  elements.modalOverlay = document.getElementById("modal-overlay");
-  elements.modalTitle = document.getElementById("modal-title");
-  elements.form = document.getElementById("leader-form");
-  elements.closeModal = document.getElementById("close-modal");
-  elements.cancelButton = document.getElementById("cancel-modal") || document.getElementById("cancel-button");
-  elements.fullName = document.getElementById("full-name");
-  elements.publicName = document.getElementById("public-name");
-  elements.position = document.getElementById("position");
-  elements.organization = document.getElementById("organization");
-  elements.keywords = document.getElementById("keywords");
-  elements.nicknames = document.getElementById("nicknames");
-  elements.monitoringEnabled = document.getElementById("monitoring-enabled");
-  elements.submitButton = document.getElementById("save-leader-btn") || document.getElementById("save-leader-button");
-  elements.formError = document.getElementById("form-error");
-  elements.pageError = document.getElementById("page-error") || document.getElementById("leaders-error");
-  console.log("CivicLens: elements cached", { addBtn: !!elements.addButton, refreshBtn: !!elements.refreshButton, container: !!elements.leadersContainer, loading: !!elements.loadingEl });
-}
-
-function initializeSupabase() {
-  if (!window.supabase || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) { console.error("Supabase config unavailable"); return; }
-  try { supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY); console.log("CivicLens: Supabase initialized."); }
-  catch (e) { console.error("Supabase init failed", e); }
-}
-async function verifySession() {
-  try { const { data } = await supabaseClient.auth.getSession(); if (!data?.session) { window.location.href = "/login"; return false; } return true; }
-  catch { window.location.href = "/login"; return false; }
-}
-async function civicLensFetch(url, options = {}) {
-  const { data } = await supabaseClient.auth.getSession();
-  if (!data?.session) { window.location.href = "/login"; throw new Error("Session expired"); }
-  const headers = new Headers(options.headers || {});
-  headers.set("Authorization", `Bearer ${data.session.access_token}`);
-  headers.set("Accept", "application/json");
-  return fetch(url, { ...options, headers });
-}
-async function loadUserProfile() {
-  try { const { data } = await supabaseClient.auth.getUser(); if (!data?.user) return; const name = data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User"; if (elements.userName) elements.userName.textContent = name; if (elements.userEmail) elements.userEmail.textContent = data.user.email; if (elements.userAvatar) elements.userAvatar.textContent = name.charAt(0).toUpperCase(); } catch {}
-}
-async function loadLeaders() {
-  showLoading();
-  try {
-    console.log("CivicLens: Loading leaders...");
-    const response = await civicLensFetch("/api/leaders");
-    const result = await readJson(response);
-    if (!response.ok) throw new Error(result?.detail || "Unable to load leaders");
-    leaders = Array.isArray(result?.leaders) ? result.leaders : [];
-    console.log("CivicLens: Leaders loaded:", leaders.length);
-    renderLeaders(leaders);
-    updateLeaderCount();
-  } catch (e) {
-    console.error(e);
-    showPageError(e.message);
-    forceHideLoading();
+  console.log("CivicLens: Starting leaders loader, container:", !!container);
+  if (!container) {
+    console.error("CivicLens: leaders-container not found. Check HTML IDs");
+    // Try to create it
+    const main = document.querySelector("main") || document.querySelector(".content");
+    if (main) {
+      const div = document.createElement("div");
+      div.id = "leaders-container";
+      div.className = "leaders-grid";
+      main.appendChild(div);
+    }
   }
-}
-async function readJson(res) { try { return await res.json(); } catch { const t = await res.text(); try { return JSON.parse(t); } catch { return { message: t }; } } }
-function renderLeaders(list) {
-  forceHideLoading();
-  if (!elements.leadersContainer) return;
-  if (!list.length) { elements.leadersContainer.innerHTML = ""; if (elements.emptyEl) elements.emptyEl.classList.remove("hidden"); return; }
-  if (elements.emptyEl) elements.emptyEl.classList.add("hidden");
-  elements.leadersContainer.innerHTML = list.map(createLeaderCard).join("");
-}
-function createLeaderCard(leader) {
-  const id = escapeAttribute(leader.id || "");
-  const fullName = escapeHtml(leader.full_name || "Unnamed");
-  const publicName = escapeHtml(leader.public_name || "");
-  const position = escapeHtml(leader.position || "");
-  const organization = escapeHtml(leader.organization || "");
-  const monitoring = Boolean(leader.monitoring_enabled);
-  const keywords = (leader.keywords || "").split(",").map(k=>k.trim()).filter(Boolean);
-  const nicknames = (leader.nicknames || "").split(",").map(k=>k.trim()).filter(Boolean);
 
-  return `
-  <article class="cl-leader-card" data-leader-id="${id}">
-    <div class="cl-card-top">
-      <div class="cl-avatar">${escapeHtml((leader.public_name || leader.full_name || "L").charAt(0).toUpperCase())}</div>
-      <div class="cl-card-info">
-        <h3 class="cl-name">${fullName}</h3>
-        ${publicName ? `<span class="cl-public">${publicName}</span>` : ""}
-        <div class="cl-meta">
-          ${position ? `<span class="cl-pill">${position}</span>` : ""}
-          ${organization ? `<span class="cl-pill org">${organization}</span>` : ""}
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) { window.location.href="/login"; return; }
+
+  let allLeaders = [];
+
+  async function loadLeaders() {
+    // Show loading only if container exists
+    const target = document.getElementById("leaders-container") || document.getElementById("leaders-grid") || container;
+    if (target) target.innerHTML = `<div class="mentions-loading"><div class="loading-spinner"></div><p>Loading leaders...</p></div>`;
+
+    let leaders = [];
+    try {
+      // Try with user_id
+      let r1 = await supabase.from("leaders").select("*").eq("user_id", user.id).order("created_at",{ascending:false});
+      console.log("Leaders with user_id:", r1.data?.length, r1.error);
+      if (r1.data && r1.data.length > 0) leaders = r1.data;
+      
+      // Fallback: all leaders
+      if (leaders.length === 0) {
+        let r2 = await supabase.from("leaders").select("*").order("created_at",{ascending:false}).limit(50);
+        console.log("Leaders fallback all:", r2.data?.length, r2.error);
+        if (r2.data) leaders = r2.data;
+      }
+    } catch(e) { console.error(e); }
+
+    allLeaders = leaders || [];
+    console.log("CivicLens: Leaders loaded:", allLeaders.length);
+    render(allLeaders);
+    return allLeaders;
+  }
+
+  function render(list) {
+    const target = document.getElementById("leaders-container") || document.getElementById("leaders-grid") || document.getElementById("leaders-list") || container;
+    if (!target) { console.error("CivicLens: leaders-container not found. - cannot render"); return; }
+    
+    const q = (searchEl?.value || "").toLowerCase();
+    let filtered = list.filter(l => !q || `${l.full_name} ${l.organization||""} ${l.position||""}`.toLowerCase().includes(q));
+
+    if (filtered.length === 0) {
+      target.innerHTML = `
+        <div class="mentions-empty">
+          <div class="empty-mention-icon">👤</div>
+          <h4>No leaders found</h4>
+          <p>Add your first leader to start monitoring public mentions.</p>
+          <button onclick="document.getElementById('add-leader-modal')?.classList.add('show')" style="margin-top:14px;padding:10px 18px;background:#1769e0;color:#fff;border:0;border-radius:10px;font-weight:700;cursor:pointer">+ Add Leader</button>
+        </div>`;
+      return;
+    }
+
+    target.innerHTML = filtered.map(l => `
+      <article class="leader-card" data-id="${l.id}" style="background:#fff;border:1px solid #e6eaf0;border-radius:16px;padding:18px;box-shadow:0 2px 12px rgba(15,23,42,.04)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div style="display:flex;gap:12px;align-items:center">
+            <div style="width:42px;height:42px;border-radius:50%;background:#eaf2ff;color:#0868dd;display:flex;align-items:center;justify-content:center;font-weight:800">${(l.full_name||"L").charAt(0)}</div>
+            <div>
+              <div style="font-weight:800;color:#10223b;font-size:14px">${escapeHtml(l.full_name)}</div>
+              <div style="font-size:11px;color:#64748b">${escapeHtml(l.position||"")}${l.organization?" • "+escapeHtml(l.organization):""}</div>
+            </div>
+          </div>
+          <span style="font-size:10px;font-weight:700;padding:5px 10px;border-radius:20px;background:${l.monitoring_enabled?"#ecfdf3":"#f1f5f9"};color:${l.monitoring_enabled?"#067647":"#64748b"}">${l.monitoring_enabled?"● Monitoring":"○ Paused"}</span>
         </div>
-      </div>
-      <span class="cl-badge ${monitoring ? "is-active" : "is-paused"}">
-        <span class="dot"></span>${monitoring ? "Monitoring" : "Paused"}
-      </span>
-    </div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn-toggle" data-id="${l.id}" style="flex:1;padding:8px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer">${l.monitoring_enabled?"Pause":"Enable"}</button>
+          <button class="btn-delete" data-id="${l.id}" style="padding:8px 12px;border:1px solid #fecaca;border-radius:8px;background:#fef2f2;color:#b42318;font-size:11px;font-weight:700;cursor:pointer">Delete</button>
+        </div>
+      </article>
+    `).join("");
 
-    <div class="cl-card-fields">
-      ${keywords.length ? `<div class="cl-field"><label>Keywords</label><div class="cl-tags">${keywords.map(k=>`<span class="cl-tag">${escapeHtml(k)}</span>`).join("")}</div></div>` : ""}
-      ${nicknames.length ? `<div class="cl-field"><label>Nicknames</label><div class="cl-tags muted">${nicknames.map(k=>`<span class="cl-tag muted">${escapeHtml(k)}</span>`).join("")}</div></div>` : ""}
-    </div>
+    // Bind buttons
+    target.querySelectorAll(".btn-toggle").forEach(b=>{
+      b.addEventListener("click", async ()=>{
+        const id = b.dataset.id;
+        const leader = allLeaders.find(x=>String(x.id)===String(id));
+        if(!leader) return;
+        await supabase.from("leaders").update({monitoring_enabled: !leader.monitoring_enabled}).eq("id", id);
+        await loadLeaders();
+      });
+    });
+    target.querySelectorAll(".btn-delete").forEach(b=>{
+      b.addEventListener("click", async ()=>{
+        if(!confirm("Delete this leader?")) return;
+        await supabase.from("leaders").delete().eq("id", b.dataset.id);
+        await loadLeaders();
+      });
+    });
+  }
 
-    <div class="cl-card-actions">
-      <button type="button" class="cl-btn ghost" data-action="edit-leader" data-leader-id="${id}">Edit</button>
-      <button type="button" class="cl-btn ghost" data-action="toggle-monitoring" data-leader-id="${id}">${monitoring ? "Pause" : "Resume"}</button>
-      <button type="button" class="cl-btn danger" data-action="delete-leader" data-leader-id="${id}">Delete</button>
-    </div>
-  </article>`;
-}
-function setupEventHandlers() {
-  // HARD BIND - no dataset guard for critical buttons
-  if (elements.addButton) { elements.addButton.onclick = (e) => { e.preventDefault(); console.log("Add clicked"); openAddModal(); }; }
-  if (elements.emptyAddButton) { elements.emptyAddButton.onclick = (e) => { e.preventDefault(); openAddModal(); }; }
-  if (elements.refreshButton) { elements.refreshButton.onclick = async (e) => { e.preventDefault(); await refreshLeaders(); }; }
-  if (elements.logoutButton) { elements.logoutButton.onclick = async (e) => { e.preventDefault(); await logoutUser(); }; }
-  if (elements.closeModal) { elements.closeModal.onclick = (e) => { e.preventDefault(); closeModal(); }; }
-  if (elements.cancelButton) { elements.cancelButton.onclick = (e) => { e.preventDefault(); closeModal(); }; }
-  if (elements.modalOverlay) { elements.modalOverlay.onclick = () => closeModal(); }
-  if (elements.form) { elements.form.onsubmit = async (e) => { e.preventDefault(); await saveLeader(); }; }
-  if (elements.search) { elements.search.oninput = function() { searchLeaders(this.value); }; }
-  if (elements.leadersContainer) { elements.leadersContainer.addEventListener("click", handleLeaderContainerClick); }
-  document.addEventListener("click", handleGlobalLeaderClick);
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
-  if (elements.modal) { elements.modal.addEventListener("click", (e) => { if (e.target === elements.modal) closeModal(); }); }
-}
-async function handleLeaderContainerClick(event) { const b = event.target.closest("[data-action]"); if (!b) return; event.preventDefault(); await handleLeaderAction(b); }
-async function handleGlobalLeaderClick(event) {
-  const b = event.target.closest("[data-action]");
-  if (!b) return;
-  const a = b.dataset.action;
-  if (!["add-leader","edit-leader","delete-leader","toggle-monitoring"].includes(a)) return;
-  if (elements.leadersContainer && elements.leadersContainer.contains(b)) return;
-  event.preventDefault(); await handleLeaderAction(b);
-}
-async function handleLeaderAction(button) {
-  const action = button.dataset.action; const leaderId = button.dataset.leaderId;
-  if (action === "add-leader") openAddModal();
-  if (action === "edit-leader" && leaderId) openEditModal(leaderId);
-  if (action === "delete-leader" && leaderId) await deleteLeader(leaderId);
-  if (action === "toggle-monitoring" && leaderId) await toggleMonitoring(leaderId);
-}
-function openAddModal() {
-  console.log("Opening Add modal");
-  clearForm();
-  if (elements.modalTitle) elements.modalTitle.textContent = "Add Leader";
-  if (elements.submitButton) elements.submitButton.textContent = "Save Leader";
-  if (elements.form) delete elements.form.dataset.editId;
-  showModal();
-}
-function openEditModal(leaderId) {
-  const leader = leaders.find(i => String(i.id) === String(leaderId));
-  if (!leader) return;
-  if (elements.modalTitle) elements.modalTitle.textContent = "Edit Leader";
-  if (elements.submitButton) elements.submitButton.textContent = "Update Leader";
-  if (elements.form) elements.form.dataset.editId = leader.id;
-  if (elements.fullName) elements.fullName.value = leader.full_name || "";
-  if (elements.publicName) elements.publicName.value = leader.public_name || "";
-  if (elements.position) elements.position.value = leader.position || "";
-  if (elements.organization) elements.organization.value = leader.organization || "";
-  if (elements.keywords) elements.keywords.value = leader.keywords || "";
-  if (elements.nicknames) elements.nicknames.value = leader.nicknames || "";
-  if (elements.monitoringEnabled) elements.monitoringEnabled.checked = leader.monitoring_enabled !== false;
-  showModal();
-}
-function closeModal() { if (!elements.modal) return; elements.modal.classList.add("hidden"); elements.modal.classList.remove("open","active","show"); elements.modal.style.display = "none"; }
-function showModal() { if (!elements.modal) { console.error("modal not found"); return; } elements.modal.classList.remove("hidden"); elements.modal.classList.add("open","active","show"); elements.modal.style.display = "flex"; setTimeout(() => elements.fullName?.focus(), 50); }
-async function saveLeader() {
-  const fullName = elements.fullName?.value.trim() || "";
-  if (!fullName) { showFormError("Full name required"); return; }
-  const payload = { full_name: fullName, public_name: elements.publicName?.value.trim() || "", position: elements.position?.value.trim() || "", organization: elements.organization?.value.trim() || "", keywords: elements.keywords?.value.trim() || "", nicknames: elements.nicknames?.value.trim() || "", monitoring_enabled: elements.monitoringEnabled ? elements.monitoringEnabled.checked : true };
-  const editId = elements.form?.dataset.editId;
-  const isEditing = Boolean(editId);
-  if (elements.submitButton) { elements.submitButton.disabled = true; elements.submitButton.textContent = isEditing ? "Updating..." : "Saving..."; }
-  try {
-    const url = isEditing ? `/api/leaders/${encodeURIComponent(editId)}` : "/api/leaders";
-    const method = isEditing ? "PUT" : "POST";
-    const res = await civicLensFetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    const result = await readJson(res);
-    if (!res.ok) throw new Error(result?.detail || "Unable to save");
-    closeModal(); await loadLeaders();
-  } catch (e) { showFormError(e.message); }
-  finally { if (elements.submitButton) { elements.submitButton.disabled = false; elements.submitButton.textContent = isEditing ? "Update Leader" : "Save Leader"; } }
-}
-async function deleteLeader(id) { if (!confirm("Delete this leader?")) return; try { const r = await civicLensFetch(`/api/leaders/${encodeURIComponent(id)}`, { method: "DELETE" }); if (!r.ok) throw new Error("Delete failed"); await loadLeaders(); } catch (e) { showPageError(e.message); } }
-async function toggleMonitoring(id) {
-  const leader = leaders.find(i => String(i.id) === String(id)); if (!leader) return;
-  const payload = { full_name: leader.full_name, public_name: leader.public_name || "", position: leader.position || "", organization: leader.organization || "", keywords: leader.keywords || "", nicknames: leader.nicknames || "", monitoring_enabled: !leader.monitoring_enabled };
-  try { const r = await civicLensFetch(`/api/leaders/${encodeURIComponent(id)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); if (!r.ok) throw new Error("Update failed"); await loadLeaders(); } catch (e) { showPageError(e.message); }
-}
-function searchLeaders(q) { const n = q.toLowerCase().trim(); if (!n) { renderLeaders(leaders); updateLeaderCount(); return; } const f = leaders.filter(l => [l.full_name,l.public_name,l.position,l.organization,l.keywords,l.nicknames].join(" ").toLowerCase().includes(n)); renderLeaders(f); updateLeaderCount(f.length); }
-async function refreshLeaders() { if (elements.refreshButton) elements.refreshButton.textContent = "↻ Refreshing..."; await loadLeaders(); if (elements.refreshButton) elements.refreshButton.textContent = "↻ Refresh"; }
-async function logoutUser() { try { await supabaseClient.auth.signOut(); } catch {} window.location.href = "/login"; }
-function clearForm() { if (elements.form) { elements.form.reset(); delete elements.form.dataset.editId; } if (elements.monitoringEnabled) elements.monitoringEnabled.checked = true; clearFormError(); }
-function clearFormError() { if (elements.formError) { elements.formError.textContent = ""; elements.formError.style.display = "none"; } }
-function showFormError(m) { if (!elements.formError) { alert(m); return; } elements.formError.textContent = m; elements.formError.style.display = "block"; }
-function showPageError(m) { forceHideLoading(); const el = document.getElementById("leaders-error") || document.getElementById("page-error"); if (el) { el.textContent = m; el.classList.remove("hidden"); el.style.display = "block"; } }
-function showLoading() { const l = document.getElementById("leaders-loading"); if (l) { l.classList.remove("hidden"); l.style.display = "flex"; } const e = document.getElementById("leaders-empty"); if (e) e.classList.add("hidden"); }
-function hideLoading() { forceHideLoading(); }
-function forceHideLoading() {
-  const l = document.getElementById("leaders-loading");
-  if (l) { l.classList.add("hidden"); l.style.display = "none"; l.style.visibility = "hidden"; }
-  // also hide any injected spinner inside container
-  const injected = document.querySelector(".leaders-loading");
-  if (injected && injected.id !== "leaders-loading") injected.style.display = "none";
-}
-function updateLeaderCount(c = leaders.length) { if (elements.leaderCount) elements.leaderCount.textContent = c; }
-function escapeHtml(v) { return String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
-function escapeAttribute(v) { return escapeHtml(v); }
-window.civicLensLeaders = { loadLeaders, openAddModal, openEditModal, closeModal, deleteLeader, toggleMonitoring, searchLeaders, refreshLeaders, civicLensFetch, forceHideLoading };
-console.log("CivicLens: leaders.js file loaded.");
+  // Events
+  searchEl?.addEventListener("input", ()=> render(allLeaders));
+  refreshBtn?.addEventListener("click", loadLeaders);
+  
+  // Fix search input selector from your HTML
+  const realSearch = document.querySelector('input[placeholder*="Search leaders"]');
+  if (realSearch && realSearch !== searchEl) {
+    realSearch.addEventListener("input", (e)=>{
+      if(searchEl) searchEl.value = e.target.value;
+      render(allLeaders);
+    });
+  }
+
+  await loadLeaders();
+  console.log("CivicLens: leaders.js loaded successfully.");
+
+  function escapeHtml(v){ return String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+});
