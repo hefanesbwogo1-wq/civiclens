@@ -9,9 +9,7 @@ dependencies = [
   "supabase",
   "pydantic",
   "httpx",
-  "python-multipart",
-  "python-jose[cryptography]",
-  "passlib[bcrypt]"
+  "python-multipart"
 ]
 
 [tool.vercel]
