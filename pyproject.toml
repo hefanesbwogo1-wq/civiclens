@@ -5,7 +5,13 @@ requires-python = ">=3.9"
 dependencies = [
   "fastapi",
   "uvicorn[standard]",
-  "pydantic"
+  "python-dotenv",
+  "supabase",
+  "pydantic",
+  "httpx",
+  "python-multipart",
+  "python-jose[cryptography]",
+  "passlib[bcrypt]"
 ]
 
 [tool.vercel]
