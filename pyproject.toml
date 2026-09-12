@@ -8,8 +8,7 @@ dependencies = [
   "python-dotenv",
   "supabase",
   "pydantic",
-  "httpx",
-  "python-multipart"
+  "httpx"
 ]
 
 [tool.vercel]
