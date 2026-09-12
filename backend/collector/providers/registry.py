@@ -4,7 +4,6 @@ CivicLens Platform Provider Registry
 
 from .base import PlatformProvider
 from .x import XProvider
-from .facebook import FacebookProvider
 
 
 # =========================================================
@@ -13,7 +12,6 @@ from .facebook import FacebookProvider
 
 PROVIDERS: dict[str, type[PlatformProvider]] = {
     "x": XProvider,
-    "facebook": FacebookProvider,
 }
 
 

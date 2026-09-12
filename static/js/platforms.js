@@ -34,7 +34,7 @@ async function loadUser(){
 }
 async function loadStatistics(){
   try{
-    const r=await fetch("/api/platforms/stats"); const d=await r.json();
+    const r=await civicLensFetch("/api/platforms/stats"); const d=await r.json();
     if(!d.success) return;
     if(elements.activePlatforms) elements.activePlatforms.textContent=d.active_platforms||0;
     if(elements.totalMentions) elements.totalMentions.textContent=d.total_mentions||0;
@@ -46,7 +46,7 @@ async function loadPlatforms(){
   if(!elements.platformList) return;
   elements.platformList.innerHTML=`<div class="platform-loading"><p>Loading platforms...</p></div>`;
   try{
-    const r=await fetch("/api/platforms"); if(!r.ok) throw new Error("fail");
+    const r=await civicLensFetch("/api/platforms"); if(!r.ok) throw new Error("fail");
     const result=await r.json(); const list=result.platforms||result||[];
     if(!list.length){ elements.platformList.innerHTML=`<div class="platform-loading"><p>No platforms configured.</p></div>`; return; }
     elements.platformList.innerHTML=list.map(p=>`
@@ -57,6 +57,13 @@ async function loadPlatforms(){
         <button class="platform-action ${p.status!=="available"?"disabled":""}" ${p.status!=="available"?"disabled":""}>${p.status==="available"?"Configure":"Coming Soon"}</button>
       </div>`).join("");
   }catch(e){ elements.platformList.innerHTML=`<div class="platform-loading"><p>Unable to load platforms.</p></div>`; }
+}
+async function civicLensFetch(url, options={}){
+  const { data:{ session } }=await supabaseClient.auth.getSession();
+  if(!session){ location.href="/login"; throw new Error("Your session has expired."); }
+  const headers=new Headers(options.headers||{});
+  headers.set("Authorization",`Bearer ${session.access_token}`);
+  return fetch(url,{...options,headers});
 }
 function setupEvents(){
   elements.refresh?.addEventListener("click", async ()=>{

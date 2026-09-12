@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from .service import process_post
 from .worker import run_collection
+from .providers.registry import available_providers
 
 
 router = APIRouter(
@@ -40,7 +41,7 @@ class TestPost(BaseModel):
 # =========================================================
 
 class CollectionRequest(BaseModel):
-    platforms: list[str] = ["x", "facebook"]
+    platforms: list[str] = ["x"]
 
 
 # =========================================================
@@ -169,6 +170,15 @@ async def run_collection_endpoint(
         raise HTTPException(
             status_code=400,
             detail="At least one platform must be selected."
+        )
+
+    unsupported_platforms = set(platforms) - set(available_providers())
+
+    if unsupported_platforms:
+        names = ", ".join(sorted(unsupported_platforms))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Collection is not available for: {names}."
         )
 
     # -----------------------------------------------------

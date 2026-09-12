@@ -86,10 +86,11 @@ from .leaders import router as leaders_router
 from .mentions import router as mentions_router
 from .platforms import router as platforms_router
 from .reports import router as reports_router
-from .debug import router as debug_router
+from .profiles import router as profiles_router
 
 # Mention Collection Engine
 from .collector.routes import router as collector_router
+from .collector.cron import router as collector_cron_router
 
 
 # =========================================================
@@ -144,6 +145,10 @@ app.include_router(
     reports_router
 )
 
+app.include_router(
+    profiles_router
+)
+
 # =========================================================
 # MENTION COLLECTION ENGINE
 # =========================================================
@@ -152,14 +157,9 @@ app.include_router(
     collector_router
 )
 
-# =========================================================
-# DEBUG ROUTER
-# =========================================================
-
 app.include_router(
-    debug_router
+    collector_cron_router
 )
-
 
 # =========================================================
 # FRONTEND SUPABASE CONFIGURATION

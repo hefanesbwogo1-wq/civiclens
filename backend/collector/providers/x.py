@@ -1,234 +1,135 @@
+"""CivicLens X (Twitter) recent-search provider."""
+
 import os
-from datetime import datetime
-from typing import Any
+from datetime import datetime, timezone
+from typing import Optional
 
-import requests
+import httpx
+
+from .base import PlatformProvider, SocialPost
 
 
-class XProvider:
+class XProvider(PlatformProvider):
+    """Fetch public posts from X and normalize them for CivicLens."""
 
-    platform = "x"
-
+    platform_name = "x"
     SEARCH_URL = "https://api.x.com/2/tweets/search/recent"
 
     def __init__(self):
-        self.bearer_token = os.getenv(
-            "X_BEARER_TOKEN",
-            ""
-        ).strip()
+        self.bearer_token = os.getenv("X_BEARER_TOKEN", "").strip()
 
-    def health_check(self) -> dict[str, Any]:
+    async def health_check(self) -> bool:
+        """Report whether the provider has the credentials it needs."""
+        return bool(self.bearer_token)
 
-        if not self.bearer_token:
-
-            return {
-                "platform": self.platform,
-                "healthy": False,
-                "message": "X_BEARER_TOKEN is not configured."
-            }
-
-        return {
-            "platform": self.platform,
-            "healthy": True,
-            "message": "X API credentials are configured."
-        }
-
-    def search(
+    async def search(
         self,
         query: str,
-        max_results: int = 10
-    ) -> list[dict[str, Any]]:
-
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        max_results: int = 100,
+    ) -> list[SocialPost]:
+        """Search recent X posts and return CivicLens ``SocialPost`` records."""
         if not self.bearer_token:
-
-            raise RuntimeError(
-                "X_BEARER_TOKEN is not configured."
-            )
+            raise RuntimeError("X_BEARER_TOKEN is not configured.")
 
         if not query or not query.strip():
             return []
 
-        max_results = max(
-            10,
-            min(int(max_results), 100)
-        )
-
-        headers = {
-            "Authorization": (
-                f"Bearer {self.bearer_token}"
-            ),
-            "Accept": "application/json"
-        }
-
         params = {
             "query": query.strip(),
-            "max_results": max_results,
-            "tweet.fields": (
-                "id,"
-                "text,"
-                "author_id,"
-                "created_at,"
-                "lang,"
-                "public_metrics"
-            ),
+            "max_results": max(10, min(int(max_results), 100)),
+            "tweet.fields": "id,text,author_id,created_at,lang,public_metrics",
             "expansions": "author_id",
-            "user.fields": (
-                "id,"
-                "name,"
-                "username"
-            )
+            "user.fields": "id,name,username",
         }
 
-        response = requests.get(
-            self.SEARCH_URL,
-            headers=headers,
-            params=params,
-            timeout=30
-        )
+        if start_time:
+            params["start_time"] = self._format_timestamp(start_time)
+        if end_time:
+            params["end_time"] = self._format_timestamp(end_time)
 
-        if response.status_code == 401:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    self.SEARCH_URL,
+                    headers={
+                        "Authorization": f"Bearer {self.bearer_token}",
+                        "Accept": "application/json",
+                    },
+                    params=params,
+                )
+        except httpx.HTTPError as error:
+            raise RuntimeError("Unable to reach the X API.") from error
 
-            raise RuntimeError(
-                "X API authentication failed. "
-                "Check X_BEARER_TOKEN."
-            )
+        self._raise_for_error(response)
 
-        if response.status_code == 403:
+        try:
+            payload = response.json()
+        except ValueError as error:
+            raise RuntimeError("X API returned an invalid response.") from error
 
-            raise RuntimeError(
-                "X API access was forbidden. "
-                "Check your X API access level and permissions."
-            )
-
-        if response.status_code == 429:
-
-            raise RuntimeError(
-                "X API rate limit reached. "
-                "Try again later."
-            )
-
-        if not response.ok:
-
-            try:
-                error_data = response.json()
-            except Exception:
-                error_data = response.text
-
-            raise RuntimeError(
-                f"X API request failed "
-                f"({response.status_code}): "
-                f"{error_data}"
-            )
-
-        payload = response.json()
-
-        users = {}
-
-        for user in (
-            payload
-            .get("includes", {})
-            .get("users", [])
-        ):
-
-            user_id = user.get("id")
-
-            if user_id:
-                users[user_id] = user
-
+        users = {
+            user["id"]: user
+            for user in payload.get("includes", {}).get("users", [])
+            if user.get("id")
+        }
         posts = []
 
-        for tweet in payload.get(
-            "data",
-            []
-        ):
-
+        for tweet in payload.get("data", []):
             tweet_id = tweet.get("id")
-
             if not tweet_id:
                 continue
 
-            author_id = tweet.get(
-                "author_id"
-            )
+            author = users.get(tweet.get("author_id"), {})
+            username = author.get("username")
 
-            author = users.get(
-                author_id,
-                {}
-            )
-
-            username = author.get(
-                "username"
-            )
-
-            author_name = author.get(
-                "name"
-            )
-
-            post_url = None
-
-            if username:
-
-                post_url = (
-                    "https://x.com/"
-                    f"{username}/status/"
-                    f"{tweet_id}"
+            posts.append(
+                SocialPost(
+                    platform=self.platform_name,
+                    external_id=tweet_id,
+                    content=tweet.get("text", ""),
+                    author_name=author.get("name"),
+                    author_handle=f"@{username}" if username else None,
+                    post_url=(
+                        f"https://x.com/{username}/status/{tweet_id}"
+                        if username
+                        else None
+                    ),
+                    published_at=self._parse_timestamp(tweet.get("created_at")),
+                    metadata={
+                        "author_id": tweet.get("author_id"),
+                        "lang": tweet.get("lang"),
+                        "public_metrics": tweet.get("public_metrics", {}),
+                    },
                 )
-
-            published_at = None
-
-            created_at = tweet.get(
-                "created_at"
             )
-
-            if created_at:
-
-                try:
-
-                    published_at = datetime.fromisoformat(
-                        created_at.replace(
-                            "Z",
-                            "+00:00"
-                        )
-                    )
-
-                except ValueError:
-
-                    published_at = None
-
-            posts.append({
-
-                "platform": "x",
-
-                "external_id": tweet_id,
-
-                "author_name": author_name,
-
-                "author_handle": (
-                    f"@{username}"
-                    if username
-                    else None
-                ),
-
-                "content": tweet.get(
-                    "text",
-                    ""
-                ),
-
-                "post_url": post_url,
-
-                "published_at": published_at,
-
-                "sentiment": "neutral",
-
-                "metadata": {
-                    "author_id": author_id,
-                    "lang": tweet.get("lang"),
-                    "public_metrics": tweet.get(
-                        "public_metrics",
-                        {}
-                    )
-                }
-
-            })
 
         return posts
+
+    @staticmethod
+    def _format_timestamp(value: datetime) -> str:
+        """Format an X API timestamp in UTC."""
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    @staticmethod
+    def _parse_timestamp(value: Optional[str]) -> Optional[datetime]:
+        if not value:
+            return None
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _raise_for_error(response: httpx.Response) -> None:
+        if response.status_code == 401:
+            raise RuntimeError("X API authentication failed. Check X_BEARER_TOKEN.")
+        if response.status_code == 403:
+            raise RuntimeError("X API access was forbidden. Check access permissions.")
+        if response.status_code == 429:
+            raise RuntimeError("X API rate limit reached. Try again later.")
+        if response.is_error:
+            raise RuntimeError(f"X API request failed ({response.status_code}).")

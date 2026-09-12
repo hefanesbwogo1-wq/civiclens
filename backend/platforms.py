@@ -1,21 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
-from .database import get_connection
+from .mentions import get_authenticated_supabase
 
-
-# =========================================================
-# CIVICLENS PLATFORMS ROUTER
-# =========================================================
 
 router = APIRouter(
     prefix="/api/platforms",
-    tags=["Platforms"]
+    tags=["Platforms"],
 )
 
-
-# =========================================================
-# PLATFORM CONFIGURATION
-# =========================================================
 
 PLATFORMS = [
     {
@@ -23,122 +15,82 @@ PLATFORMS = [
         "name": "X",
         "description": "Public conversations on X",
         "icon": "𝕏",
-        "status": "available"
+        "status": "available",
     },
     {
         "id": "facebook",
         "name": "Facebook",
-        "description": "Public conversations on Facebook",
+        "description": "Monitoring is pending Meta API approval and integration",
         "icon": "f",
-        "status": "available"
+        "status": "coming_soon",
     },
     {
         "id": "instagram",
         "name": "Instagram",
         "description": "Public conversations on Instagram",
         "icon": "◎",
-        "status": "coming_soon"
+        "status": "coming_soon",
     },
     {
         "id": "youtube",
         "name": "YouTube",
         "description": "Public conversations on YouTube",
         "icon": "▶",
-        "status": "coming_soon"
-    }
+        "status": "coming_soon",
+    },
 ]
 
 
-# =========================================================
-# GET PLATFORMS
-# =========================================================
+def get_platform_counts(supabase, user_id: str) -> dict[str, int]:
+    """Count this user's mentions by platform from Supabase."""
+
+    response = (
+        supabase.table("mentions")
+        .select("platform")
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    counts: dict[str, int] = {}
+
+    for row in response.data or []:
+        platform = str(row.get("platform") or "").strip().lower()
+
+        if platform:
+            counts[platform] = counts.get(platform, 0) + 1
+
+    return counts
+
 
 @router.get("")
-async def get_platforms():
-
-    connection = get_connection()
-
-    results = []
-
-    for platform in PLATFORMS:
-
-        try:
-            row = connection.execute(
-                """
-                SELECT COUNT(*) AS count
-                FROM mentions
-                WHERE LOWER(platform) = LOWER(?)
-                """,
-                (platform["name"],)
-            ).fetchone()
-
-            mention_count = row["count"] if row else 0
-
-        except Exception:
-            mention_count = 0
-
-        results.append({
-            **platform,
-            "mention_count": mention_count,
-            "monitoring": (
-                platform["status"] == "available"
-            )
-        })
-
-    connection.close()
+async def get_platforms(request: Request):
+    supabase, user = get_authenticated_supabase(request)
+    counts = get_platform_counts(supabase, user.id)
 
     return {
         "success": True,
-        "platforms": results
+        "platforms": [
+            {
+                **platform,
+                "mention_count": counts.get(platform["id"], 0),
+                "monitoring": platform["status"] == "available",
+            }
+            for platform in PLATFORMS
+        ],
     }
 
 
-# =========================================================
-# PLATFORM STATISTICS
-# =========================================================
-
 @router.get("/stats")
-async def platform_stats():
-
-    connection = get_connection()
-
-    try:
-
-        total_mentions = connection.execute(
-            """
-            SELECT COUNT(*) AS count
-            FROM mentions
-            """
-        ).fetchone()["count"]
-
-        x_mentions = connection.execute(
-            """
-            SELECT COUNT(*) AS count
-            FROM mentions
-            WHERE LOWER(platform) = 'x'
-            """
-        ).fetchone()["count"]
-
-        facebook_mentions = connection.execute(
-            """
-            SELECT COUNT(*) AS count
-            FROM mentions
-            WHERE LOWER(platform) = 'facebook'
-            """
-        ).fetchone()["count"]
-
-    except Exception:
-
-        total_mentions = 0
-        x_mentions = 0
-        facebook_mentions = 0
-
-    connection.close()
+async def platform_stats(request: Request):
+    supabase, user = get_authenticated_supabase(request)
+    counts = get_platform_counts(supabase, user.id)
 
     return {
         "success": True,
-        "total_mentions": total_mentions,
-        "x_mentions": x_mentions,
-        "facebook_mentions": facebook_mentions,
-        "active_platforms": 2
+        "total_mentions": sum(counts.values()),
+        "x_mentions": counts.get("x", 0),
+        "facebook_mentions": counts.get("facebook", 0),
+        "active_platforms": sum(
+            platform["status"] == "available" for platform in PLATFORMS
+        ),
     }

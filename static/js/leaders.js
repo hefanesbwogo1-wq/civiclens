@@ -21,7 +21,6 @@ initializeLeaders
 async function initializeLeaders() {
 console.log("CivicLens: leaders.js initializing...");
 
-```
 cacheElements();
 
 initializeSupabase();
@@ -49,7 +48,6 @@ await loadLeaders();
 console.log(
     "CivicLens: leaders.js loaded successfully."
 );
-```
 
 }
 
@@ -61,7 +59,6 @@ function cacheElements() {
 elements.userName =
 document.getElementById("user-name");
 
-```
 elements.userEmail =
     document.getElementById("user-email");
 
@@ -134,7 +131,6 @@ elements.formError =
 
 elements.pageError =
     document.getElementById("page-error");
-```
 
 }
 
@@ -152,7 +148,6 @@ console.error(
 "CivicLens: Supabase configuration unavailable."
 );
 
-```
     return;
 }
 
@@ -172,7 +167,6 @@ try {
         error
     );
 }
-```
 
 }
 
@@ -188,7 +182,6 @@ error
 } =
 await supabaseClient.auth.getSession();
 
-```
     if (error) {
         console.error(
             "CivicLens session error:",
@@ -221,7 +214,6 @@ await supabaseClient.auth.getSession();
 
     return false;
 }
-```
 
 }
 
@@ -239,7 +231,6 @@ throw new Error(
 );
 }
 
-```
 const {
     data,
     error
@@ -280,7 +271,6 @@ return fetch(
         headers
     }
 );
-```
 
 }
 
@@ -296,7 +286,6 @@ error
 } =
 await supabaseClient.auth.getUser();
 
-```
     if (
         error ||
         !data?.user
@@ -339,7 +328,6 @@ await supabaseClient.auth.getUser();
         error
     );
 }
-```
 
 }
 
@@ -350,7 +338,6 @@ LOAD LEADERS
 async function loadLeaders() {
 showLoading();
 
-```
 try {
     console.log(
         "CivicLens: Loading leaders..."
@@ -414,7 +401,6 @@ try {
     );
 
 }
-```
 
 }
 
@@ -428,7 +414,6 @@ response.headers.get(
 "content-type"
 ) || "";
 
-```
 if (
     contentType.includes(
         "application/json"
@@ -451,7 +436,6 @@ try {
         message: text
     };
 }
-```
 
 }
 
@@ -467,7 +451,6 @@ console.warn(
 "CivicLens: leaders-container not found."
 );
 
-```
     return;
 }
 
@@ -527,7 +510,6 @@ elements.leadersContainer.innerHTML =
             createLeaderCard
         )
         .join("");
-```
 
 }
 
@@ -548,7 +530,6 @@ escapeAttribute(
 leader.id || ""
 );
 
-```
                 const fullName =
                     escapeHtml(
                         leader.full_name ||
@@ -659,7 +640,6 @@ leader.id || ""
             }
         )
         .join("");
-```
 
 }
 
@@ -675,7 +655,6 @@ escapeAttribute(
 leader.id || ""
 );
 
-```
 const fullName =
     escapeHtml(
         leader.full_name ||
@@ -865,7 +844,6 @@ return `
 
     </article>
 `;
-```
 
 }
 
@@ -880,7 +858,6 @@ function setupEventHandlers() {
 * leader buttons.
 */
 
-```
 if (
     elements.addButton &&
     !elements.addButton.dataset.civicLensBound
@@ -1076,7 +1053,6 @@ if (
         }
     );
 }
-```
 
 }
 
@@ -1092,7 +1068,6 @@ event.target.closest(
 "[data-action]"
 );
 
-```
 if (!button) {
     return;
 }
@@ -1103,7 +1078,6 @@ event.stopPropagation();
 await handleLeaderAction(
     button
 );
-```
 
 }
 
@@ -1119,7 +1093,6 @@ event.target.closest(
 "[data-action]"
 );
 
-```
 if (!button) {
     return;
 }
@@ -1161,7 +1134,6 @@ event.preventDefault();
 await handleLeaderAction(
     button
 );
-```
 
 }
 
@@ -1175,7 +1147,6 @@ button
 const action =
 button.dataset.action;
 
-```
 const leaderId =
     button.dataset.leaderId;
 
@@ -1212,7 +1183,6 @@ switch (action) {
     default:
         break;
 }
-```
 
 }
 
@@ -1225,7 +1195,6 @@ console.log(
 "CivicLens: Opening Add Leader modal."
 );
 
-```
 clearForm();
 
 if (elements.modalTitle) {
@@ -1243,7 +1212,6 @@ elements.form?.removeAttribute(
 );
 
 showModal();
-```
 
 }
 
@@ -1261,7 +1229,6 @@ String(item.id) ===
 String(leaderId)
 );
 
-```
 if (!leader) {
     showFormError(
         "Leader could not be found."
@@ -1328,7 +1295,6 @@ if (elements.monitoringEnabled) {
 clearFormError();
 
 showModal();
-```
 
 }
 
@@ -1341,7 +1307,6 @@ if (!elements.modal) {
 return;
 }
 
-```
 elements.modal.classList.remove(
     "open",
     "active",
@@ -1361,7 +1326,6 @@ if (
 }
 
 clearFormError();
-```
 
 }
 
@@ -1375,7 +1339,6 @@ console.warn(
 "CivicLens: leader modal not found."
 );
 
-```
     return;
 }
 
@@ -1402,7 +1365,6 @@ setTimeout(
     },
     50
 );
-```
 
 }
 
@@ -1413,7 +1375,6 @@ SAVE LEADER
 async function saveLeader() {
 clearFormError();
 
-```
 const fullName =
     elements.fullName?.value.trim() ||
     "";
@@ -1562,7 +1523,6 @@ try {
                 : "Save Leader";
     }
 }
-```
 
 }
 
@@ -1580,7 +1540,6 @@ String(item.id) ===
 String(leaderId)
 );
 
-```
 const leaderName =
     leader?.full_name ||
     leader?.public_name ||
@@ -1651,7 +1610,6 @@ try {
         "Unable to delete leader."
     );
 }
-```
 
 }
 
@@ -1669,7 +1627,6 @@ String(item.id) ===
 String(leaderId)
 );
 
-```
 if (!leader) {
     return;
 }
@@ -1741,7 +1698,6 @@ try {
         "Unable to update monitoring status."
     );
 }
-```
 
 }
 
@@ -1757,7 +1713,6 @@ String(query || "")
 .trim()
 .toLowerCase();
 
-```
 if (!normalized) {
     renderLeaders(
         leaders
@@ -1797,7 +1752,6 @@ renderLeaders(
 updateLeaderCount(
     filtered.length
 );
-```
 
 }
 
@@ -1810,7 +1764,6 @@ if (elements.refreshButton) {
 elements.refreshButton.disabled =
 true;
 
-```
     elements.refreshButton.textContent =
         "↻ Refreshing...";
 }
@@ -1827,7 +1780,6 @@ try {
             "↻ Refresh";
     }
 }
-```
 
 }
 
@@ -1840,7 +1792,6 @@ console.log(
 "CivicLens: Logging out..."
 );
 
-```
 try {
     if (supabaseClient) {
         await supabaseClient.auth.signOut();
@@ -1854,7 +1805,6 @@ try {
 
 window.location.href =
     "/login";
-```
 
 }
 
@@ -1866,7 +1816,6 @@ function clearForm() {
 if (elements.form) {
 elements.form.reset();
 
-```
     delete elements.form.dataset.editId;
 }
 
@@ -1876,7 +1825,6 @@ if (elements.monitoringEnabled) {
 }
 
 clearFormError();
-```
 
 }
 
@@ -1885,11 +1833,9 @@ if (elements.formError) {
 elements.formError.textContent =
 "";
 
-```
     elements.formError.style.display =
         "none";
 }
-```
 
 }
 
@@ -1901,13 +1847,11 @@ window.alert(message);
 return;
 }
 
-```
 elements.formError.textContent =
     message;
 
 elements.formError.style.display =
     "block";
-```
 
 }
 
@@ -1922,7 +1866,6 @@ if (elements.pageError) {
 elements.pageError.textContent =
 message;
 
-```
     elements.pageError.style.display =
         "block";
 }
@@ -1934,7 +1877,6 @@ if (elements.leadersContainer) {
         </div>
     `;
 }
-```
 
 }
 
@@ -1947,7 +1889,6 @@ if (!elements.leadersContainer) {
 return;
 }
 
-```
 elements.leadersContainer.innerHTML = `
     <div class="leaders-loading">
 
@@ -1959,7 +1900,6 @@ elements.leadersContainer.innerHTML = `
 
     </div>
 `;
-```
 
 }
 
@@ -1974,10 +1914,8 @@ if (!elements.leaderCount) {
 return;
 }
 
-```
 elements.leaderCount.textContent =
     count;
-```
 
 }
 
@@ -1991,23 +1929,23 @@ value
 return String(value)
 .replace(
 /&/g,
-"&"
+"&amp;"
 )
 .replace(
 /</g,
-"<"
+"&lt;"
 )
 .replace(
 />/g,
-">"
+"&gt;"
 )
 .replace(
 /"/g,
-"""
+"&quot;"
 )
 .replace(
 /'/g,
-"'"
+"&#039;"
 );
 }
 

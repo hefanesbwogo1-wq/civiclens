@@ -7,9 +7,6 @@ import urllib.request
 from fastapi import APIRouter
 from pydantic import BaseModel, EmailStr, Field
 
-from .database import get_connection
-
-
 # =========================================================
 # CIVICLENS AUTHENTICATION ROUTER
 # =========================================================
@@ -272,36 +269,6 @@ async def register_user(data: RegistrationRequest):
     email = data.email.lower().strip()
 
     # ---------------------------------------------------------
-    # CHECK LOCAL DATABASE
-    # ---------------------------------------------------------
-
-    connection = get_connection()
-
-    try:
-
-        existing_user = connection.execute(
-            """
-            SELECT id
-            FROM users
-            WHERE email = ?
-            """,
-            (email,)
-        ).fetchone()
-
-        if existing_user:
-
-            return {
-                "success": False,
-                "message": (
-                    "An account with this email already exists."
-                )
-            }
-
-    finally:
-
-        connection.close()
-
-    # ---------------------------------------------------------
     # CREATE USER IN SUPABASE AUTH
     # ---------------------------------------------------------
 
@@ -332,66 +299,6 @@ async def register_user(data: RegistrationRequest):
         }
 
     supabase_user_id = supabase_user.get("id")
-
-    # ---------------------------------------------------------
-    # SAVE CIVICLENS PROFILE
-    #
-    # password_hash is intentionally empty.
-    # Password authentication is handled by Supabase Auth.
-    # ---------------------------------------------------------
-
-    connection = get_connection()
-
-    try:
-
-        connection.execute(
-            """
-            INSERT INTO users
-            (
-                full_name,
-                email,
-                phone,
-                organization,
-                role,
-                password_hash,
-                subscription_plan
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                data.full_name.strip(),
-                email,
-                phone,
-                data.organization.strip(),
-                data.role.strip(),
-                "",
-                data.subscription_plan
-            )
-        )
-
-        connection.commit()
-
-    except Exception as error:
-
-        connection.rollback()
-
-        print(
-            "Local CivicLens profile creation failed:",
-            error
-        )
-
-        return {
-            "success": False,
-            "message": (
-                "Your authentication account was created, "
-                "but your CivicLens profile could not be saved. "
-                "Please contact support."
-            )
-        }
-
-    finally:
-
-        connection.close()
 
     # ---------------------------------------------------------
     # REGISTRATION SUCCESS

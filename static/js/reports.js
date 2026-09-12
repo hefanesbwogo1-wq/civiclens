@@ -8,6 +8,13 @@ async function initializeReports(){
   if(!session){ location.href="/login"; return; }
   await loadUser(); await loadReports(); setupEvents();
 }
+async function civicLensFetch(url, options={}){
+  const { data:{ session } }=await supabaseClient.auth.getSession();
+  if(!session){ location.href="/login"; throw new Error("Your session has expired."); }
+  const headers=new Headers(options.headers||{});
+  headers.set("Authorization",`Bearer ${session.access_token}`);
+  return fetch(url,{...options,headers});
+}
 async function loadUser(){
   try{
     const { data } = await supabaseClient.auth.getUser(); if(!data?.user) return;
@@ -20,7 +27,7 @@ async function loadUser(){
 }
 async function loadReports(){
   try{
-    const [sR,lR,pR]=await Promise.all([fetch("/api/reports/summary").catch(()=>({json:()=>({})})), fetch("/api/reports/leaders").catch(()=>({json:()=>({})})), fetch("/api/reports/platforms").catch(()=>({json:()=>({})}))]);
+    const [sR,lR,pR]=await Promise.all([civicLensFetch("/api/reports/summary"), civicLensFetch("/api/reports/leaders"), civicLensFetch("/api/reports/platforms")]);
     const summary=await sR.json().catch(()=>({})); const leaders=await lR.json().catch(()=>({leaders:[]})); const platforms=await pR.json().catch(()=>({platforms:[]}));
     if(summary.success){ setText("total-mentions",summary.total_mentions); setText("positive-mentions",summary.positive); setText("neutral-mentions",summary.neutral); setText("negative-mentions",summary.negative); }
     renderLeaders(leaders.leaders||[]); renderPlatforms(platforms.platforms||[]);
