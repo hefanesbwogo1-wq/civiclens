@@ -1,41 +1,5 @@
-# --- Secrets ---
-.env
+node_modules
+.next
 .env.local
-.env.*.local
-
-# --- Python ---
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-venv/
-.venv/
-env/
-*.egg-info/
-pip-log.txt
-.pytest_cache/
-
-# --- Node (if you add later) ---
-node_modules/
-npm-debug.log*
-dist/
-build/
-
-# --- OS ---
-.DS_Store
-Thumbs.db
-
-# --- IDE ---
-.vscode/
-.idea/
-*.swp
-*.swo
-.vercel/
-
-# --- Database ---
 *.db
-*.sqlite3
-
-# --- Logs ---
-logs/
-*.log
+*.backup
