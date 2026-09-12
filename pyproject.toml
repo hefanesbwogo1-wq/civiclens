@@ -1,11 +1,12 @@
-[project]
+﻿[project]
 name = "civiclens"
 version = "0.1.0"
 requires-python = ">=3.9"
 dependencies = [
   "fastapi",
-  "uvicorn"
+  "uvicorn[standard]",
+  "pydantic"
 ]
 
 [tool.vercel]
-entrypoint = "backend.main:app"
+entrypoint = "api/index.py"
