@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 
 const PLATFORMS = [
-  {id:"wa", n:"WhatsApp", c:892, p:71, col:"#25D366", icon:"💬"},
+  {id:"wa", n:"WhatsApp", c:892, p:71, col:"#25D366", icon:"ðŸ’¬"},
   {id:"fb", n:"Facebook", c:234, p:19, col:"#1877F2", icon:"f"},
-  {id:"x", n:"X", c:89, p:7, col:"#000", icon:"𝕏"},
-  {id:"tt", n:"TikTok", c:32, p:3, col:"#111", icon:"♪"},
+  {id:"x", n:"X", c:89, p:7, col:"#000", icon:"ð•"},
+  {id:"tt", n:"TikTok", c:32, p:3, col:"#111", icon:"â™ª"},
 ];
 
 const ISSUES = [
@@ -36,13 +36,13 @@ export default function Page(){
         <div className="max-w-[1200px] mx-auto px-4 h-[56px] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-zinc-900 text-white grid place-items-center font-black">C</div>
-            <div><div className="font-black text-[14px] leading-none">CivicLens</div><div className="text-[10px] text-zinc-500 tracking-widest">47 COUNTIES • KENYA • LIVE</div></div>
-            <div className="hidden md:flex ml-6 text-[11px] px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"/>LIVE • 1,247 mentions • 47 counties</div>
+            <div><div className="font-black text-[14px] leading-none">CivicLens</div><div className="text-[10px] text-zinc-500 tracking-widest">47 COUNTIES â€¢ KENYA â€¢ LIVE</div></div>
+            <div className="hidden md:flex ml-6 text-[11px] px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"/>LIVE â€¢ 1,247 mentions â€¢ 47 counties</div>
           </div>
-          <a href="/impact" className="bg-[#FF4D00] text-white text-[12px] font-bold px-4 py-2 rounded-full">Impact Deck →</a>
+          <a href="/impact" className="bg-[#FF4D00] text-white text-[12px] font-bold px-4 py-2 rounded-full">Impact Deck â†’</a>
         </div>
         <div className="max-w-[1200px] mx-auto px-2 pb-2 flex gap-1.5 overflow-auto">
-          {[{k:"dashboard",l:"Dashboard"},{k:"platforms",l:`Platforms • 4`},{k:"leaders",l:"Leaders 50"},{k:"reports",l:"Reports"}].map(t=>(
+          {[{k:"dashboard",l:"Dashboard"},{k:"platforms",l:`Platforms â€¢ 4`},{k:"leaders",l:"Leaders 50"},{k:"reports",l:"Reports"}].map(t=>(
             <button key={t.k} onClick={()=>handleTab(t.k)} className={`px-4 h-8 rounded-full text-[12px] font-bold whitespace-nowrap border ${tab===t.k?"bg-zinc-900 text-white":"bg-white text-zinc-600"}`}>{t.l}</button>
           ))}
         </div>
@@ -56,17 +56,17 @@ export default function Page(){
               <div className="relative">
                 <div className="text-[11px] tracking-widest opacity-60">KENYA PUBLIC CONVERSATION INTELLIGENCE</div>
                 <h1 className="text-[30px] md:text-[44px] font-black leading-[0.9] mt-2">We turn public noise <br/>into <span className="text-[#FF4D00]">accountability.</span></h1>
-                <p className="text-[12px] opacity-70 mt-2 max-w-[500px]">Tracking 50 leaders across all 47 counties. Swahili, Sheng, English. From Turkana to Kwale, Kisumu to Garissa.</p>
+                <p className="text-[12px] opacity-70 mt-2 max-w-[500px]">Built by Billet Kiplaa — for every Kenyan who complains in WhatsApp groups and gets ignored. Pilot validated in Bomet, now scaling national.
                 <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
                   <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10">47 Counties coverage</span>
-                  <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10">50 Leaders • National + Governors</span>
-                  <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10">Pilot validated in Bomet • Scaling national</span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10">50 Leaders â€¢ National + Governors</span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/10">Pilot validated in Bomet â€¢ Scaling national</span>
                 </div>
               </div>
               <div className="relative grid grid-cols-3 gap-2 mt-6">
                 <div className="rounded-2xl bg-white/10 border border-white/10 p-3"><div className="text-[10px] opacity-60">COUNTIES</div><div className="text-xl font-black">47</div><div className="text-[10px] opacity-70">100% Kenya</div></div>
                 <div className="rounded-2xl bg-white/10 border border-white/10 p-3"><div className="text-[10px] opacity-60">LEADERS</div><div className="text-xl font-black">50</div><div className="text-[10px] opacity-70">Gov + President + DP</div></div>
-                <div className="rounded-2xl bg-white/10 border border-white/10 p-3"><div className="text-[10px] opacity-60">MENTIONS</div><div className="text-xl font-black">1,247</div><div className="text-[10px] opacity-70">Today • All platforms</div></div>
+                <div className="rounded-2xl bg-white/10 border border-white/10 p-3"><div className="text-[10px] opacity-60">MENTIONS</div><div className="text-xl font-black">1,247</div><div className="text-[10px] opacity-70">Today â€¢ All platforms</div></div>
               </div>
             </div>
 
@@ -75,7 +75,7 @@ export default function Page(){
                 <div className="flex justify-between"><b className="text-[13px]">Top Issues - National</b><span className="text-[10px] bg-zinc-900 text-white px-2 py-1 rounded-full">KENYA</span></div>
                 <div className="mt-3 space-y-3">
                   {ISSUES.map(i=>(
-                    <div key={i.tag}><div className="flex justify-between text-[12px]"><span className="font-bold">{i.tag} <span className="font-normal text-zinc-500">• {i.county}</span></span><span className="text-[11px] bg-zinc-100 px-2 rounded-full">{i.count}</span></div><div className="mt-1 h-1.5 bg-zinc-100 rounded-full overflow-hidden"><div className={`h-full ${i.color}`} style={{width:`${i.neg}%`}}/></div></div>
+                    <div key={i.tag}><div className="flex justify-between text-[12px]"><span className="font-bold">{i.tag} <span className="font-normal text-zinc-500">â€¢ {i.county}</span></span><span className="text-[11px] bg-zinc-100 px-2 rounded-full">{i.count}</span></div><div className="mt-1 h-1.5 bg-zinc-100 rounded-full overflow-hidden"><div className={`h-full ${i.color}`} style={{width:`${i.neg}%`}}/></div></div>
                   ))}
                 </div>
               </div>
@@ -86,7 +86,7 @@ export default function Page(){
                     <div key={i} className={`h-7 rounded-lg grid place-items-center text-[9px] font-bold ${i%5===0?"bg-zinc-900 text-white":i%3===0?"bg-orange-100 text-orange-700 border border-orange-200":"bg-zinc-100 text-zinc-600"}`}>{i+1}</div>
                   ))}
                 </div>
-                <div className="mt-3 text-[10px] text-zinc-500">Equal tracking • No county bias • Turkana to Kwale</div>
+                <div className="mt-3 text-[10px] text-zinc-500">Equal tracking â€¢ No county bias â€¢ Turkana to Kwale</div>
                 <div className="mt-2 flex flex-wrap gap-1">{COUNTIES_SAMPLE.map(c=><span key={c} className="text-[9px] px-2 py-1 rounded-full bg-zinc-50 border">{c}</span>)}</div>
               </div>
             </div>
@@ -104,12 +104,12 @@ export default function Page(){
             <div className="bg-white rounded-[20px] border p-4">
               <b className="text-[13px]">Live Feed - National</b>
               <div className="mt-3 space-y-2 text-[12px]">
-                <div className="p-2 rounded-xl bg-[#F8F9FB] border">“Barabara ya Kiambu mbovu sana” <span className="text-[9px] bg-zinc-100 px-1 rounded">#roads • Kiambu</span></div>
-                <div className="p-2 rounded-xl bg-[#F8F9FB] border">“Maji Lodwar hakuna wiki tatu” <span className="text-[9px] bg-zinc-100 px-1 rounded">#maji • Turkana</span></div>
-                <div className="p-2 rounded-xl bg-[#F8F9FB] border">“Bursary Kwale haijafika” <span className="text-[9px] bg-zinc-100 px-1 rounded">#education • Kwale</span></div>
-                <div className="p-2 rounded-xl bg-[#F8F9FB] border">“Ufisadi Mombasa port” <span className="text-[9px] bg-zinc-100 px-1 rounded">#ufisadi • Mombasa</span></div>
+                <div className="p-2 rounded-xl bg-[#F8F9FB] border">â€œBarabara ya Kiambu mbovu sanaâ€ <span className="text-[9px] bg-zinc-100 px-1 rounded">#roads â€¢ Kiambu</span></div>
+                <div className="p-2 rounded-xl bg-[#F8F9FB] border">â€œMaji Lodwar hakuna wiki tatuâ€ <span className="text-[9px] bg-zinc-100 px-1 rounded">#maji â€¢ Turkana</span></div>
+                <div className="p-2 rounded-xl bg-[#F8F9FB] border">â€œBursary Kwale haijafikaâ€ <span className="text-[9px] bg-zinc-100 px-1 rounded">#education â€¢ Kwale</span></div>
+                <div className="p-2 rounded-xl bg-[#F8F9FB] border">â€œUfisadi Mombasa portâ€ <span className="text-[9px] bg-zinc-100 px-1 rounded">#ufisadi â€¢ Mombasa</span></div>
               </div>
-              <div className="mt-2 text-[10px] text-zinc-500">Pilot validated in Siongiroi, Bomet — now national model.</div>
+              <div className="mt-2 text-[10px] text-zinc-500">Pilot validated in Bomet, now scaling national.
             </div>
           </div>
         </div>
@@ -117,13 +117,15 @@ export default function Page(){
 
       {tab==="leaders" && (
         <div className="max-w-[1000px] mx-auto p-3">
-          <div className="text-sm font-bold">All 47 Governors + National Leaders — Kenya</div>
+          <div className="text-sm font-bold">All 47 Governors + National Leaders â€” Kenya</div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3">
-            {COUNTIES_SAMPLE.map(c=><div key={c} className="bg-white p-3 rounded-2xl border text-sm"><div className="font-bold">{c}</div><div className="text-[11px] text-zinc-500">Governor • LIVE tracking</div></div>)}
+            {COUNTIES_SAMPLE.map(c=><div key={c} className="bg-white p-3 rounded-2xl border text-sm"><div className="font-bold">{c}</div><div className="text-[11px] text-zinc-500">Governor â€¢ LIVE tracking</div></div>)}
           </div>
-          <div className="mt-3 p-3 rounded-xl bg-zinc-900 text-white text-xs text-center">Full 50 leaders list in reports — Turkana to Kwale, all equal.</div>
+          <div className="mt-3 p-3 rounded-xl bg-zinc-900 text-white text-xs text-center">Full 50 leaders list in reports â€” Turkana to Kwale, all equal.</div>
         </div>
       )}
     </div>
   )
 }
+
+
