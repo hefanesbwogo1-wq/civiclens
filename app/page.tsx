@@ -1,4 +1,4 @@
-﻿"use client";
+﻿"use client";"use client";
 export default function Page(){
   return (
     <div style={{padding:20, fontFamily:'sans-serif'}}>
@@ -9,3 +9,4 @@ export default function Page(){
     </div>
   )
 }
+
