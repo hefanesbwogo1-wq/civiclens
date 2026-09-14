@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+﻿"use client";import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_KE",
     url: "https://civiclens.vercel.app",
-    title: "CivicLens — We turn WhatsApp noise into accountability | 47 Counties LIVE",
+    title: "CivicLens â€” We turn WhatsApp noise into accountability | 47 Counties LIVE",
     description: "Live AI tracking 60+ leaders (Ruto, 47 Governors) + trending #ufisadi #roads. Swahili/Sheng sentiment. WhatsApp share + PDF reports. Built in Siongiroi.",
     siteName: "CivicLens",
     images: [
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CivicLens — 47 Counties Accountability LIVE",
+    title: "CivicLens â€” 47 Counties Accountability LIVE",
     description: "AI tracks 47 Governors + trending issues. Swahili/Sheng. WhatsApp + PDF. Built in Bomet.",
     images: ["/icon-512.png"],
   },
