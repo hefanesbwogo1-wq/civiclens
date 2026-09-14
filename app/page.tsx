@@ -21,106 +21,104 @@ const GOVERNORS = [
   {name:"Kithure Kindiki", county:"National - DP"}, {name:"Raila Odinga", county:"Opposition"}
 ];
 
+const PLATFORMS = [
+  {id:"whatsapp", name:"WhatsApp", icon:"💬", count:892, pct:71, color:"bg-[#25D366]", desc:"Public groups • Swahili/Sheng", live:true, sample:"Barabara ya Siongiroi-Chebole mbaya sana"},
+  {id:"facebook", name:"Facebook", icon:"📘", count:234, pct:19, color:"bg-[#1877F2]", desc:"Pages & public groups", live:true, sample:"Bomet county bursary complaint"},
+  {id:"x", name:"X (Twitter)", icon:"𝕏", count:89, pct:7, color:"bg-black", desc:"#Bomet #Siongiroi trends", live:true, sample:"#ufisadi Bomet trend"},
+  {id:"tiktok", name:"TikTok", icon:"🎵", count:32, pct:3, color:"bg-[#000]", desc:"Citizen videos • comments", live:false, sample:"Roads video 12k views"},
+  {id:"radio", name:"Radio / Call-in", icon:"📻", count:18, pct:2, color:"bg-[#FF6B35]", desc:"Kass FM, Chamgei", live:false, sample:"Morning call on water"},
+];
+
 export default function Page(){
   const [tab,setTab]=useState("dashboard");
+  const [platform,setPlatform]=useState("whatsapp");
   const [search,setSearch]=useState("");
   const [mounted,setMounted]=useState(false);
   useEffect(()=>setMounted(true),[]);
   if(!mounted) return null;
-
   const filtered = GOVERNORS.filter(g=> (g.name+g.county).toLowerCase().includes(search.toLowerCase()));
+  const activePlat = PLATFORMS.find(p=>p.id===platform);
 
   return (
-    <div className="min-h-screen bg-[#F6F7FB] text-[#0A1931] font-sans">
-      {/* TOP BAR */}
+    <div className="min-h-screen bg-[#F6F7FB] text-[#0A1931]">
       <div className="sticky top-0 z-20 bg-[#0A1931] text-white px-4 py-3 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#FF6B35] rounded-lg grid place-items-center font-black">C</div>
-          <div><div className="font-bold leading-none">CivicLens</div><div className="text-[10px] opacity-70">Siongiroi • Bomet Pilot</div></div>
-        </div>
-        <div className="text-[11px] bg-white/10 px-3 py-1 rounded-full">50 Leaders • 47 Counties LIVE • <span className="text-green-400">●</span></div>
+        <div className="flex items-center gap-2"><div className="w-8 h-8 bg-[#FF6B35] rounded-lg grid place-items-center font-black">C</div><div><div className="font-bold leading-none text-sm">CivicLens</div><div className="text-[10px] opacity-70">Siongiroi • 47 Counties</div></div></div>
+        <div className="text-[10px] bg-white/10 px-2 py-1 rounded-full">50 Leaders • LIVE</div>
       </div>
 
-      {/* TABS */}
-      <div className="sticky top-[52px] z-10 bg-white border-b px-3 py-2 flex gap-2">
-        <button onClick={()=>setTab("dashboard")} className={`px-4 py-2 rounded-full text-sm font-semibold ${tab==="dashboard"?"bg-[#0A1931] text-white":"bg-gray-100"}`}>Dashboard</button>
-        <button onClick={()=>setTab("leaders")} className={`px-4 py-2 rounded-full text-sm font-semibold ${tab==="leaders"?"bg-[#0A1931] text-white":"bg-gray-100"}`}>Leaders {GOVERNORS.length}</button>
-        <a href="/impact" className="px-4 py-2 rounded-full text-sm font-bold bg-[#FF6B35] text-white ml-auto">Impact</a>
+      <div className="sticky top-[52px] z-10 bg-white border-b px-2 py-2 flex gap-1.5 overflow-x-auto">
+        <button onClick={()=>setTab("dashboard")} className={`px-3 py-2 rounded-full text-xs font-bold whitespace-nowrap ${tab==="dashboard"?"bg-[#0A1931] text-white":"bg-gray-100"}`}>Dashboard</button>
+        <button onClick={()=>setTab("leaders")} className={`px-3 py-2 rounded-full text-xs font-bold whitespace-nowrap ${tab==="leaders"?"bg-[#0A1931] text-white":"bg-gray-100"}`}>Leaders {GOVERNORS.length}</button>
+        <button onClick={()=>setTab("platforms")} className={`px-3 py-2 rounded-full text-xs font-bold whitespace-nowrap ${tab==="platforms"?"bg-[#0A1931] text-white":"bg-gray-100"}`}>Platforms • {PLATFORMS.length}</button>
+        <a href="/impact" className="px-3 py-2 rounded-full text-xs font-bold bg-[#FF6B35] text-white whitespace-nowrap ml-auto">Impact</a>
       </div>
 
       {tab==="dashboard" && (
-        <div className="p-4 max-w-[900px] mx-auto">
-          <h1 className="text-[32px] font-black leading-[0.95] tracking-tight mt-2">We turn WhatsApp noise <span className="text-[#FF6B35]">into accountability.</span></h1>
-          <p className="text-sm text-gray-500 mt-2">Live AI tracking 50 leaders • 47 Counties • Swahili / Sheng • Real public groups</p>
+        <div className="p-3 max-w-[900px] mx-auto">
+          <h1 className="text-[28px] font-black leading-[0.95] mt-2">We turn WhatsApp noise <span className="text-[#FF6B35]">into accountability.</span></h1>
+          <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1">
+            {PLATFORMS.map(p=>(
+              <button key={p.id} onClick={()=>{setPlatform(p.id); setTab("platforms")}} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border text-xs whitespace-nowrap"><span>{p.icon}</span><b>{p.name}</b><span className="bg-gray-100 px-1.5 rounded-full">{p.count}</span></button>
+            ))}
+          </div>
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            <div className="bg-white rounded-2xl p-3 border"><div className="text-[10px] text-gray-500">LEADERS</div><div className="text-lg font-black">50</div></div>
+            <div className="bg-white rounded-2xl p-3 border"><div className="text-[10px] text-gray-500">MENTIONS</div><div className="text-lg font-black">1,247</div></div>
+            <div className="bg-[#0A1931] text-white rounded-2xl p-3"><div className="text-[10px] opacity-60">PLATFORMS</div><div className="text-lg font-black">5</div><div className="text-[9px] text-[#25D366]">WA 71% dominant</div></div>
+          </div>
+          <div className="bg-white rounded-2xl p-4 border mt-3">
+            <b className="text-sm">Trending Issues LIVE</b>
+            {[{tag:"#roads", c:234, pct:78},{tag:"#ufisadi", c:189, pct:65},{tag:"#maji", c:156, pct:52},{tag:"#education", c:134, pct:44}].map(t=>(
+              <div key={t.tag} className="mt-3"><div className="flex justify-between text-sm"><span className="font-bold">{t.tag}</span><span className="text-xs bg-red-50 px-2 rounded-full">{t.c}</span></div><div className="h-1.5 bg-gray-100 rounded-full mt-1"><div className="h-full bg-red-500 rounded-full" style={{width:`${t.pct}%`}}/></div></div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            <a href={`https://wa.me/?text=${encodeURIComponent("CivicLens - 47 Counties https://civiclens-six-psi.vercel.app/")}`} className="bg-[#25D366] text-white text-center py-3 rounded-2xl font-bold text-sm">Share WhatsApp</a>
+            <a href="/reports" className="bg-[#0A1931] text-white text-center py-3 rounded-2xl font-bold text-sm">View Reports</a>
+          </div>
+        </div>
+      )}
 
-          {/* STATS GRID */}
-          <div className="grid grid-cols-3 gap-2 mt-5">
-            <div className="bg-white rounded-2xl p-3 border"><div className="text-[11px] text-gray-500">LEADERS</div><div className="text-xl font-black">50</div><div className="text-[10px] text-green-600">+3 this week</div></div>
-            <div className="bg-white rounded-2xl p-3 border"><div className="text-[11px] text-gray-500">MENTIONS</div><div className="text-xl font-black">1,247</div><div className="text-[10px] text-green-600">+89 today</div></div>
-            <div className="bg-[#0A1931] text-white rounded-2xl p-3 border"><div className="text-[11px] opacity-70">COUNTIES</div><div className="text-xl font-black">47</div><div className="text-[10px] text-[#FF6B35]">100% coverage</div></div>
+      {tab==="platforms" && (
+        <div className="p-3 max-w-[900px] mx-auto">
+          <h2 className="font-black text-xl mt-1">Platforms Intelligence</h2>
+          <p className="text-xs text-gray-500">Where Kenyans talk about leaders - 5 sources tracked</p>
+
+          <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+            {PLATFORMS.map(p=>(
+              <button key={p.id} onClick={()=>setPlatform(p.id)} className={`px-3 py-2 rounded-full text-xs font-bold whitespace-nowrap border flex items-center gap-1.5 ${platform===p.id?"bg-[#0A1931] text-white":"bg-white"}`}><span>{p.icon}</span>{p.name} {p.live && <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>}</button>
+            ))}
           </div>
 
-          {/* MAIN CARDS */}
-          <div className="grid md:grid-cols-[1.2fr_0.8fr] gap-3 mt-4">
-            <div className="bg-white rounded-[20px] p-4 border shadow-sm">
-              <div className="flex justify-between items-center"><b className="text-sm">Trending Issues LIVE</b><a href="/reports" className="text-[11px] bg-gray-900 text-white px-2 py-1 rounded-full">View All →</a></div>
-              {[
-                {tag:"#roads", c:234, pct:78, color:"bg-red-500"},
-                {tag:"#ufisadi", c:189, pct:65, color:"bg-orange-500"},
-                {tag:"#maji", c:156, pct:52, color:"bg-blue-500"},
-                {tag:"#education", c:134, pct:44, color:"bg-green-500"},
-              ].map(t=>(
-                <div key={t.tag} className="mt-4">
-                  <div className="flex justify-between text-sm"><span className="font-bold">{t.tag}</span><span className="text-xs bg-red-50 px-2 rounded-full">{t.c}</span></div>
-                  <div className="h-2 bg-gray-100 rounded-full mt-2 overflow-hidden"><div className={`h-full ${t.color}`} style={{width:`${t.pct}%`}} /></div>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-3">
-              <div className="bg-white rounded-[20px] p-4 border">
-                <b className="text-sm">Sentiment</b>
-                <div className="flex items-end gap-2 mt-3">
-                  <div className="flex-1"><div className="h-16 bg-red-100 rounded-t-lg" style={{height:48}} /><div className="text-[10px] text-center mt-1">Neg 62%</div></div>
-                  <div className="flex-1"><div className="h-16 bg-yellow-100 rounded-t-lg" style={{height:24}} /><div className="text-[10px] text-center mt-1">Neu 22%</div></div>
-                  <div className="flex-1"><div className="h-16 bg-green-100 rounded-t-lg" style={{height:20}} /><div className="text-[10px] text-center mt-1">Pos 16%</div></div>
-                </div>
+          {activePlat && (
+            <div className="bg-white rounded-[20px] border p-4 mt-3">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-2"><div className={`w-10 h-10 ${activePlat.color} text-white rounded-xl grid place-items-center`}>{activePlat.icon}</div><div><div className="font-bold text-sm">{activePlat.name}</div><div className="text-[11px] text-gray-500">{activePlat.desc}</div></div></div>
+                <div className="text-right"><div className="text-lg font-black">{activePlat.count}</div><div className="text-[10px] text-gray-500">{activePlat.pct}% of mentions</div></div>
               </div>
-              <div className="bg-[#0A1931] rounded-[20px] p-4 text-white">
-                <div className="text-[11px] opacity-60">BOMET PILOT - LIVE</div>
-                <div className="font-bold mt-1">Hillary Barchok</div>
-                <div className="text-xs opacity-80">#roads #maji top complaints - Siongiroi ward</div>
-                <a href="/reports" className="mt-3 inline-block text-xs bg-white text-black px-3 py-1.5 rounded-full font-bold">View Bomet Report →</a>
+              <div className="h-2 bg-gray-100 rounded-full mt-4 overflow-hidden"><div className={`h-full ${activePlat.color}`} style={{width:`${activePlat.pct}%`}} /></div>
+              <div className="mt-4 p-3 bg-gray-50 rounded-xl text-sm">Latest: “{activePlat.sample}” <div className="text-[10px] text-gray-500 mt-1">Anonymized • Bomet • 2h ago • Sentiment: Negative</div></div>
+              <div className="grid grid-cols-3 gap-2 mt-3 text-[11px]">
+                <div className="bg-gray-50 p-2 rounded-xl"><div className="text-gray-500">Languages</div><b>Swahili 45%, Sheng 30%, Kalenjin 15%</b></div>
+                <div className="bg-gray-50 p-2 rounded-xl"><div className="text-gray-500">Peak Time</div><b>7-9pm • After barazas</b></div>
+                <div className="bg-gray-50 p-2 rounded-xl"><div className="text-gray-500">Trust Score</div><b>{activePlat.live?"High • Verified":"Medium"}</b></div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* LIVE FEED */}
-          <div className="bg-white rounded-[20px] p-4 border mt-3">
-            <b className="text-sm">Live WhatsApp Feed (anonymized)</b>
-            <div className="mt-3 space-y-2 text-[13px]">
-              <div className="p-2 bg-gray-50 rounded-xl">“Barabara ya Siongiroi-Chebole mbaya sana, mchanga tu” <span className="text-[10px] bg-red-100 px-1 rounded">#roads • Bomet</span></div>
-              <div className="p-2 bg-gray-50 rounded-xl">“Maji hakuna kwa wiki tatu Sotik” <span className="text-[10px] bg-blue-100 px-1 rounded">#maji • Bomet</span></div>
-              <div className="p-2 bg-gray-50 rounded-xl">“Bursary ya county haijafika shule” <span className="text-[10px] bg-green-100 px-1 rounded">#education • Nairobi</span></div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            <a href={`https://wa.me/?text=${encodeURIComponent("CivicLens PRO - 47 Counties LIVE https://civiclens-six-psi.vercel.app/")}`} className="bg-[#25D366] text-white text-center py-3.5 rounded-2xl font-bold text-sm">Share WhatsApp</a>
-            <button onClick={()=>{const t=`CivicLens 47 Counties Report\n${GOVERNORS.map(g=>`${g.county} - ${g.name}`).join('\n')}`; const b=new Blob([t],{type:"text/plain"}); const u=URL.createObjectURL(b); const a=document.createElement("a"); a.href=u; a.download="CivicLens-PRO.txt"; a.click()}} className="bg-[#0A1931] text-white py-3.5 rounded-2xl font-bold text-sm">Download Report PDF</button>
+          <div className="bg-[#0A1931] rounded-[20px] p-4 text-white mt-3">
+            <b className="text-sm">Why WhatsApp first?</b><div className="text-xs opacity-80 mt-1">12M Kenyans in public WhatsApp groups. No API. We built scraper for public groups + citizen reporters in Siongiroi. Facebook/X is 10x noisier but 3x less trusted.</div>
+            <div className="mt-3 flex gap-2"><a href="/reports" className="text-xs bg-white text-black px-3 py-1.5 rounded-full font-bold">See WA Reports →</a><a href="/impact" className="text-xs bg-[#FF6B35] px-3 py-1.5 rounded-full font-bold">Partner to add USSD *384#</a></div>
           </div>
         </div>
       )}
 
       {tab==="leaders" && (
         <div className="p-3 max-w-[900px] mx-auto">
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search county, e.g. Bomet, Turkana, Sakaja..." className="w-full p-3 rounded-2xl border bg-white text-sm outline-none" />
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search Bomet, Sakaja..." className="w-full p-3 rounded-2xl border bg-white text-sm" />
           <div className="grid md:grid-cols-2 gap-2 mt-3">
             {filtered.map(l=>(
-              <div key={l.county+l.name} className={`bg-white p-3 rounded-2xl border flex justify-between items-center ${l.highlight?"ring-2 ring-[#FF6B35]":""}`}>
-                <div><div className="font-bold text-sm">{l.name} {l.highlight && <span className="text-[10px] bg-[#FF6B35] text-white px-1.5 py-0.5 rounded-full ml-1">PILOT</span>}</div><div className="text-[11px] text-gray-500">{l.county}</div></div>
-                <div className="flex gap-1"><span className="text-[10px] bg-green-50 text-green-700 px-2 py-1 rounded-full">LIVE</span><a href={`https://wa.me/?text=${encodeURIComponent(l.name+" "+l.county)}`} className="text-[10px] bg-gray-100 px-2 py-1 rounded-full">WA</a></div>
-              </div>
+              <div key={l.county+l.name} className={`bg-white p-3 rounded-2xl border flex justify-between ${l.highlight?"ring-2 ring-[#FF6B35]":""}`}><div><div className="font-bold text-sm">{l.name}</div><div className="text-[11px] text-gray-500">{l.county}</div></div><span className="text-[10px] bg-green-50 text-green-700 px-2 py-1 rounded-full h-fit">LIVE</span></div>
             ))}
           </div>
         </div>
