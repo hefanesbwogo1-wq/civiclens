@@ -6,17 +6,11 @@ const nextConfig = {
   },
 };
 
-let config = nextConfig;
+const withPWA = require('next-pwa').default || require('next-pwa');
 
-// Enable PWA only in production
-if (process.env.NODE_ENV === 'production') {
-  const withPWA = require('next-pwa').default({
-    dest: 'public',
-    register: true,
-    skipWaiting: true,
-    disable: false,
-  });
-  config = withPWA(nextConfig);
-}
-
-module.exports = config;
+module.exports = withPWA({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+})(nextConfig);
