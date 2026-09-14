@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 
 const PLATFORMS = [
@@ -20,10 +20,15 @@ const COUNTIES_SAMPLE = ["Mombasa","Kwale","Kilifi","Nairobi","Kiambu","Nakuru",
 
 export default function Page(){
   const [tab,setTab]=useState("dashboard");
-  const [plat,setPlat]=useState("wa");
   const [m,setM]=useState(false);
   useEffect(()=>setM(true),[]);
   if(!m) return null;
+
+  const handleTab = (k:string) => {
+    if(k==="reports") { window.location.href="/reports"; return; }
+    if(k==="platforms") { window.location.href="/platforms"; return; }
+    setTab(k);
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] text-zinc-900">
@@ -32,13 +37,13 @@ export default function Page(){
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-zinc-900 text-white grid place-items-center font-black">C</div>
             <div><div className="font-black text-[14px] leading-none">CivicLens</div><div className="text-[10px] text-zinc-500 tracking-widest">47 COUNTIES • KENYA • LIVE</div></div>
-            <div className="hidden md:flex ml-6 text-[11px] px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"/>LIVE • 1,247 mentions • 47 counties</div>
+            <div className="hidden md:flex ml-6 text-[11px] px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"/>LIVE • 1,247 mentions • 47 counties</div>
           </div>
           <a href="/impact" className="bg-[#FF4D00] text-white text-[12px] font-bold px-4 py-2 rounded-full">Impact Deck →</a>
         </div>
         <div className="max-w-[1200px] mx-auto px-2 pb-2 flex gap-1.5 overflow-auto">
           {[{k:"dashboard",l:"Dashboard"},{k:"platforms",l:`Platforms • 4`},{k:"leaders",l:"Leaders 50"},{k:"reports",l:"Reports"}].map(t=>(
-            <button key={t.k} onClick={()=>t.k==="reports"?window.location.href="/reports":setTab(t.k)} className={`px-4 h-8 rounded-full text-[12px] font-bold whitespace-nowrap border ${tab===t.k?"bg-zinc-900 text-white":"bg-white text-zinc-600"}`}>{t.l}</button>
+            <button key={t.k} onClick={()=>handleTab(t.k)} className={`px-4 h-8 rounded-full text-[12px] font-bold whitespace-nowrap border ${tab===t.k?"bg-zinc-900 text-white":"bg-white text-zinc-600"}`}>{t.l}</button>
           ))}
         </div>
       </div>
@@ -106,18 +111,6 @@ export default function Page(){
               </div>
               <div className="mt-2 text-[10px] text-zinc-500">Pilot validated in Siongiroi, Bomet — now national model.</div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {tab==="platforms" && (
-        <div className="max-w-[1000px] mx-auto p-3">
-          <h2 className="font-black text-xl">Platforms - Kenya Wide</h2>
-          <p className="text-xs text-zinc-500">Where Kenyans talk — same pattern in all 47 counties</p>
-          <div className="grid md:grid-cols-4 gap-2 mt-3">
-            {PLATFORMS.map(p=>(
-              <div key={p.id} className="bg-white rounded-2xl border p-4"><div className="w-8 h-8 rounded-full grid place-items-center text-white" style={{background:p.col}}>{p.icon}</div><div className="font-bold mt-2">{p.n}</div><div className="text-xs text-zinc-500">{p.c} mentions • {p.p}% national</div></div>
-            ))}
           </div>
         </div>
       )}
