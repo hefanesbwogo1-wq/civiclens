@@ -88,7 +88,7 @@ export default function Page(){
       <div style={{display:"flex", gap:8, padding:12, background:"white", position:"sticky", top:44, zIndex:9, borderBottom:"1px solid #eee"}}>
         <button onClick={()=>setTab("dashboard")} style={{padding:"8px 14px", borderRadius:20, border:"none", background:tab==="dashboard"?"#0A1931":"#eee", color:tab==="dashboard"?"white":"black"}}>Dashboard</button>
         <button onClick={()=>setTab("leaders")} style={{padding:"8px 14px", borderRadius:20, border:"none", background:tab==="leaders"?"#0A1931":"#eee", color:tab==="leaders"?"white":"black"}}>Leaders {filtered.length}</button>
-        <a href="/ngo-pitch" style={{padding:"8px 14px", borderRadius:20, background:"#FF6B35", color:"white", textDecoration:"none"}}>NGO Pitch</a>
+        <a href="/ngo-pitch" style={{padding:"8px 14px", borderRadius:20, background:"#FF6B35", color:"white", textDecoration:"none"}}>Partner</a>
       </div>
 
       {tab==="dashboard" && (
@@ -134,3 +134,4 @@ export default function Page(){
     </div>
   )
 }
+
