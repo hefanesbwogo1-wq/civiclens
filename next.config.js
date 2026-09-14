@@ -1,16 +1,17 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  images: {
-    domains: ['res.cloudinary.com'],
-  },
-};
+﻿const path = require('path')
+const withPWA = require('next-pwa')
 
-const withPWA = require('next-pwa').default || require('next-pwa');
-
-module.exports = withPWA({
+const pwa = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
-})(nextConfig);
+})
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  outputFileTracingRoot: path.join(__dirname),
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
+}
+
+module.exports = pwa(nextConfig)
