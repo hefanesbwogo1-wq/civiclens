@@ -1,417 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CivicLens | Reports</title>
-
-    <link
-        rel="stylesheet"
-        href="/static/css/dashboard.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="/static/css/reports.css"
-    >
-
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/reports.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <script src="/config.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/static/js/config.js"></script>
+    <style>
+        .bar-bg{background:#eef2f7;height:8px;border-radius:20px;overflow:hidden;margin-top:6px}
+        .bar-fill{height:100%;border-radius:20px;transition:width .6s ease}
+        .report-tool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+        @media(max-width:800px){.report-tool-grid{grid-template-columns:1fr}}
+        .tool-active{cursor:pointer!important;opacity:1!important;border:1.5px solid #1769e0!important;background:#f8fbff!important;border-radius:12px;padding:14px;text-align:left;transition:.2s}
+        .tool-active:hover{background:#1769e0!important;color:#fff!important;transform:translateY(-2px);box-shadow:0 8px 20px rgba(23,105,224,.25)}
+        .tool-active:hover span{color:#dbeafe!important}
+        .tool-active strong{display:block;font-size:13px;margin-bottom:4px}
+        .tool-active span{font-size:11px;color:#64748b;line-height:1.3;display:block}
+    </style>
 </head>
-
-
 <body>
-
-
 <aside class="sidebar">
-
-    <div class="sidebar-brand">
-
-        <img
-            src="/static/images/civiclens-logo.png"
-            alt="CivicLens"
-        >
-
-    </div>
-
-
+    <div class="sidebar-brand"><img src="/static/images/civiclens-logo.png" alt="CivicLens" onerror="this.outerHTML='<div style=color:#fff;font-weight:900;padding:12px;font-size:20px>CL</div>'"></div>
     <nav class="sidebar-nav">
-
-        <a href="/dashboard" class="nav-item">
-            <span>▣</span>
-            <span>Dashboard</span>
-        </a>
-
-        <a href="/mentions" class="nav-item">
-            <span>◉</span>
-            <span>Mentions</span>
-        </a>
-
-        <a href="/leaders" class="nav-item">
-            <span>♟</span>
-            <span>Leaders</span>
-        </a>
-
-        <a href="/platforms" class="nav-item">
-            <span>◌</span>
-            <span>Platforms</span>
-        </a>
-
-        <a href="/reports" class="nav-item active">
-            <span>▤</span>
-            <span>Reports</span>
-        </a>
-
-        <a href="/settings" class="nav-item">
-            <span>⚙</span>
-            <span>Settings</span>
-        </a>
-
+        <a href="/dashboard" class="nav-item"><span>▣</span><span>Dashboard</span></a>
+        <a href="/mentions" class="nav-item"><span>◉</span><span>Mentions</span></a>
+        <a href="/leaders" class="nav-item"><span>♟</span><span>Leaders</span></a>
+        <a href="/platforms" class="nav-item"><span>◌</span><span>Platforms</span></a>
+        <a href="/reports" class="nav-item active"><span>▤</span><span>Reports</span></a>
+        <a href="/settings" class="nav-item"><span>⚙</span><span>Settings</span></a>
     </nav>
-
-
-    <div class="sidebar-bottom">
-
-        <button
-            id="logout-button"
-            class="logout-button"
-            type="button"
-        >
-            <span>↪</span>
-            <span>Sign Out</span>
-        </button>
-
-    </div>
-
+    <div class="sidebar-bottom"><button id="logout-button" class="logout-button" type="button"><span>↪</span><span>Sign Out</span></button></div>
 </aside>
 
-
-
 <main class="main-content">
-
-
     <header class="topbar">
-
-        <div>
-
-            <p class="eyebrow">
-                PUBLIC CONVERSATION INTELLIGENCE
-            </p>
-
-            <h1>
-                Reports
-            </h1>
-
-        </div>
-
-
-        <div class="topbar-right">
-
-            <div class="notification">
-                🔔
-            </div>
-
-            <div class="user-profile">
-
-                <div
-                    class="avatar"
-                    id="user-avatar"
-                >
-                    C
-                </div>
-
-                <div class="user-info">
-
-                    <strong id="user-name">
-                        CivicLens User
-                    </strong>
-
-                    <span id="user-email">
-                        Loading...
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
+        <div><p class="eyebrow">PUBLIC CONVERSATION INTELLIGENCE</p><h1>Reports</h1></div>
+        <div class="topbar-right"><div class="notification">🔔</div><div class="user-profile"><div class="avatar" id="user-avatar">C</div><div class="user-info"><strong id="user-name">CivicLens User</strong><span id="user-email">Loading...</span></div></div></div>
     </header>
 
-
-
     <section class="reports-hero">
-
-        <div>
-
-            <span class="hero-kicker">
-                INTELLIGENCE REPORTING
-            </span>
-
-            <h2>
-                Conversation Reports
-            </h2>
-
-            <p>
-                Turn CivicLens monitoring data into clear
-                intelligence about public conversations,
-                leaders and platforms.
-            </p>
-
-        </div>
-
-
-        <button
-            id="refresh-reports"
-            class="refresh-button"
-            type="button"
-        >
-            ↻ Refresh
-        </button>
-
+        <div><span class="hero-kicker">INTELLIGENCE REPORTING</span><h2>Conversation Reports</h2><p>Real monitoring data from Google News RSS — Live intelligence for <span id="report-count" style="font-weight:800">0</span> mentions</p></div>
+        <button id="refresh-reports" class="refresh-button" type="button">↻ Refresh</button>
     </section>
-
-
 
     <section class="report-stat-grid">
-
-
-        <div class="report-stat">
-
-            <span>
-                TOTAL MENTIONS
-            </span>
-
-            <strong id="total-mentions">
-                0
-            </strong>
-
-        </div>
-
-
-        <div class="report-stat">
-
-            <span>
-                POSITIVE
-            </span>
-
-            <strong id="positive-mentions">
-                0
-            </strong>
-
-        </div>
-
-
-        <div class="report-stat">
-
-            <span>
-                NEUTRAL
-            </span>
-
-            <strong id="neutral-mentions">
-                0
-            </strong>
-
-        </div>
-
-
-        <div class="report-stat">
-
-            <span>
-                NEGATIVE
-            </span>
-
-            <strong id="negative-mentions">
-                0
-            </strong>
-
-        </div>
-
-
+        <div class="report-stat" style="border-left:4px solid #0f1e3a"><span>TOTAL MENTIONS</span><strong id="total-mentions">0</strong><small style="color:#64748b;display:block;margin-top:4px">Across all platforms</small></div>
+        <div class="report-stat" style="border-left:4px solid #16a34a"><span>POSITIVE</span><strong id="positive-mentions" style="color:#16a34a">0</strong><div class="bar-bg"><div id="pos-bar" class="bar-fill" style="width:0%;background:#16a34a"></div></div></div>
+        <div class="report-stat" style="border-left:4px solid #94a3b8"><span>NEUTRAL</span><strong id="neutral-mentions">0</strong><div class="bar-bg"><div id="neu-bar" class="bar-fill" style="width:0%;background:#94a3b8"></div></div></div>
+        <div class="report-stat" style="border-left:4px solid #dc2626"><span>NEGATIVE</span><strong id="negative-mentions" style="color:#dc2626">0</strong><div class="bar-bg"><div id="neg-bar" class="bar-fill" style="width:0%;background:#dc2626"></div></div></div>
     </section>
-
-
 
     <section class="reports-grid">
-
-
-        <div class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <span class="panel-kicker">
-                        LEADER ANALYSIS
-                    </span>
-
-                    <h3>
-                        Mentions by Leader
-                    </h3>
-
-                </div>
-
-            </div>
-
-
-            <div
-                id="leader-report"
-                class="report-list"
-            >
-
-                <div class="report-empty">
-                    No report data available yet.
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-        <div class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <span class="panel-kicker">
-                        PLATFORM ANALYSIS
-                    </span>
-
-                    <h3>
-                        Mentions by Platform
-                    </h3>
-
-                </div>
-
-            </div>
-
-
-            <div
-                id="platform-report"
-                class="report-list"
-            >
-
-                <div class="report-empty">
-                    No report data available yet.
-                </div>
-
-            </div>
-
-        </div>
-
-
+        <div class="panel"><div class="panel-header"><div><span class="panel-kicker">LEADER ANALYSIS</span><h3>Mentions by Leader</h3><small id="leader-summary" style="color:#64748b;font-size:11px">Top monitored leaders</small></div></div><div id="leader-report" class="report-list" style="padding:12px"><div class="report-empty" style="padding:20px;text-align:center;color:#64748b">Loading leader data...</div></div></div>
+        <div class="panel"><div class="panel-header"><div><span class="panel-kicker">PLATFORM ANALYSIS</span><h3>Mentions by Platform</h3><small style="color:#64748b;font-size:11px">Source breakdown</small></div></div><div id="platform-report" class="report-list" style="padding:12px"><div class="report-empty" style="padding:20px;text-align:center;color:#64748b">Loading platform data...</div></div></div>
     </section>
-
-
 
     <section class="panel report-actions">
-
-        <div class="panel-header">
-
-            <div>
-
-                <span class="panel-kicker">
-                    REPORTING TOOLS
-                </span>
-
-                <h3>
-                    Generate Intelligence
-                </h3>
-
-            </div>
-
-        </div>
-
-
+        <div class="panel-header"><div><span class="panel-kicker">REPORTING TOOLS</span><h3>Generate Intelligence</h3></div><span id="export-status" style="font-size:11px;color:#16a34a;font-weight:700"></span></div>
         <div class="report-tool-grid">
-
-
-            <button
-                class="report-tool"
-                type="button"
-                disabled
-            >
-
-                <strong>
-                    Executive Report
-                </strong>
-
-                <span>
-                    Coming after live monitoring is connected
-                </span>
-
-            </button>
-
-
-            <button
-                class="report-tool"
-                type="button"
-                disabled
-            >
-
-                <strong>
-                    Sentiment Report
-                </strong>
-
-                <span>
-                    Coming after sentiment analysis is active
-                </span>
-
-            </button>
-
-
-            <button
-                class="report-tool"
-                type="button"
-                disabled
-            >
-
-                <strong>
-                    Leader Comparison
-                </strong>
-
-                <span>
-                    Compare monitored leaders
-                </span>
-
-            </button>
-
-
+            <button class="report-tool tool-active" type="button" id="btn-executive"><strong>📄 Executive Report</strong><span>Export PDF with all 10 mentions, leaders & sentiment — LIVE V11.2</span></button>
+            <button class="report-tool tool-active" type="button" id="btn-sentiment"><strong>📊 Sentiment Report</strong><span>Detailed sentiment breakdown + insight — LIVE</span></button>
+            <button class="report-tool tool-active" type="button" id="btn-comparison"><strong>⚖️ Leader Comparison</strong><span>Compare John Kiptoo vs Ruto vs Gachagua side-by-side — LIVE</span></button>
         </div>
-
     </section>
 
-
-
-    <footer class="dashboard-footer">
-
-        <span>
-            © 2026 CivicLens
-        </span>
-
-        <span>
-            Public Conversation Intelligence Platform
-        </span>
-
-    </footer>
-
-
+    <footer class="dashboard-footer"><span>© 2026 CivicLens</span><span>Public Conversation Intelligence Platform — V11.2 REAL</span></footer>
 </main>
-
-
-<script src="/static/js/reports.js"></script>
-
+<script src="/static/js/reports.js?v=11.2"></script>
 </body>
-
 </html>

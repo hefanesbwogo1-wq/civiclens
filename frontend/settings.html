@@ -1,445 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CivicLens | Settings</title>
-
-    <link
-        rel="stylesheet"
-        href="/static/css/dashboard.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="/static/css/settings.css"
-    >
-
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/settings.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script src="/config.js"></script>
-
+    <style>
+       .subscription-card{display:flex;justify-content:space-between;align-items:center;gap:12px}
+       .plan-badge{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800}
+       .badge-free{background:#f1f5f9;color:#475569}
+       .badge-pro{background:#dcfce7;color:#16a34a}
+       .badge-enterprise{background:#dbeafe;color:#2563eb}
+       .btn-change{background:#0f1e3a;color:#fff;border:0;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;transition:.2s}
+       .btn-change:hover{background:#1769e0;transform:translateY(-1px)}
+       .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
+       .modal-overlay.active{display:flex}
+       .modal-box{background:#fff;border-radius:16px;padding:24px;max-width:900px;width:100%;max-height:90vh;overflow:auto}
+       .plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+        @media(max-width:800px){.plans-grid{grid-template-columns:1fr}}
+       .plan-card{border:1.5px solid #e2e8f0;border-radius:14px;padding:18px;cursor:pointer;transition:.2s;background:#fff}
+       .plan-card:hover{border-color:#1769e0;transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.08)}
+       .plan-card.selected{border-color:#1769e0;background:#f8fbff;box-shadow:0 0 0 2px #1769e0}
+       .plan-card h4{margin:0 0 6px 0;font-size:16px}
+       .plan-card.price{font-size:22px;font-weight:900;margin:8px 0}
+       .plan-card ul{margin:10px 0;padding-left:18px;font-size:12px;color:#475569;line-height:1.6}
+       .plan-card button{width:100%;margin-top:10px;padding:10px;border-radius:8px;border:0;font-weight:700;cursor:pointer}
+       .btn-free{background:#f1f5f9;color:#334155}
+       .btn-pro{background:#16a34a;color:#fff}
+       .btn-ent{background:#2563eb;color:#fff}
+    </style>
 </head>
-
-
 <body>
-
-
 <aside class="sidebar">
-
-    <div class="sidebar-brand">
-
-        <img
-            src="/static/images/civiclens-logo.png"
-            alt="CivicLens"
-        >
-
-    </div>
-
-
+    <div class="sidebar-brand"><img src="/static/images/civiclens-logo.png" alt="CivicLens" onerror="this.outerHTML='<div style=color:#fff;font-weight:900;padding:12px;font-size:20px>CL</div>'"></div>
     <nav class="sidebar-nav">
-
-        <a href="/dashboard" class="nav-item">
-            <span>▣</span>
-            <span>Dashboard</span>
-        </a>
-
-        <a href="/mentions" class="nav-item">
-            <span>◉</span>
-            <span>Mentions</span>
-        </a>
-
-        <a href="/leaders" class="nav-item">
-            <span>♟</span>
-            <span>Leaders</span>
-        </a>
-
-        <a href="/platforms" class="nav-item">
-            <span>◌</span>
-            <span>Platforms</span>
-        </a>
-
-        <a href="/reports" class="nav-item">
-            <span>▤</span>
-            <span>Reports</span>
-        </a>
-
-        <a href="/settings" class="nav-item active">
-            <span>⚙</span>
-            <span>Settings</span>
-        </a>
-
+        <a href="/dashboard" class="nav-item"><span>▣</span><span>Dashboard</span></a>
+        <a href="/mentions" class="nav-item"><span>◉</span><span>Mentions</span></a>
+        <a href="/leaders" class="nav-item"><span>♟</span><span>Leaders</span></a>
+        <a href="/platforms" class="nav-item"><span>◌</span><span>Platforms</span></a>
+        <a href="/reports" class="nav-item"><span>▤</span><span>Reports</span></a>
+        <a href="/settings" class="nav-item active"><span>⚙</span><span>Settings</span></a>
     </nav>
-
-
-    <div class="sidebar-bottom">
-
-        <button
-            id="logout-button"
-            class="logout-button"
-            type="button"
-        >
-            <span>↪</span>
-            <span>Sign Out</span>
-        </button>
-
-    </div>
-
+    <div class="sidebar-bottom"><button id="logout-button" class="logout-button" type="button"><span>↪</span><span>Sign Out</span></button></div>
 </aside>
 
-
-
 <main class="main-content">
-
-
     <header class="topbar">
-
-        <div>
-
-            <p class="eyebrow">
-                CIVICLENS CONFIGURATION
-            </p>
-
-            <h1>
-                Settings
-            </h1>
-
-        </div>
-
-
-        <div class="topbar-right">
-
-            <div class="user-profile">
-
-                <div
-                    class="avatar"
-                    id="user-avatar"
-                >
-                    C
-                </div>
-
-                <div class="user-info">
-
-                    <strong id="user-name">
-                        CivicLens User
-                    </strong>
-
-                    <span id="user-email">
-                        Loading...
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
+        <div><p class="eyebrow">CIVICLENS CONFIGURATION</p><h1>Settings</h1></div>
+        <div class="topbar-right"><div class="user-profile"><div class="avatar" id="user-avatar">C</div><div class="user-info"><strong id="user-name">CivicLens User</strong><span id="user-email">Loading...</span></div></div></div>
     </header>
 
-
-
     <section class="settings-hero">
-
-        <span>
-            ACCOUNT CONTROL CENTER
-        </span>
-
-        <h2>
-            Manage your CivicLens account
-        </h2>
-
-        <p>
-            Update your profile and monitoring preferences.
-        </p>
-
+        <span>ACCOUNT CONTROL CENTER</span>
+        <h2>Manage your CivicLens account</h2>
+        <p>Update your profile and monitoring preferences.</p>
     </section>
 
-
-
-    <div
-        id="settings-message"
-        class="settings-message"
-    ></div>
-
-
+    <div id="settings-message" class="settings-message"></div>
 
     <section class="settings-grid">
-
-
         <!-- PROFILE -->
-
         <div class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <span class="panel-kicker">
-                        ACCOUNT
-                    </span>
-
-                    <h3>
-                        Profile Information
-                    </h3>
-
-                </div>
-
-            </div>
-
-
+            <div class="panel-header"><div><span class="panel-kicker">ACCOUNT</span><h3>Profile Information</h3></div></div>
             <form id="profile-form">
-
-
-                <label>
-                    Full Name
-                </label>
-
-                <input
-                    id="full-name"
-                    type="text"
-                    placeholder="Your full name"
-                    required
-                >
-
-
-                <label>
-                    Email
-                </label>
-
-                <input
-                    id="email"
-                    type="email"
-                    readonly
-                >
-
-
-                <label>
-                    Organization
-                </label>
-
-                <input
-                    id="organization"
-                    type="text"
-                    placeholder="Organization"
-                >
-
-
-                <label>
-                    Phone
-                </label>
-
-                <input
-                    id="phone"
-                    type="tel"
-                    placeholder="Phone number"
-                >
-
-
-                <button
-                    type="submit"
-                    class="save-button"
-                >
-                    Save Profile
-                </button>
-
-
+                <label>Full Name</label><input id="full-name" type="text" placeholder="Your full name" required>
+                <label>Email</label><input id="email" type="email" readonly>
+                <label>Organization</label><input id="organization" type="text" placeholder="Organization">
+                <label>Phone</label><input id="phone" type="tel" placeholder="Phone number">
+                <button type="submit" class="save-button" id="save-profile-btn">Save Profile</button>
             </form>
-
         </div>
-
-
-
         <!-- PREFERENCES -->
-
         <div class="panel">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <span class="panel-kicker">
-                        MONITORING
-                    </span>
-
-                    <h3>
-                        Notification Preferences
-                    </h3>
-
-                </div>
-
-            </div>
-
-
-            <div class="preference">
-
-                <div>
-
-                    <strong>
-                        Mention Alerts
-                    </strong>
-
-                    <span>
-                        Notify me when a new mention is detected.
-                    </span>
-
-                </div>
-
-                <label class="switch">
-
-                    <input
-                        id="mention-alerts"
-                        type="checkbox"
-                        checked
-                    >
-
-                    <span></span>
-
-                </label>
-
-            </div>
-
-
-            <div class="preference">
-
-                <div>
-
-                    <strong>
-                        Daily Summary
-                    </strong>
-
-                    <span>
-                        Receive a daily monitoring summary.
-                    </span>
-
-                </div>
-
-                <label class="switch">
-
-                    <input
-                        id="daily-summary"
-                        type="checkbox"
-                    >
-
-                    <span></span>
-
-                </label>
-
-            </div>
-
-
-            <div class="preference">
-
-                <div>
-
-                    <strong>
-                        Email Notifications
-                    </strong>
-
-                    <span>
-                        Allow CivicLens account notifications.
-                    </span>
-
-                </div>
-
-                <label class="switch">
-
-                    <input
-                        id="email-notifications"
-                        type="checkbox"
-                        checked
-                    >
-
-                    <span></span>
-
-                </label>
-
-            </div>
-
-
-            <button
-                id="save-preferences"
-                class="save-button"
-                type="button"
-            >
-                Save Preferences
-            </button>
-
+            <div class="panel-header"><div><span class="panel-kicker">MONITORING</span><h3>Notification Preferences</h3></div></div>
+            <div class="preference"><div><strong>Mention Alerts</strong><span>Notify me when a new mention is detected.</span></div><label class="switch"><input id="mention-alerts" type="checkbox" checked><span></span></label></div>
+            <div class="preference"><div><strong>Daily Summary</strong><span>Receive a daily monitoring summary.</span></div><label class="switch"><input id="daily-summary" type="checkbox"><span></span></label></div>
+            <div class="preference"><div><strong>Email Notifications</strong><span>Allow CivicLens account notifications.</span></div><label class="switch"><input id="email-notifications" type="checkbox" checked><span></span></label></div>
+            <button id="save-preferences" class="save-button" type="button">Save Preferences</button>
         </div>
-
-
     </section>
-
-
 
     <section class="panel subscription-panel">
-
-        <div class="panel-header">
-
-            <div>
-
-                <span class="panel-kicker">
-                    SUBSCRIPTION
-                </span>
-
-                <h3>
-                    CivicLens Plan
-                </h3>
-
-            </div>
-
-        </div>
-
-
+        <div class="panel-header"><div><span class="panel-kicker">SUBSCRIPTION</span><h3>CivicLens Plan</h3></div><span id="sub-status-msg" style="font-size:11px;color:#16a34a;font-weight:700"></span></div>
         <div class="subscription-card">
-
             <div>
-
-                <span>
-                    CURRENT PLAN
-                </span>
-
-                <strong id="subscription-plan">
-                    Loading...
-                </strong>
-
+                <span style="font-size:10px;letter-spacing:.08em;color:#94a3b8;font-weight:700">CURRENT PLAN</span>
+                <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+                    <strong id="subscription-plan" style="font-size:18px">Loading...</strong>
+                    <span id="subscription-badge" class="plan-badge badge-pro">ACTIVE</span>
+                </div>
+                <small id="subscription-detail" style="color:#64748b;font-size:12px;display:block;margin-top:6px">Auto-refresh 15min • Real Google News RSS • 10 leaders tracked</small>
             </div>
-
-
-            <span class="subscription-status">
-                ACCOUNT ACTIVE
-            </span>
-
+            <div style="display:flex;gap:8px">
+                <button id="change-plan-btn" class="btn-change" type="button">Change Plan</button>
+            </div>
         </div>
-
     </section>
 
-
-
-    <footer class="dashboard-footer">
-
-        <span>
-            © 2026 CivicLens
-        </span>
-
-        <span>
-            Public Conversation Intelligence Platform
-        </span>
-
-    </footer>
-
-
+    <footer class="dashboard-footer"><span>© 2026 CivicLens</span><span>Public Conversation Intelligence Platform</span></footer>
 </main>
 
+<!-- SUBSCRIPTION MODAL -->
+<div id="plan-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><h3 style="margin:0">Choose Your Plan</h3><small style="color:#64748b">Upgrade or downgrade anytime. Instant activation.</small></div>
+            <button id="close-modal" style="background:#f1f5f9;border:0;width:32px;height:32px;border-radius:50%;cursor:pointer">✕</button>
+        </div>
+        <div class="plans-grid">
+            <div class="plan-card" data-plan="free"><h4>Free</h4><div class="price">$0<span style="font-size:12px;color:#64748b">/mo</span></div><small style="color:#64748b">For testing</small><ul><li>3 Leaders</li><li>50 Mentions/mo</li><li>Daily refresh</li><li>Email support</li></ul><button class="btn-free" onclick="changePlan('free')">Select Free</button></div>
+            <div class="plan-card selected" data-plan="pro"><h4>⭐ Pro <span style="background:#16a34a;color:#fff;padding:2px 6px;border-radius:10px;font-size:9px">POPULAR</span></h4><div class="price">$19<span style="font-size:12px;color:#64748b">/mo</span></div><small style="color:#64748b">For professionals</small><ul><li>25 Leaders</li><li>Unlimited Mentions</li><li>15min Auto-refresh LIVE</li><li>PDF Reports</li><li>Priority support</li></ul><button class="btn-pro" onclick="changePlan('pro')">Select Pro</button></div>
+            <div class="plan-card" data-plan="enterprise"><h4>🏢 Enterprise</h4><div class="price">$99<span style="font-size:12px;color:#64748b">/mo</span></div><small style="color:#64748b">For State House / Gov</small><ul><li>Unlimited Leaders</li><li>Real-time + API Access</li><li>5min Refresh</li><li>Custom Integrations</li><li>Dedicated Support</li></ul><button class="btn-ent" onclick="changePlan('enterprise')">Select Enterprise</button></div>
+        </div>
+        <div style="margin-top:16px;text-align:center;color:#94a3b8;font-size:11px">Contact ICT OFFICE STATE HOUSE for Enterprise billing. All plans include Google News RSS.</div>
+    </div>
+</div>
 
-<script src="/static/js/settings.js"></script>
-
+<script src="/static/js/settings.js?v=13"></script>
 </body>
-
 </html>

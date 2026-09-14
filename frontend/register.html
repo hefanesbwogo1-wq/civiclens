@@ -1,569 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <meta
-        name="description"
-        content="Create your CivicLens account."
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create your CivicLens account.">
     <title>Create Account | CivicLens</title>
-
-    <link
-        rel="stylesheet"
-        href="/static/css/register.css"
-    >
-
+    <link rel="stylesheet" href="/static/css/register.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/config.js"></script>
+    <style>
+    .steps-bar{display:flex;gap:8px;margin:16px 0}
+    .step-dot{flex:1;height:6px;border-radius:10px;background:#e5ebf2;transition:.3s}
+    .step-dot.active{background:#087cf5}
+    .step-dot.done{background:#159669}
+    .step-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .step-count{font-size:12px;font-weight:800;color:#087cf5;background:#eef6ff;padding:4px 10px;border-radius:20px}
+    .form-step{display:none;animation:fade.3s ease}
+    .form-step.active{display:block}
+     @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .step-actions{display:flex;gap:12px;margin-top:24px}
+    .step-actions.secondary{flex:1;background:#f1f5f9;color:#334155;border:1px solid #e2e8f0;padding:14px;border-radius:12px;font-weight:700;cursor:pointer}
+    .upload-box{border:2px dashed #cbd5e1;border-radius:12px;padding:18px;text-align:center;background:#f8fafc;cursor:pointer;transition:.2s}
+    .upload-box:hover{border-color:#087cf5;background:#f0f7ff}
+    .upload-box input{display:none}
+    .upload-preview{margin-top:10px;font-size:12px;color:#159669;font-weight:700}
+    .plan-card{position:relative;cursor:pointer}
+    .plan-card.selected{border-color:#087cf5!important;background:#f0f7ff!important}
+    .plan-features{margin-top:8px;font-size:11px;color:#64748b;line-height:1.5}
+    .field-hint.error{color:#dc4b55!important}
+    .field-hint.ok{color:#159669!important}
+    .payment-fields{animation:fade.3s ease}
+    .order-summary{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:16px}
+    .summary-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px}
+    </style>
 </head>
-
-
 <body>
-
     <div class="page-shell">
-
-        <!-- LEFT SIDE -->
-
         <section class="brand-panel">
-
-            <a href="/" class="logo-link">
-
-                <img
-                    src="/static/images/civiclens-logo.png"
-                    alt="CivicLens"
-                >
-
-            </a>
-
-
+            <a href="/" class="logo-link"><img src="/static/images/civiclens-logo.png" alt="CivicLens"></a>
             <div class="brand-content">
-
-                <span class="eyebrow">
-                    JOIN CIVICLENS
-                </span>
-
-                <h1>
-                    Start seeing the
-                    <span>conversation clearly.</span>
-                </h1>
-
-                <p>
-                    Create your CivicLens account and prepare
-                    your monitoring workspace for public
-                    conversation insights.
-                </p>
-
-
+                <span class="eyebrow">JOIN CIVICLENS</span>
+                <h1>Start seeing the <span>conversation clearly.</span></h1>
+                <p>Create your CivicLens account and prepare your monitoring workspace for public conversation insights.</p>
                 <div class="benefits">
-
-                    <div class="benefit">
-
-                        <div class="benefit-icon">
-                            ◉
-                        </div>
-
-                        <div>
-                            <strong>
-                                Organized monitoring
-                            </strong>
-
-                            <span>
-                                Keep relevant public mentions
-                                in one workspace.
-                            </span>
-                        </div>
-
-                    </div>
-
-
-                    <div class="benefit">
-
-                        <div class="benefit-icon">
-                            ◇
-                        </div>
-
-                        <div>
-                            <strong>
-                                Actionable insights
-                            </strong>
-
-                            <span>
-                                Understand conversation trends
-                                and emerging topics.
-                            </span>
-                        </div>
-
-                    </div>
-
-
-                    <div class="benefit">
-
-                        <div class="benefit-icon">
-                            🔔
-                        </div>
-
-                        <div>
-                            <strong>
-                                Mention alerts
-                            </strong>
-
-                            <span>
-                                Stay informed when matching
-                                public mentions are detected.
-                            </span>
-                        </div>
-
-                    </div>
-
+                    <div class="benefit"><div class="benefit-icon">◉</div><div><strong>Organized monitoring</strong><span>Keep relevant public mentions in one workspace.</span></div></div>
+                    <div class="benefit"><div class="benefit-icon">◇</div><div><strong>Actionable insights</strong><span>Understand conversation trends and emerging topics.</span></div></div>
+                    <div class="benefit"><div class="benefit-icon">🔔</div><div><strong>Mention alerts</strong><span>Stay informed when matching public mentions are detected.</span></div></div>
                 </div>
-
             </div>
-
-
-            <div class="brand-footer">
-                Monitor • Understand • Build Better
-            </div>
-
+            <div class="brand-footer">Monitor • Understand • Build Better</div>
         </section>
 
-
-        <!-- RIGHT SIDE -->
-
         <main class="registration-panel">
-
             <div class="registration-container">
-
-                <div class="mobile-logo">
-
-                    <img
-                        src="/static/images/civiclens-logo.png"
-                        alt="CivicLens"
-                    >
-
-                </div>
-
-
+                <div class="mobile-logo"><img src="/static/images/civiclens-logo.png" alt="CivicLens"></div>
                 <div class="form-heading">
-
-                    <span class="eyebrow">
-                        ACCOUNT REGISTRATION
-                    </span>
-
-                    <h2>
-                        Create your account
-                    </h2>
-
-                    <p>
-                        Set up your CivicLens workspace in a few
-                        simple steps.
-                    </p>
-
+                    <span class="eyebrow">ACCOUNT REGISTRATION</span>
+                    <h2 id="stepTitle">Create your account</h2>
+                    <p id="stepDesc">Set up your CivicLens workspace in a few simple steps.</p>
                 </div>
 
+                <div class="steps-bar">
+                    <div class="step-dot active" id="dot1"></div>
+                    <div class="step-dot" id="dot2"></div>
+                    <div class="step-dot" id="dot3"></div>
+                    <div class="step-dot" id="dot4"></div>
+                </div>
+                <div class="step-header"><span class="step-count" id="stepCount">STEP 1 OF 4</span><span style="font-size:11px;color:#94a3b8" id="stepLabel">Personal Details</span></div>
 
-                <div
-                    id="message"
-                    class="message"
-                ></div>
-
+                <div id="message" class="message"></div>
 
                 <form id="registrationForm">
 
-
-                    <!-- PERSONAL INFORMATION -->
-
-                    <div class="form-section">
-
-                        <div class="section-title">
-
-                            <span>01</span>
-
-                            <div>
-                                <strong>
-                                    Account information
-                                </strong>
-
-                                <small>
-                                    Tell us who you are
-                                </small>
+                    <!-- STEP 1 -->
+                    <div class="form-step active" id="step1">
+                        <div class="form-section">
+                            <div class="section-title"><span>01</span><div><strong>Personal details</strong><small>Who you are</small></div></div>
+                            <div class="form-grid">
+                                <div class="field full"><label for="fullName">Full name *</label><input type="text" id="fullName" name="full_name" placeholder="HEFANES BWOGO" autocomplete="name" required></div>
+                                <div class="field"><label for="email">Email address *</label><input type="email" id="email" name="email" placeholder="name@example.com" autocomplete="email" required></div>
+                                <div class="field"><label for="phone">Phone number *</label><input type="tel" id="phone" name="phone" placeholder="+254 7XX XXX XXX" autocomplete="tel" required></div>
+                                <div class="field"><label for="organization">Organization / Office *</label><input type="text" id="organization" name="organization" placeholder="ICT OFFICE STATE HOUSE" required></div>
+                                <div class="field"><label for="role">Role / Position *</label><input type="text" id="role" name="role" placeholder="Director, Analyst..." required></div>
                             </div>
-
                         </div>
-
-
-                        <div class="form-grid">
-
-                            <div class="field full">
-
-                                <label for="fullName">
-                                    Full name
-                                </label>
-
-                                <input
-                                    type="text"
-                                    id="fullName"
-                                    name="full_name"
-                                    placeholder="Enter your full name"
-                                    autocomplete="name"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="field">
-
-                                <label for="email">
-                                    Email address
-                                </label>
-
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    placeholder="name@example.com"
-                                    autocomplete="email"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="field">
-
-                                <label for="phone">
-                                    Phone number
-                                </label>
-
-                                <input
-                                    type="tel"
-                                    id="phone"
-                                    name="phone"
-                                    placeholder="+254 7XX XXX XXX"
-                                    autocomplete="tel"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="field">
-
-                                <label for="organization">
-                                    Organization / Office
-                                </label>
-
-                                <input
-                                    type="text"
-                                    id="organization"
-                                    name="organization"
-                                    placeholder="Organization or office"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="field">
-
-                                <label for="role">
-                                    Role / Position
-                                </label>
-
-                                <input
-                                    type="text"
-                                    id="role"
-                                    name="role"
-                                    placeholder="Your role or position"
-                                    required
-                                >
-
-                            </div>
-
-                        </div>
-
+                        <div class="step-actions"><button type="button" class="submit-btn" style="flex:1" onclick="nextStep(2)"><span>Continue to Identity</span><span class="arrow"> →</span></button></div>
                     </div>
 
-
-                    <!-- PASSWORD -->
-
-                    <div class="form-section">
-
-                        <div class="section-title">
-
-                            <span>02</span>
-
-                            <div>
-                                <strong>
-                                    Secure your account
-                                </strong>
-
-                                <small>
-                                    Create a strong password
-                                </small>
+                    <!-- STEP 2 -->
+                    <div class="form-step" id="step2">
+                        <div class="form-section">
+                            <div class="section-title"><span>02</span><div><strong>Identity verification</strong><small>Secure your workspace</small></div></div>
+                            <div class="form-grid">
+                                <div class="field full"><label for="otherNames">Other names (optional)</label><input type="text" id="otherNames" placeholder="Any other official names"></div>
+                                <div class="field full"><label for="idNumber">National ID / Passport Number *</label><input type="text" id="idNumber" placeholder="12345678" required></div>
+                                <div class="field full"><label>ID Front Photo *</label><label class="upload-box" for="idFront"><div>📷 Click to upload ID front</div><small style="color:#64748b">JPG, PNG max 5MB</small><input type="file" id="idFront" accept="image/*"><div class="upload-preview" id="frontPreview"></div></label></div>
+                                <div class="field full"><label>ID Back Photo (optional)</label><label class="upload-box" for="idBack"><div>📷 Click to upload ID back</div><small style="color:#64748b">JPG, PNG max 5MB</small><input type="file" id="idBack" accept="image/*"><div class="upload-preview" id="backPreview"></div></label></div>
                             </div>
+                        </div>
+                        <div class="step-actions"><button type="button" class="secondary" onclick="nextStep(1)">← Back</button><button type="button" class="submit-btn" style="flex:2" onclick="nextStep(3)"><span>Continue to Password</span><span class="arrow"> →</span></button></div>
+                    </div>
 
+                    <!-- STEP 3 -->
+                    <div class="form-step" id="step3">
+                        <div class="form-section">
+                            <div class="section-title"><span>03</span><div><strong>Secure your account</strong><small>Create a strong password</small></div></div>
+                            <div class="form-grid">
+                                <div class="field"><label for="password">Password *</label><input type="password" id="password" name="password" placeholder="Minimum 8 characters" autocomplete="new-password" minlength="8" required><div class="password-strength"><span></span><span></span><span></span><span></span></div><small id="passwordHint" class="field-hint">Use a mixture of letters, numbers and symbols.</small></div>
+                                <div class="field"><label for="confirmPassword">Confirm password *</label><input type="password" id="confirmPassword" placeholder="Repeat your password" autocomplete="new-password" required><small id="matchHint" class="field-hint"></small></div>
+                            </div>
+                        </div>
+                        <div class="step-actions"><button type="button" class="secondary" onclick="nextStep(2)">← Back</button><button type="button" class="submit-btn" style="flex:2" onclick="nextStep(4)"><span>Continue to Plan & Pay</span><span class="arrow"> →</span></button></div>
+                    </div>
+
+                    <!-- STEP 4 WITH PAYMENT -->
+                    <div class="form-step" id="step4">
+                        <div class="form-section">
+                            <div class="section-title"><span>04</span><div><strong>Select your plan</strong><small>You can change later in settings</small></div></div>
+                            <div class="plan-grid">
+                                <label class="plan-card"><input type="radio" name="subscription_plan" value="free" data-price="0"><div class="plan-content"><div class="plan-top"><strong>Free</strong><span>$0/mo</span></div><small>Essential monitoring</small><div class="plan-features">• 3 leaders<br>• 50 mentions/mo<br>• Daily refresh</div></div></label>
+                                <label class="plan-card selected"><input type="radio" name="subscription_plan" value="pro" data-price="19" checked><div class="plan-content"><div class="plan-top"><strong>Pro</strong><span>$19/mo</span></div><small>Advanced insights & alerts</small><div class="plan-features">• 25 leaders<br>• Unlimited mentions<br>• 15min refresh<br>• Export reports</div></div><b class="recommended">RECOMMENDED</b></label>
+                                <label class="plan-card"><input type="radio" name="subscription_plan" value="enterprise" data-price="99"><div class="plan-content"><div class="plan-top"><strong>Enterprise</strong><span>$99/mo</span></div><small>Government & orgs</small><div class="plan-features">• Unlimited leaders<br>• API access<br>• Priority support</div></div></label>
+                            </div>
                         </div>
 
+                        <div class="form-section" id="paymentSection">
+                            <div class="section-title"><span>💳</span><div><strong>Choose payment method</strong><small>Secure payment</small></div></div>
+                            <div class="plan-grid" style="grid-template-columns:repeat(3,1fr)">
+                                <label class="plan-card pay-card selected" data-method="mpesa"><input type="radio" name="payment_method" value="mpesa" checked><div class="plan-content"><div style="font-size:22px">📱</div><strong>M-Pesa</strong><small>STK Push</small></div></label>
+                                <label class="plan-card pay-card" data-method="card"><input type="radio" name="payment_method" value="card"><div class="plan-content"><div style="font-size:22px">💳</div><strong>Card</strong><small>Visa/MC</small></div></label>
+                                <label class="plan-card pay-card" data-method="bank"><input type="radio" name="payment_method" value="bank"><div class="plan-content"><div style="font-size:22px">🏦</div><strong>Bank</strong><small>Transfer</small></div></label>
+                            </div>
 
-                        <div class="form-grid">
-
-                            <div class="field">
-
-                                <label for="password">
-                                    Password
-                                </label>
-
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    placeholder="Minimum 8 characters"
-                                    autocomplete="new-password"
-                                    minlength="8"
-                                    required
-                                >
-
-                                <div class="password-strength">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
+                            <div id="mpesaFields" class="payment-fields">
+                                <div class="form-grid" style="margin-top:16px">
+                                    <div class="field full"><label for="mpesaPhone">M-Pesa Phone Number *</label><input type="tel" id="mpesaPhone" placeholder="+254 7XX XXX XXX"><small class="field-hint">We'll send STK push to this number</small></div>
                                 </div>
-
-                                <small
-                                    id="passwordHint"
-                                    class="field-hint"
-                                >
-                                    Use a mixture of letters,
-                                    numbers and symbols.
-                                </small>
-
+                                <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:12px;border-radius:10px;margin-top:12px;font-size:12px;color:#166534">✅ <b id="mpesaAmount">Enter PIN to pay $19</b> to CivicLens</div>
                             </div>
 
-
-                            <div class="field">
-
-                                <label for="confirmPassword">
-                                    Confirm password
-                                </label>
-
-                                <input
-                                    type="password"
-                                    id="confirmPassword"
-                                    placeholder="Repeat your password"
-                                    autocomplete="new-password"
-                                    required
-                                >
-
-                                <small
-                                    id="matchHint"
-                                    class="field-hint"
-                                ></small>
-
+                            <div id="cardFields" class="payment-fields" style="display:none">
+                                <div class="form-grid" style="margin-top:16px">
+                                    <div class="field full"><label for="cardNumber">Card Number *</label><input type="text" id="cardNumber" placeholder="4242 4242 4242 4242" maxlength="19"></div>
+                                    <div class="field"><label for="cardExpiry">Expiry MM/YY *</label><input type="text" id="cardExpiry" placeholder="12/28" maxlength="5"></div>
+                                    <div class="field"><label for="cardCvv">CVV *</label><input type="text" id="cardCvv" placeholder="123" maxlength="4"></div>
+                                    <div class="field full"><label for="cardName">Name on Card *</label><input type="text" id="cardName" placeholder="HEFANES BWOGO"></div>
+                                </div>
                             </div>
 
-                        </div>
-
-                    </div>
-
-
-                    <!-- PLAN -->
-
-                    <div class="form-section">
-
-                        <div class="section-title">
-
-                            <span>03</span>
-
-                            <div>
-                                <strong>
-                                    Select your plan
-                                </strong>
-
-                                <small>
-                                    You can manage your subscription later
-                                </small>
+                            <div id="bankFields" class="payment-fields" style="display:none">
+                                <div style="background:#eff6ff;border:1px solid #bfdbfe;padding:14px;border-radius:10px;margin-top:12px;font-size:12px;line-height:1.6">
+                                    <b>Bank Transfer:</b><br>Bank: KCB Bank Kenya<br>Account: CivicLens Ltd<br>No: <b>1234567890</b><br>Paybill: <b>522533</b> - Acc: Your Email
+                                </div>
+                                <div class="form-grid" style="margin-top:12px"><div class="field full"><label for="bankRef">Transaction Code / Reference *</label><input type="text" id="bankRef" placeholder="e.g. QK12345678"></div></div>
                             </div>
 
+                            <div class="order-summary">
+                                <div class="summary-row"><span>Plan:</span><b id="summaryPlan">Pro - $19/mo</b></div>
+                                <div class="summary-row"><span>Payment:</span><b id="summaryMethod">M-Pesa</b></div>
+                                <div class="summary-row"><span>VAT:</span><b>$0</b></div>
+                                <div style="border-top:1px dashed #cbd5e1;margin:8px 0"></div>
+                                <div class="summary-row" style="font-size:15px;font-weight:800"><span>Total:</span><b id="summaryTotal">$19</b></div>
+                            </div>
                         </div>
 
+                        <div id="freeNote" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:14px;border-radius:10px;margin-top:16px;font-size:13px;color:#166534">✅ Free plan - No payment required. Upgrade anytime in Settings.</div>
 
-                        <div class="plan-grid">
+                        <div class="terms-row"><label class="checkbox"><input type="checkbox" id="terms" required><span class="checkmark"></span></label><p>I agree to Terms and Privacy and confirm payment of <b id="termsAmount">$19</b>.</p></div>
 
-
-                            <label class="plan-card">
-
-                                <input
-                                    type="radio"
-                                    name="subscription_plan"
-                                    value="basic"
-                                    checked
-                                >
-
-                                <div class="plan-content">
-
-                                    <div class="plan-top">
-                                        <strong>Basic</strong>
-                                        <span>$10/mo</span>
-                                    </div>
-
-                                    <small>
-                                        Essential monitoring
-                                    </small>
-
-                                </div>
-
-                            </label>
-
-
-                            <label class="plan-card selected">
-
-                                <input
-                                    type="radio"
-                                    name="subscription_plan"
-                                    value="professional"
-                                >
-
-                                <div class="plan-content">
-
-                                    <div class="plan-top">
-                                        <strong>Professional</strong>
-                                        <span>$27/mo</span>
-                                    </div>
-
-                                    <small>
-                                        Advanced insights & alerts
-                                    </small>
-
-                                </div>
-
-                                <b class="recommended">
-                                    RECOMMENDED
-                                </b>
-
-                            </label>
-
-
-                            <label class="plan-card">
-
-                                <input
-                                    type="radio"
-                                    name="subscription_plan"
-                                    value="enterprise"
-                                >
-
-                                <div class="plan-content">
-
-                                    <div class="plan-top">
-                                        <strong>
-                                            Enterprise / Government
-                                        </strong>
-
-                                        <span>$50/mo</span>
-                                    </div>
-
-                                    <small>
-                                        Advanced organization features
-                                    </small>
-
-                                </div>
-
-                            </label>
-
-                        </div>
-
+                        <div class="step-actions"><button type="button" class="secondary" onclick="nextStep(3)">← Back</button><button type="submit" class="submit-btn" style="flex:2" id="submitBtn"><span id="submitText">Confirm & Pay $19</span><span class="arrow"> →</span></button></div>
+                        <div class="login-link">Already have an account? <a href="/login">Sign in</a></div>
                     </div>
-
-
-                    <!-- TERMS -->
-
-                    <div class="terms-row">
-
-                        <label class="checkbox">
-
-                            <input
-                                type="checkbox"
-                                id="terms"
-                                required
-                            >
-
-                            <span class="checkmark"></span>
-
-                        </label>
-
-                        <p>
-                            I agree to the CivicLens
-                            <a href="#">
-                                Terms of Service
-                            </a>
-                            and
-                            <a href="#">
-                                Privacy Policy
-                            </a>.
-                        </p>
-
-                    </div>
-
-
-                    <button
-                        type="submit"
-                        class="submit-btn"
-                        id="submitBtn"
-                    >
-
-                        <span id="submitText">
-                            Create CivicLens Account
-                        </span>
-
-                        <span class="arrow">
-                            →
-                        </span>
-
-                    </button>
-
-
-                    <div class="login-link">
-
-                        Already have an account?
-
-                        <a href="/login">
-                            Sign in
-                        </a>
-
-                    </div>
-
 
                 </form>
-
-
-                <div class="security-note">
-
-                    <span>🔒</span>
-
-                    <p>
-                        Your account information is protected
-                        using secure authentication practices.
-                    </p>
-
-                </div>
-
+                <div class="security-note"><span>🔒</span><p>Your payment is encrypted. ID is stored securely for verification only.</p></div>
             </div>
-
         </main>
-
     </div>
-
-
-    <script src="/static/js/register.js"></script>
-
+    <script src="/static/js/register.js?v=16.1"></script>
 </body>
-
 </html>

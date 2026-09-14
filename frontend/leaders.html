@@ -1,52 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Leaders | CivicLens</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/static/js/config.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:Inter,system-ui,sans-serif;background:#f6f8fb;display:flex;min-height:100vh}
-    .sidebar{width:240px;background:#0f1e3a;color:#8fa0bf;display:flex;flex-direction:column;padding:18px 12px;position:fixed;height:100vh;left:0;top:0}
-    .sidebar-brand{display:flex;align-items:center;gap:10px;padding:10px 8px;margin-bottom:20px}
-    .brand-icon{width:34px;height:34px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#0f1e3a;font-weight:900}
-    .brand-text{color:#fff;font-weight:800;font-size:15px} .brand-text span{display:block;font-size:9px;color:#7c8db0}
-    .nav-item{display:flex;gap:10px;padding:11px 12px;border-radius:10px;color:#8fa0bf;text-decoration:none;font-size:13px;margin-bottom:4px}
-    .nav-item.active{background:#1a2e5a;color:#fff}
-    .main{margin-left:240px;flex:1}
-    .topbar{background:#fff;border-bottom:1px solid #e6eaf0;padding:16px 28px;display:flex;justify-content:space-between;align-items:center}
-    .content{padding:24px 28px}
-    .toolbar{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px}
-    .search-box input{width:280px;padding:10px 12px 10px 36px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px}
-    .btn{padding:10px 16px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;border:0}
-    .btn-primary{background:#1769e0;color:#fff} .btn-secondary{background:#fff;border:1px solid #e2e8f0}
-    .leaders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicLens | Reports</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/reports.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/static/js/config.js"></script>
+    <style>
+        .bar-bg{background:#eef2f7;height:8px;border-radius:20px;overflow:hidden;margin-top:6px}
+        .bar-fill{height:100%;border-radius:20px;transition:width .6s ease}
+        .report-row-pro{padding:14px 16px;border:1px solid #eef2f7;border-radius:12px;margin-bottom:10px;background:#fff}
+        .report-row-pro:hover{border-color:#1769e0;box-shadow:0 4px 12px rgba(23,105,224,.08)}
+        .tool-active{cursor:pointer!important;opacity:1!important;border:1px solid #1769e0!important;background:#f8fbff!important}
+        .tool-active:hover{background:#1769e0!important;color:#fff!important}
+        .tool-active:hover span{color:#dbeafe!important}
+    </style>
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="sidebar-brand"><div class="brand-icon">CL</div><div class="brand-text">CivicLens <span>POLITICAL INTELLIGENCE</span></div></div>
-    <a href="/dashboard" class="nav-item">Dashboard</a>
-    <a href="/mentions" class="nav-item">Mentions</a>
-    <a href="/leaders" class="nav-item active">Leaders</a>
-    <a href="/settings" class="nav-item">Settings</a>
-  </aside>
-  <div class="main">
-    <div class="topbar"><div><h1 style="font-size:20px;color:#10223b;font-weight:800">Leaders</h1><p style="font-size:11px;color:#7b8797">Manage leaders and monitoring</p></div></div>
-    <div class="content">
-      <div class="toolbar">
-        <div class="search-box"><input id="search-leaders" type="text" placeholder="Search leaders..." /></div>
-        <div style="display:flex;gap:10px"><button id="refresh-leaders" class="btn btn-secondary">Refresh</button><button id="add-leader-btn" class="btn btn-primary">+ Add Leader</button></div>
-      </div>
-      <!-- FIX: THIS DIV WAS MISSING - NOW IT EXISTS -->
-      <div id="leaders-container" class="leaders-grid" style="min-height:200px">
-        <div style="grid-column:1/-1;text-align:center;padding:60px;color:#94a3b8">Loading leaders...</div>
-      </div>
-    </div>
-  </div>
-  <div id="add-leader-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center"><div style="background:#fff;width:90%;max-width:440px;border-radius:16px;padding:20px"><h3 style="margin-bottom:12px">Add Leader</h3><form id="add-leader-form" style="display:flex;flex-direction:column;gap:10px"><input id="leader-name" required placeholder="Full name" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px"/><input id="leader-position" placeholder="Position" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px"/><input id="leader-org" placeholder="Organization" style="padding:10px;border:1px solid #e2e8f0;border-radius:8px"/><div style="display:flex;gap:10px"><button type="button" id="close-modal" style="flex:1;padding:10px">Cancel</button><button type="submit" style="flex:1;padding:10px;background:#1769e0;color:#fff;border:0;border-radius:8px">Add</button></div></form></div></div>
-  <script src="/static/js/leaders.js?v=5"></script>
+<aside class="sidebar">
+    <div class="sidebar-brand"><img src="/static/images/civiclens-logo.png" alt="CivicLens" onerror="this.outerHTML='<div style=color:#fff;font-weight:900;padding:12px>CL</div>'"></div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard" class="nav-item"><span>▣</span><span>Dashboard</span></a>
+        <a href="/mentions" class="nav-item"><span>◉</span><span>Mentions</span></a>
+        <a href="/leaders" class="nav-item"><span>♟</span><span>Leaders</span></a>
+        <a href="/platforms" class="nav-item"><span>◌</span><span>Platforms</span></a>
+        <a href="/reports" class="nav-item active"><span>▤</span><span>Reports</span></a>
+        <a href="/settings" class="nav-item"><span>⚙</span><span>Settings</span></a>
+    </nav>
+    <div class="sidebar-bottom"><button id="logout-button" class="logout-button" type="button"><span>↪</span><span>Sign Out</span></button></div>
+</aside>
+<main class="main-content">
+    <header class="topbar">
+        <div><p class="eyebrow">PUBLIC CONVERSATION INTELLIGENCE</p><h1>Reports</h1></div>
+        <div class="topbar-right"><div class="notification">🔔</div><div class="user-profile"><div class="avatar" id="user-avatar">C</div><div class="user-info"><strong id="user-name">CivicLens User</strong><span id="user-email">Loading...</span></div></div></div>
+    </header>
+    <section class="reports-hero">
+        <div><span class="hero-kicker">INTELLIGENCE REPORTING</span><h2>Conversation Reports</h2><p>Real monitoring data from Google News RSS - Live intelligence for <span id="report-count">0</span> mentions</p></div>
+        <button id="refresh-reports" class="refresh-button" type="button">↻ Refresh</button>
+    </section>
+    <section class="report-stat-grid">
+        <div class="report-stat" style="border-left:4px solid #0f1e3a"><span>TOTAL MENTIONS</span><strong id="total-mentions">0</strong><small style="color:#64748b">Across all platforms</small></div>
+        <div class="report-stat" style="border-left:4px solid #16a34a"><span>POSITIVE</span><strong id="positive-mentions" style="color:#16a34a">0</strong><div class="bar-bg"><div id="pos-bar" class="bar-fill" style="width:0%;background:#16a34a"></div></div></div>
+        <div class="report-stat" style="border-left:4px solid #94a3b8"><span>NEUTRAL</span><strong id="neutral-mentions">0</strong><div class="bar-bg"><div id="neu-bar" class="bar-fill" style="width:0%;background:#94a3b8"></div></div></div>
+        <div class="report-stat" style="border-left:4px solid #dc2626"><span>NEGATIVE</span><strong id="negative-mentions" style="color:#dc2626">0</strong><div class="bar-bg"><div id="neg-bar" class="bar-fill" style="width:0%;background:#dc2626"></div></div></div>
+    </section>
+    <section class="reports-grid">
+        <div class="panel"><div class="panel-header"><div><span class="panel-kicker">LEADER ANALYSIS</span><h3>Mentions by Leader</h3><small id="leader-summary" style="color:#64748b;font-size:11px">Top monitored leaders</small></div></div><div id="leader-report" class="report-list" style="padding:12px"><div class="report-empty">Loading...</div></div></div>
+        <div class="panel"><div class="panel-header"><div><span class="panel-kicker">PLATFORM ANALYSIS</span><h3>Mentions by Platform</h3><small style="color:#64748b;font-size:11px">Source breakdown</small></div></div><div id="platform-report" class="report-list" style="padding:12px"><div class="report-empty">Loading...</div></div></div>
+    </section>
+    <section class="panel report-actions">
+        <div class="panel-header"><div><span class="panel-kicker">REPORTING TOOLS</span><h3>Generate Intelligence</h3></div><span id="export-status" style="font-size:11px;color:#16a34a"></span></div>
+        <div class="report-tool-grid">
+            <button class="report-tool tool-active" type="button" id="btn-executive"><strong>📄 Executive Report</strong><span>Export PDF with all leaders & mentions - LIVE</span></button>
+            <button class="report-tool tool-active" type="button" id="btn-sentiment"><strong>📊 Sentiment Report</strong><span>Detailed sentiment breakdown - LIVE</span></button>
+            <button class="report-tool tool-active" type="button" id="btn-comparison"><strong>⚖️ Leader Comparison</strong><span>Compare leaders side-by-side - LIVE</span></button>
+        </div>
+    </section>
+    <footer class="dashboard-footer"><span>© 2026 CivicLens</span><span>Public Conversation Intelligence Platform - V11 REAL</span></footer>
+</main>
+<script src="/static/js/reports.js?v=11"></script>
 </body>
 </html>

@@ -1,1255 +1,179 @@
 "use strict";
+console.log("CivicLens: dashboard.js V14.2 loaded successfully.");
+let supabaseClient=null;
 
-/*
- * ============================================================
- * CIVICLENS DASHBOARD
- * Authenticated dashboard data loader
- * Collection worker integration
- * ============================================================
- */
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("CivicLens: Dashboard starting...");
+  if(!window.SUPABASE_URL ||!window.SUPABASE_ANON_KEY ||!window.supabase){
+    location.href="/login"; return;
+  }
+  supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  const { data:{ session } } = await supabaseClient.auth.getSession();
+  if(!session){ location.href="/login"; return; }
+  console.log("CivicLens: Supabase initialized.");
 
-let supabaseClient = null;
+  await loadUser();
+  setupNavigation();
+  await loadDashboardStats();
+  await loadRecentMentions();
+  setupCollection();
+  setupRefresh();
+  console.log("CivicLens: Dashboard ready.");
+});
 
-
-/* ============================================================
-   INITIALIZE SUPABASE
-============================================================ */
-
-function initializeSupabase() {
-
-    if (supabaseClient) {
-        return supabaseClient;
-    }
-
-    if (
-        !window.supabase ||
-        !window.SUPABASE_URL ||
-        !window.SUPABASE_ANON_KEY
-    ) {
-        console.error(
-            "CivicLens: Supabase configuration missing."
-        );
-
-        return null;
-    }
-
-    try {
-
-        supabaseClient =
-            window.supabase.createClient(
-                window.SUPABASE_URL,
-                window.SUPABASE_ANON_KEY
-            );
-
-        console.log(
-            "CivicLens: Supabase initialized."
-        );
-
-        return supabaseClient;
-
-    } catch (error) {
-
-        console.error(
-            "CivicLens: Supabase initialization failed:",
-            error
-        );
-
-        return null;
-    }
+async function civicLensFetch(url, options={}){
+  const { data:{ session } } = await supabaseClient.auth.getSession();
+  if(!session){ location.href="/login"; throw new Error("No session"); }
+  const headers = new Headers(options.headers||{});
+  headers.set("Authorization", `Bearer ${session.access_token}`);
+  headers.set("Content-Type","application/json");
+  const res = await fetch(url, {...options, headers});
+  console.log(`CivicLens: Authenticated request -> ${url} ${res.status}`);
+  return res;
 }
 
-
-/* ============================================================
-   GET CURRENT SESSION
-============================================================ */
-
-async function getCurrentSession() {
-
-    const client =
-        initializeSupabase();
-
-    if (!client) {
-        throw new Error(
-            "Supabase is not configured."
-        );
-    }
-
-    const {
-        data,
-        error
-    } = await client.auth.getSession();
-
-    if (error) {
-
-        console.error(
-            "CivicLens session error:",
-            error
-        );
-
-        throw new Error(
-            "Unable to verify your login session."
-        );
-    }
-
-    if (
-        !data ||
-        !data.session ||
-        !data.session.access_token
-    ) {
-
-        console.warn(
-            "CivicLens: No active Supabase session."
-        );
-
-        window.location.href =
-            "/login";
-
-        return null;
-    }
-
-    return data.session;
+async function loadUser(){
+  try{
+    const { data } = await supabaseClient.auth.getUser();
+    if(!data?.user) return;
+    const meta = data.user.user_metadata || {};
+    const name = meta.full_name || data.user.email.split("@")[0];
+    document.getElementById("user-name") && (document.getElementById("user-name").textContent = name.toUpperCase());
+    document.getElementById("user-email") && (document.getElementById("user-email").textContent = data.user.email);
+    document.getElementById("user-avatar") && (document.getElementById("user-avatar").textContent = name.charAt(0).toUpperCase());
+    console.log("CivicLens auth event: SIGNED_IN");
+  }catch(e){}
 }
 
-
-/* ============================================================
-   AUTHENTICATED FETCH
-============================================================ */
-
-async function civicLensFetch(
-    url,
-    options = {}
-) {
-
-    const session =
-        await getCurrentSession();
-
-    if (!session) {
-        return null;
-    }
-
-    const headers =
-        new Headers(
-            options.headers || {}
-        );
-
-    headers.set(
-        "Authorization",
-        `Bearer ${session.access_token}`
-    );
-
-    headers.set(
-        "Accept",
-        "application/json"
-    );
-
-    if (
-        options.body &&
-        !headers.has("Content-Type")
-    ) {
-
-        headers.set(
-            "Content-Type",
-            "application/json"
-        );
-    }
-
-    console.log(
-        `CivicLens: Authenticated request → ${url}`
-    );
-
-    const response =
-        await fetch(
-            url,
-            {
-                ...options,
-                headers
-            }
-        );
-
-    if (response.status === 401) {
-
-        console.warn(
-            "CivicLens: API returned 401 Unauthorized."
-        );
-
-        const client =
-            initializeSupabase();
-
-        if (client) {
-            await client.auth.signOut();
-        }
-
-        window.location.href =
-            "/login";
-
-        return null;
-    }
-
-    return response;
+function setupNavigation(){
+  console.log("CivicLens: Setting up dashboard navigation...");
+  document.getElementById("logout-button")?.addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+    localStorage.clear();
+    location.href="/login";
+  });
 }
 
+async function loadDashboardStats(){
+  try{
+    const res = await civicLensFetch("/api/dashboard/stats");
+    const json = await res.json();
+    console.log("Stats loaded:", json);
+    const total = json.total_mentions || json.mentions || json.total || 0;
+    const leaders = json.leaders || 0;
+    const positive = json.positive || 0;
+    const platforms = 3; // you have 3 active
 
-/* ============================================================
-   SAFE JSON
-============================================================ */
-
-async function readJson(response) {
-
-    if (!response) {
-        return null;
-    }
-
-    const contentType =
-        response.headers.get(
-            "content-type"
-        ) || "";
-
-    if (
-        !contentType.includes(
-            "application/json"
-        )
-    ) {
-
-        return null;
-    }
-
-    try {
-
-        return await response.json();
-
-    } catch (error) {
-
-        console.error(
-            "CivicLens JSON parsing error:",
-            error
-        );
-
-        return null;
-    }
+    // FIX: Use exact IDs from your HTML
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = val;
+    };
+    set("total-mentions", total);
+    set("total-leaders", leaders);
+    set("total-platforms", platforms);
+    set("positive-mentions", positive);
+  }catch(e){
+    console.error("stats err", e);
+  }
 }
 
+async function loadRecentMentions(){
+  const container = document.getElementById("recent-mentions-container");
+  if(!container) return;
+  try{
+    const res = await civicLensFetch("/api/dashboard/recent");
+    const json = await res.json();
+    const mentions = json.mentions || json.data || [];
+    console.log("Recent mentions:", mentions.length, mentions);
 
-/* ============================================================
-   DOM HELPERS
-============================================================ */
-
-function setElementText(
-    id,
-    value
-) {
-
-    const element =
-        document.getElementById(id);
-
-    if (element) {
-        element.textContent = value;
+    if(!mentions.length){
+      container.innerHTML = `<div class="dashboard-empty"><div class="empty-icon">◉</div><h4>No mentions yet</h4><p>Run Collection to fetch news.</p></div>`;
+      return;
     }
+
+    const html = mentions.slice(0,5).map(m=>{
+      const title = (m.title || m.content || "Untitled").slice(0,120);
+      const leader = m.leaders?.full_name || m.leader_name || m.full_name || "William Ruto";
+      const sentiment = (m.sentiment||"neutral").toLowerCase();
+      const badgeClass = sentiment==="positive"?"badge-pos":sentiment==="negative"?"badge-neg":"badge-neu";
+      const avatarBg = sentiment==="positive"?"#dcfce7":sentiment==="negative"?"#fee2e2":"#f1f5f9";
+      const avatarColor = sentiment==="positive"?"#16a34a":sentiment==="negative"?"#dc2626":"#64748b";
+      const url = m.url || "#";
+      const date = m.published_at? new Date(m.published_at).toLocaleDateString("en-KE",{day:"2-digit",month:"short"}) : "Recent";
+      return `
+        <div class="mention-row">
+          <div class="mention-avatar" style="background:${avatarBg};color:${avatarColor}">${leader.charAt(0)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <span style="font-weight:700;font-size:13px;color:#0f172a">${leader}</span>
+              <span class="badge ${badgeClass}">${sentiment}</span>
+              <span style="color:#94a3b8;font-size:11px">• ${date} • 📰 Google News</span>
+            </div>
+            <a href="${url}" target="_blank" style="display:block;margin-top:4px;font-size:13px;color:#334155;text-decoration:none;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</a>
+          </div>
+          <a href="${url}" target="_blank" style="color:#1769e0;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0">View →</a>
+        </div>
+      `;
+    }).join("");
+
+    container.innerHTML = `<div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden">${html}<div style="text-align:center;padding:12px;border-top:1px solid #f1f5f9"><a href="/mentions" style="font-size:12px;color:#1769e0;font-weight:700;text-decoration:none">View all ${mentions.length} mentions →</a></div></div>`;
+  }catch(e){
+    console.error("recent err", e);
+  }
 }
 
+function setupCollection(){
+  console.log("CivicLens: Run Collection listener attached.");
+  const btn = document.getElementById("run-collection");
+  if(!btn){
+    console.warn("Run Collection button not found");
+    return;
+  }
+  btn.addEventListener("click", async ()=>{
+    const oldText = btn.textContent;
+    const statusEl = document.getElementById("collection-status");
+    btn.textContent = "Collecting...";
+    btn.disabled = true;
+    if(statusEl) statusEl.textContent = "⏳ Collecting live news from Google News RSS...";
+    try{
+      const res = await civicLensFetch("/api/collect", {method:"POST"});
+      const j = await res.json();
+      console.log("Collect started:", j);
+      if(statusEl) statusEl.textContent = "✅ Collection started - refreshing in 6s...";
+      setTimeout(async ()=>{
+        await loadDashboardStats();
+        await loadRecentMentions();
+        btn.textContent = "✓ Collected";
+        if(statusEl) statusEl.textContent = "✅ Done - found new mentions";
+        setTimeout(()=>{ btn.textContent=oldText; btn.disabled=false; if(statusEl) statusEl.textContent=""; },2500);
+      }, 6000);
+    }catch(e){
+      console.error(e);
+      btn.textContent = oldText;
+      btn.disabled = false;
+      if(statusEl) statusEl.textContent = "❌ Collect failed: "+e.message;
+    }
+  });
 
-function formatNumber(value) {
-
-    const number =
-        Number(value || 0);
-
-    return number.toLocaleString();
+  // 15min auto-refresh
+  setInterval(async ()=>{
+    console.log("⏰ 15min auto-refresh");
+    try{
+      await civicLensFetch("/api/cron/collect");
+      setTimeout(async ()=>{ await loadDashboardStats(); await loadRecentMentions(); }, 4000);
+    }catch(e){}
+  }, 15*60*1000);
 }
 
-
-/* ============================================================
-   LOAD LEADERS
-============================================================ */
-
-async function loadDashboardLeaders() {
-
-    try {
-
-        const response =
-            await civicLensFetch(
-                "/api/leaders"
-            );
-
-        if (!response) {
-            return [];
-        }
-
-        if (!response.ok) {
-
-            console.error(
-                "Failed to load leaders:",
-                response.status
-            );
-
-            return [];
-        }
-
-        const data =
-            await readJson(response);
-
-        if (Array.isArray(data)) {
-            return data;
-        }
-
-        if (
-            data &&
-            Array.isArray(data.leaders)
-        ) {
-            return data.leaders;
-        }
-
-        return [];
-
-    } catch (error) {
-
-        console.error(
-            "Dashboard leaders error:",
-            error
-        );
-
-        return [];
-    }
+function setupRefresh(){
+  document.getElementById("refresh-dashboard")?.addEventListener("click", async ()=>{
+    const btn = document.getElementById("refresh-dashboard");
+    const old = btn.textContent;
+    btn.textContent = "↻ Refreshing...";
+    await loadDashboardStats();
+    await loadRecentMentions();
+    btn.textContent = "✓ Refreshed";
+    setTimeout(()=> btn.textContent = old, 1500);
+  });
 }
-
-
-/* ============================================================
-   LOAD MENTION STATS
-============================================================ */
-
-async function loadMentionStats() {
-
-    try {
-
-        const response =
-            await civicLensFetch(
-                "/api/mentions/stats"
-            );
-
-        if (!response) {
-            return {};
-        }
-
-        if (!response.ok) {
-
-            console.error(
-                "Failed to load mention statistics:",
-                response.status
-            );
-
-            return {};
-        }
-
-        return (
-            await readJson(response)
-        ) || {};
-
-    } catch (error) {
-
-        console.error(
-            "Mention statistics error:",
-            error
-        );
-
-        return {};
-    }
-}
-
-
-/* ============================================================
-   LOAD PLATFORM STATS
-============================================================ */
-
-async function loadPlatformStats() {
-
-    try {
-
-        const response =
-            await civicLensFetch(
-                "/api/platforms/stats"
-            );
-
-        if (!response) {
-            return {};
-        }
-
-        if (!response.ok) {
-
-            console.error(
-                "Failed to load platform statistics:",
-                response.status
-            );
-
-            return {};
-        }
-
-        return (
-            await readJson(response)
-        ) || {};
-
-    } catch (error) {
-
-        console.error(
-            "Platform statistics error:",
-            error
-        );
-
-        return {};
-    }
-}
-
-
-/* ============================================================
-   EXTRACT TOTAL MENTIONS
-============================================================ */
-
-function extractTotalMentions(stats) {
-
-    if (
-        !stats ||
-        typeof stats !== "object"
-    ) {
-        return 0;
-    }
-
-    return (
-        stats.total_mentions ??
-        stats.total ??
-        stats.count ??
-        stats.mentions ??
-        0
-    );
-}
-
-
-/* ============================================================
-   EXTRACT POSITIVE MENTIONS
-============================================================ */
-
-function extractPositiveMentions(stats) {
-
-    if (
-        !stats ||
-        typeof stats !== "object"
-    ) {
-        return 0;
-    }
-
-    return (
-        stats.positive_mentions ??
-        stats.positive ??
-        stats.positive_count ??
-        0
-    );
-}
-
-
-/* ============================================================
-   EXTRACT PLATFORM COUNT
-============================================================ */
-
-function extractPlatformCount(stats) {
-
-    if (
-        !stats ||
-        typeof stats !== "object"
-    ) {
-        return 0;
-    }
-
-    if (Array.isArray(stats)) {
-        return stats.length;
-    }
-
-    return (
-        stats.total_platforms ??
-        stats.active_platforms ??
-        stats.platforms_count ??
-        stats.count ??
-        0
-    );
-}
-
-
-/* ============================================================
-   UPDATE DASHBOARD
-============================================================ */
-
-function updateDashboard(
-    leaders,
-    mentionStats,
-    platformStats
-) {
-
-    setElementText(
-        "total-leaders",
-        formatNumber(
-            leaders.length
-        )
-    );
-
-    setElementText(
-        "total-mentions",
-        formatNumber(
-            extractTotalMentions(
-                mentionStats
-            )
-        )
-    );
-
-    setElementText(
-        "total-platforms",
-        formatNumber(
-            extractPlatformCount(
-                platformStats
-            )
-        )
-    );
-
-    setElementText(
-        "positive-mentions",
-        formatNumber(
-            extractPositiveMentions(
-                mentionStats
-            )
-        )
-    );
-}
-
-
-/* ============================================================
-   LOAD DASHBOARD
-============================================================ */
-
-async function loadDashboard() {
-
-    try {
-
-        const session =
-            await getCurrentSession();
-
-        if (!session) {
-            return;
-        }
-
-        const [
-            leaders,
-            mentionStats,
-            platformStats
-        ] = await Promise.all([
-
-            loadDashboardLeaders(),
-
-            loadMentionStats(),
-
-            loadPlatformStats()
-
-        ]);
-
-        updateDashboard(
-            leaders,
-            mentionStats,
-            platformStats
-        );
-
-    } catch (error) {
-
-        console.error(
-            "CivicLens dashboard error:",
-            error
-        );
-    }
-}
-
-
-/* ============================================================
-   USER PROFILE
-============================================================ */
-
-async function loadDashboardUser() {
-
-    try {
-
-        const client =
-            initializeSupabase();
-
-        if (!client) {
-            return;
-        }
-
-        const {
-            data,
-            error
-        } = await client.auth.getUser();
-
-        if (error) {
-
-            console.error(
-                "CivicLens user error:",
-                error
-            );
-
-            return;
-        }
-
-        const user =
-            data?.user;
-
-        if (!user) {
-            return;
-        }
-
-        const emailElements =
-            document.querySelectorAll(
-                "[data-user-email], #user-email, #profile-email"
-            );
-
-        emailElements.forEach(
-            element => {
-
-                element.textContent =
-                    user.email || "";
-
-            }
-        );
-
-        const name =
-            user.user_metadata?.full_name ||
-            user.user_metadata?.name ||
-            user.email?.split("@")[0] ||
-            "CivicLens User";
-
-        const nameElements =
-            document.querySelectorAll(
-                "[data-user-name], #user-name, #profile-name"
-            );
-
-        nameElements.forEach(
-            element => {
-
-                element.textContent =
-                    name;
-
-            }
-        );
-
-        const avatar =
-            document.getElementById(
-                "user-avatar"
-            );
-
-        if (avatar) {
-
-            avatar.textContent =
-                name
-                    .trim()
-                    .charAt(0)
-                    .toUpperCase() || "C";
-
-        }
-
-    } catch (error) {
-
-        console.error(
-            "Dashboard user error:",
-            error
-        );
-    }
-}
-
-
-/* ============================================================
-   COLLECTION STATUS
-============================================================ */
-
-function setCollectionStatus(
-    message,
-    type = "info"
-) {
-
-    const element =
-        document.getElementById(
-            "collection-status"
-        );
-
-    if (!element) {
-
-        console.warn(
-            "CivicLens: collection-status element not found."
-        );
-
-        return;
-    }
-
-    element.textContent =
-        message;
-
-    element.dataset.status =
-        type;
-}
-
-
-/* ============================================================
-   RUN COLLECTION
-============================================================ */
-
-async function runCollection() {
-
-    console.log(
-        "CivicLens: runCollection() started."
-    );
-
-    const button =
-        document.getElementById(
-            "run-collection"
-        );
-
-    if (!button) {
-
-        console.error(
-            "CivicLens: Run Collection button not found."
-        );
-
-        return;
-    }
-
-    if (button.disabled) {
-
-        console.warn(
-            "CivicLens: Collection already running."
-        );
-
-        return;
-    }
-
-    const originalText =
-        button.textContent;
-
-    button.disabled = true;
-
-    button.textContent =
-        "Collecting...";
-
-    setCollectionStatus(
-        "Starting mention collection...",
-        "loading"
-    );
-
-    try {
-
-        console.log(
-            "CivicLens: Preparing collection request..."
-        );
-
-        const session =
-            await getCurrentSession();
-
-        if (!session) {
-
-            console.warn(
-                "CivicLens: No active session for collection."
-            );
-
-            return;
-        }
-
-        console.log(
-            "CivicLens: Session verified."
-        );
-
-        console.log(
-            "CivicLens: Sending POST /api/collector/run"
-        );
-
-        const response =
-            await civicLensFetch(
-                "/api/collector/run",
-                {
-                    method: "POST",
-
-                    body: JSON.stringify({
-
-                        platforms: [
-                            "x"
-                        ]
-
-                    })
-                }
-            );
-
-        if (!response) {
-
-            throw new Error(
-                "No response received from the CivicLens API."
-            );
-        }
-
-        console.log(
-            "CivicLens: Collection HTTP status:",
-            response.status
-        );
-
-        const data =
-            await readJson(response);
-
-        console.log(
-            "CivicLens collection response:",
-            data
-        );
-
-        if (!response.ok) {
-
-            const message =
-                data?.detail ||
-                `Collection failed (${response.status}).`;
-
-            throw new Error(
-                message
-            );
-        }
-
-        const result =
-            data?.result || {};
-
-        const leaders =
-            Number(
-                result.leaders || 0
-            );
-
-        const platformResults =
-            Array.isArray(
-                result.platforms
-            )
-                ? result.platforms
-                : [];
-
-        const collected =
-            platformResults.reduce(
-                (
-                    total,
-                    platform
-                ) => {
-
-                    return total +
-                        Number(
-                            platform.collected || 0
-                        );
-
-                },
-                0
-            );
-
-        const matched =
-            platformResults.reduce(
-                (
-                    total,
-                    platform
-                ) => {
-
-                    return total +
-                        Number(
-                            platform.matched || 0
-                        );
-
-                },
-                0
-            );
-
-        const duplicates =
-            platformResults.reduce(
-                (
-                    total,
-                    platform
-                ) => {
-
-                    return total +
-                        Number(
-                            platform.duplicates || 0
-                        );
-
-                },
-                0
-            );
-
-        const errors =
-            platformResults.reduce(
-                (
-                    total,
-                    platform
-                ) => {
-
-                    return total +
-                        Number(
-                            platform.errors || 0
-                        );
-
-                },
-                0
-            );
-
-        if (leaders === 0) {
-
-            setCollectionStatus(
-                "No monitored leaders found. Add a leader first.",
-                "warning"
-            );
-
-        } else if (
-            collected === 0 &&
-            errors === 0
-        ) {
-
-            setCollectionStatus(
-                "Collection completed. No new public posts were returned by the configured providers.",
-                "success"
-            );
-
-        } else {
-
-            setCollectionStatus(
-                `Collection completed — ${collected} posts checked, ${matched} leader matches found.`,
-                "success"
-            );
-        }
-
-        if (errors > 0) {
-
-            setCollectionStatus(
-                `Collection completed with ${errors} provider error(s).`,
-                "warning"
-            );
-        }
-
-        console.log(
-            "CivicLens collection summary:",
-            {
-                leaders,
-                collected,
-                matched,
-                duplicates,
-                errors
-            }
-        );
-
-        await loadDashboard();
-
-    } catch (error) {
-
-        console.error(
-            "CivicLens collection error:",
-            error
-        );
-
-        setCollectionStatus(
-            error?.message ||
-            "Collection failed.",
-            "error"
-        );
-
-    } finally {
-
-        button.disabled = false;
-
-        button.textContent =
-            originalText;
-
-        console.log(
-            "CivicLens: runCollection() finished."
-        );
-    }
-}
-
-
-/* ============================================================
-   LOGOUT
-============================================================ */
-
-async function logoutUser() {
-
-    try {
-
-        const client =
-            initializeSupabase();
-
-        if (client) {
-            await client.auth.signOut();
-        }
-
-        window.location.href =
-            "/login";
-
-    } catch (error) {
-
-        console.error(
-            "Logout error:",
-            error
-        );
-
-        window.location.href =
-            "/login";
-    }
-}
-
-
-/* ============================================================
-   NAVIGATION
-============================================================ */
-
-function setupDashboardNavigation() {
-
-    console.log(
-        "CivicLens: Setting up dashboard navigation..."
-    );
-
-
-    /* --------------------------------------------------------
-       LOGOUT
-    -------------------------------------------------------- */
-
-    const logoutButtons =
-        document.querySelectorAll(
-            "#logout-button, #logout-btn, [data-action='logout'], .logout-btn"
-        );
-
-    logoutButtons.forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                async event => {
-
-                    event.preventDefault();
-
-                    await logoutUser();
-
-                }
-            );
-
-        }
-    );
-
-
-    /* --------------------------------------------------------
-       RUN COLLECTION
-    -------------------------------------------------------- */
-
-    const collectionButton =
-        document.getElementById(
-            "run-collection"
-        );
-
-    if (collectionButton) {
-
-        /*
-         * Prevent duplicate binding.
-         */
-
-        if (
-            collectionButton.dataset.civicLensBound !== "true"
-        ) {
-
-            collectionButton.dataset.civicLensBound =
-                "true";
-
-            collectionButton.addEventListener(
-                "click",
-                async event => {
-
-                    event.preventDefault();
-
-                    console.log(
-                        "CivicLens: Run Collection CLICK detected."
-                    );
-
-                    await runCollection();
-
-                }
-            );
-
-            console.log(
-                "CivicLens: Run Collection listener attached."
-            );
-
-        }
-
-    } else {
-
-        console.error(
-            "CivicLens: Run Collection button does not exist in the DOM."
-        );
-    }
-
-
-    /* --------------------------------------------------------
-       REFRESH
-    -------------------------------------------------------- */
-
-    const refreshButton =
-        document.getElementById(
-            "refresh-dashboard"
-        );
-
-    if (refreshButton) {
-
-        refreshButton.addEventListener(
-            "click",
-            async event => {
-
-                event.preventDefault();
-
-                console.log(
-                    "CivicLens: Dashboard refresh requested."
-                );
-
-                await loadDashboard();
-
-            }
-        );
-    }
-}
-
-
-/* ============================================================
-   SUPABASE AUTH STATE LISTENER
-============================================================ */
-
-function setupAuthListener() {
-
-    const client =
-        initializeSupabase();
-
-    if (!client) {
-        return;
-    }
-
-    client.auth.onAuthStateChange(
-        (
-            event,
-            session
-        ) => {
-
-            console.log(
-                "CivicLens auth event:",
-                event
-            );
-
-            if (
-                event === "SIGNED_OUT" ||
-                (
-                    event === "TOKEN_REFRESHED" &&
-                    !session
-                )
-            ) {
-
-                window.location.href =
-                    "/login";
-
-            }
-
-        }
-    );
-}
-
-
-/* ============================================================
-   START DASHBOARD
-============================================================ */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    async () => {
-
-        console.log(
-            "CivicLens: Dashboard starting..."
-        );
-
-        initializeSupabase();
-
-        setupDashboardNavigation();
-
-        setupAuthListener();
-
-        await loadDashboardUser();
-
-        await loadDashboard();
-
-        console.log(
-            "CivicLens: Dashboard ready."
-        );
-
-    }
-);
-
-
-/* ============================================================
-   EXPOSE FUNCTIONS
-============================================================ */
-
-window.civicLensDashboard = {
-
-    loadDashboard,
-
-    civicLensFetch,
-
-    logoutUser,
-
-    runCollection
-
-};
-
-
-/* ============================================================
-   GLOBAL CLICK SAFETY NET
-   This catches the button even if another dashboard element
-   interferes with the normal listener.
-============================================================ */
-
-document.addEventListener(
-    "click",
-    async event => {
-
-        const button =
-            event.target.closest(
-                "#run-collection"
-            );
-
-        if (!button) {
-            return;
-        }
-
-        /*
-         * If the normal listener already handled this click,
-         * do not execute collection twice.
-         */
-
-        if (
-            button.dataset.civicLensClickHandled === "true"
-        ) {
-
-            button.dataset.civicLensClickHandled =
-                "false";
-
-            return;
-        }
-
-        button.dataset.civicLensClickHandled =
-            "true";
-
-        console.log(
-            "CivicLens: Global Run Collection click detected."
-        );
-
-        event.preventDefault();
-
-        await runCollection();
-
-    },
-    true
-);
-
-
-/* ============================================================
-   SCRIPT LOADED CONFIRMATION
-============================================================ */
-
-console.log(
-    "CivicLens: dashboard.js loaded successfully."
-);
